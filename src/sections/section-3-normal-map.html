@@ -1,0 +1,86 @@
+      <div class="collapsible-section" id="secToolsNormal">
+        <div class="section-title collapsible-header" onclick="toggleSection('secToolsNormal')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleSection('secToolsNormal');}" tabindex="0" role="button" aria-expanded="true">
+          <div class="section-header-left">
+            <svg class="section-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            <div class="form-label-left">
+              <span>3. Normal Map (_NormalMap.png)</span>
+              <button type="button" class="help-q-btn" onclick="event.stopPropagation(); toggleFieldHelp(this, 'normalMapSource', event)" onmouseenter="showFieldHelp(this, 'normalMapSource', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Normal Map" title="Help for Normal Map">?</button>
+            </div>
+          </div>
+          <div class="section-header-right">
+            <span id="normalModeBadge" style="font-size: 10px; color: var(--text-dim); font-weight: normal;">OpenGL +X, +Y</span>
+          </div>
+        </div>
+        <div class="collapsible-content">
+          <div class="panel-box">
+          <!-- Custom Normal Map Upload / Switch -->
+          <div class="form-group">
+            <div class="form-label-row">
+              <div class="form-label-left">
+                <span>Normal Map Source</span>
+                <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'normalMapSource', event)" onmouseenter="showFieldHelp(this, 'normalMapSource', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Normal Map Source" title="Help for Normal Map Source">?</button>
+              </div>
+              <span class="form-val-badge" id="normalSourceBadge" style="background: rgba(56, 189, 248, 0.15); color: var(--primary);">Auto (From Color)</span>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px;">
+              <input type="file" id="customNormalInput" accept="image/png, image/jpeg, image/webp" style="display:none;" onchange="handleCustomNormalSelect(event)">
+              <button type="button" class="btn-secondary" style="flex: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: flex; align-items: center; gap: 6px;" onclick="document.getElementById('customNormalInput').click()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <span id="customNormalBtnText">Insert Custom _NormalMap...</span>
+              </button>
+              <button type="button" class="btn-secondary" id="btnClearCustomNormal" style="padding: 7px 10px; display: none; color: #ef4444; border-color: rgba(239, 68, 68, 0.3);" title="Revert to procedural bump map" onclick="clearCustomNormal()">✕</button>
+            </div>
+            <div id="customNormalHint" style="font-size: 10px; color: var(--text-dim); margin-top: 4px;">
+              Auto-generating bump heights from base texture. Or insert a custom tangent normal map.
+            </div>
+          </div>
+
+          <!-- Height / Bump Depth Multiplier -->
+          <div class="form-group" style="margin-top: 10px;">
+            <div class="form-label-row">
+              <div class="form-label-left">
+                <span id="bumpSliderLabel">Height / Bump Depth</span>
+                <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'bumpIntensity', event)" onmouseenter="showFieldHelp(this, 'bumpIntensity', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Bump Depth" title="Help for Bump Depth">?</button>
+              </div>
+              <span class="form-val-badge" id="bumpVal">2.5×</span>
+            </div>
+            <div class="slider-container">
+              <input type="range" id="bumpIntensity" min="0.1" max="8.0" step="0.1" value="2.5" oninput="onBumpChange()">
+            </div>
+            <div style="font-size: 10px; color: var(--text-dim); margin-top: 3px;" id="bumpSliderHint">
+              Scales normal vector relief intensity and groove steepness.
+            </div>
+          </div>
+
+          <div class="form-group" id="groupNormalBlur" style="margin-top: 10px;">
+            <div class="form-label-row">
+              <div class="form-label-left">
+                <span>Edge Pre-Blur / Smoothing</span>
+                <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'normalBlur', event)" onmouseenter="showFieldHelp(this, 'normalBlur', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Edge Pre-Blur" title="Help for Edge Pre-Blur">?</button>
+              </div>
+              <span class="form-val-badge" id="blurVal">0 px</span>
+            </div>
+            <div class="slider-container">
+              <input type="range" id="normalBlur" min="0" max="3" step="1" value="0" oninput="onBlurChange()">
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 10px;">
+            <div class="form-label-row" style="margin-bottom: 2px;">
+              <div class="form-label-left">
+                <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Inversion & Channel Flips</span>
+                <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'normalInversions', event)" onmouseenter="showFieldHelp(this, 'normalInversions', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Normal Inversions" title="Help for Normal Inversions">?</button>
+              </div>
+            </div>
+            <label class="checkbox-row">
+              <input type="checkbox" id="invertBump" onchange="renderAllMaps()">
+              <span>Invert Height (Recessed / Inset Grooves)</span>
+            </label>
+            <label class="checkbox-row">
+              <input type="checkbox" id="flipNormalY" onchange="renderAllMaps()">
+              <span>Invert Green / Y Channel (DirectX -Y to OpenGL +Y)</span>
+            </label>
+          </div>
+        </div>
+        </div>
+      </div>

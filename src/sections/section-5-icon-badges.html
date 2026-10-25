@@ -1,0 +1,1861 @@
+      <div class="collapsible-section" id="secToolsIcon">
+        <div class="section-title collapsible-header" onclick="toggleSection('secToolsIcon')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleSection('secToolsIcon');}" tabindex="0" role="button" aria-expanded="true">
+          <div class="section-header-left">
+            <svg class="section-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            <div class="form-label-left">
+              <span>5. In-Game Icon &amp; Watermark Overlays</span>
+              <button type="button" class="help-q-btn" onclick="event.stopPropagation(); toggleFieldHelp(this, 'iconSettings', event)" onmouseenter="showFieldHelp(this, 'iconSettings', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Icon Generator" title="Help for Icon Generator">?</button>
+            </div>
+          </div>
+          <div class="section-header-right">
+            <span style="font-size: 10px; color: var(--accent-purple); font-weight: bold;">_Icon.png</span>
+          </div>
+        </div>
+        <div class="collapsible-content">
+          <div class="panel-box">
+          <label class="checkbox-row" style="margin-top: 0; margin-bottom: 10px;">
+            <input type="checkbox" id="enableIconGen" checked onchange="renderAllMaps()">
+            <span style="font-weight: 600; color: var(--text-main);">Generate CS2 UI Icon (256×256)</span>
+          </label>
+
+          <div class="form-group">
+            <div class="form-label-row">
+              <div class="form-label-left">
+                <span>Icon Background Style</span>
+                <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'iconSettings', event)" onmouseenter="showFieldHelp(this, 'iconSettings', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Icon Style" title="Help for Icon Style">?</button>
+              </div>
+            </div>
+            <select id="iconBgStyle" onchange="renderAllMaps()">
+              <option value="cs2-dark" selected>CS2 In-Game Menu Tile (Slate Vignette)</option>
+              <option value="cs2-pedestal">3D Hex Pedestal / Studio Stand</option>
+              <option value="asphalt">Dark City Asphalt Texture</option>
+              <option value="transparent">Transparent Background</option>
+              <option value="blueprint">Cyan Blueprint Grid</option>
+            </select>
+          </div>
+
+          <!-- Overlay Sub-navigation Tabs -->
+          <div class="badge-subtabs" style="margin-top: 12px; flex-wrap: wrap;">
+            <button type="button" class="badge-subtab-btn active" id="badgeSubtabCreator" onclick="switchBadgeSubtab('creator')">
+              <span class="badge-tab-indicator active-dot" id="dotBadge1"></span>
+              <span>⭐ 1. Creator</span>
+            </button>
+            <button type="button" class="badge-subtab-btn" id="badgeSubtabSeries" onclick="switchBadgeSubtab('series')">
+              <span class="badge-tab-indicator active-dot" id="dotBadge2"></span>
+              <span>🎨 2. Series</span>
+            </button>
+            <button type="button" class="badge-subtab-btn" id="badgeSubtabExtra1" onclick="switchBadgeSubtab('extra1')">
+              <span class="badge-tab-indicator" id="dotBadge3"></span>
+              <span>🏷️ 3. Extra 1</span>
+            </button>
+            <button type="button" class="badge-subtab-btn" id="badgeSubtabExtra2" onclick="switchBadgeSubtab('extra2')">
+              <span class="badge-tab-indicator" id="dotBadge4"></span>
+              <span>✨ 4. Extra 2</span>
+            </button>
+            <button type="button" class="badge-subtab-btn" id="badgeSubtabDefaults" onclick="switchBadgeSubtab('defaults')">
+              <span class="badge-tab-indicator" id="dotDefaults"></span>
+              <span>💾 Defaults</span>
+            </button>
+          </div>
+
+          <!-- Style Sync Toolbar across Badges -->
+          <div class="style-sync-top-bar" id="badgeStyleSyncTopBar" style="flex-wrap: wrap; gap: 4px;">
+            <button type="button" class="btn-sync-top-action" onclick="copyBadgeStyle('creator', 'all')" title="Copy Creator colors, gradient & font settings to all overlays">
+              <span>📋 Apply Creator Style to All Badges</span>
+            </button>
+            <button type="button" class="btn-sync-top-action" onclick="copyBadgeStyle('creator', 'series')" title="Copy Creator colors, gradient & font settings to Series">
+              <span>📋 Creator ➔ Series</span>
+            </button>
+            <button type="button" class="btn-sync-top-action action-to-creator" onclick="copyBadgeStyle('series', 'creator')" title="Copy Series colors, gradient & font settings to Creator">
+              <span>📋 Series ➔ Creator</span>
+            </button>
+          </div>
+
+          <!-- SUBPANEL 1: CREATOR BADGE (OVERLAY 1) -->
+          <div class="badge-subpanel active" id="panelBadgeCreator">
+            <label class="checkbox-row" style="margin-top: 0; margin-bottom: 10px;">
+              <input type="checkbox" id="enableBadge1" checked onchange="toggleBadge1Enable(this.checked)">
+              <span style="font-weight: 600; color: var(--text-main);">Enable Creator Logo / Brand Watermark</span>
+            </label>
+
+            <!-- Mode selector: Presets, Custom Text Tag, or Custom Image Upload -->
+            <div class="form-group">
+              <div class="form-label-row">
+                <span style="font-size: 11px; color: var(--text-dim);">Creator Badge Mode:</span>
+              </div>
+              <div class="series-type-selector">
+                <button type="button" class="series-type-btn active" id="btnCreatorModePreset" onclick="setCreatorBadgeMode('preset')">
+                  🎨 Presets
+                </button>
+                <button type="button" class="series-type-btn" id="btnCreatorModeText" onclick="setCreatorBadgeMode('text')">
+                  🏷️ Custom Text
+                </button>
+                <button type="button" class="series-type-btn" id="btnCreatorModeImage" onclick="setCreatorBadgeMode('image')">
+                  📁 Custom Logo
+                </button>
+              </div>
+            </div>
+
+            <!-- Creator Quick Presets View -->
+            <div id="creatorPresetSection" class="form-group" style="margin-top: 8px;">
+              <div class="form-label-row">
+                <span style="font-size: 11px; color: var(--text-dim);">Pick Creator Seal Preset:</span>
+              </div>
+              <div class="preset-pill-grid">
+                <button type="button" class="preset-btn active" id="btnCreatorPresetStar" onclick="applyPresetLogo('star')">⭐ Star</button>
+                <button type="button" class="preset-btn" id="btnCreatorPresetVerified" onclick="applyPresetLogo('verified')">✓ Verified</button>
+                <button type="button" class="preset-btn" id="btnCreatorPresetMod" onclick="applyPresetLogo('mod')">⚡ CS2 Mod</button>
+                <button type="button" class="preset-btn" id="btnCreatorPresetCrown" onclick="applyPresetLogo('crown')">👑 Studio</button>
+                <button type="button" class="preset-btn" id="btnCreatorPresetShield" onclick="applyPresetLogo('shield')">🛡️ Crest</button>
+                <button type="button" class="preset-btn" style="color:#f87171;" onclick="clearDesignerLogo()">✕ None</button>
+                <button type="button" class="preset-btn" id="btnPresetCreatorCustom" onclick="setCreatorBadgeMode('text')" style="grid-column: span 3; border-color: rgba(56, 189, 248, 0.45); color: #38bdf8; background: rgba(56, 189, 248, 0.08); font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 10px;">
+                  <span>✍️ Custom Text Option (Type Author / Studio Name) →</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Creator Custom Text View -->
+            <div id="creatorTextSection" class="form-group" style="display: none; margin-top: 8px;">
+              <div class="form-label-row">
+                <div class="form-label-left">
+                  <span style="font-size: 11px; font-weight: 600; color: var(--text-main);">Creator Monogram / Author Text:</span>
+                  <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'creatorCustomText', event)" onmouseenter="showFieldHelp(this, 'creatorCustomText', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Creator Custom Text" title="Help for Creator Custom Text">?</button>
+                </div>
+                <span class="form-val-badge" id="badge1TextLengthBadge">7 / 20</span>
+              </div>
+              <input type="text" id="badge1TextInput" value="CREATOR" placeholder="e.g. CREATOR, RICHIE, STUDIO 99, MODS" maxlength="20" oninput="onBadge1TextChange()" spellcheck="false" style="font-weight: 600; letter-spacing: 0.5px;">
+              
+              <div style="font-size: 10px; color: var(--text-dim); margin-top: 5px; display: flex; justify-content: space-between; align-items: center;">
+                <span>Quick Author Suggestions:</span>
+                <button type="button" style="background: transparent; border: none; color: #38bdf8; cursor: pointer; padding: 0; font-size: 10px;" onclick="clearCreatorText()">✕ Clear</button>
+              </div>
+              <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;">
+                <button type="button" class="preset-btn" onclick="setBadge1TextPreset('CREATOR')">Creator</button>
+                <button type="button" class="preset-btn" onclick="setBadge1TextPreset('STUDIO')">Studio</button>
+                <button type="button" class="preset-btn" onclick="setBadge1TextPreset('MODS')">Mods</button>
+                <button type="button" class="preset-btn" onclick="setBadge1TextPreset('DEV')">Dev</button>
+                <button type="button" class="preset-btn" onclick="setBadge1TextPreset('AUTHOR')">Author</button>
+                <button type="button" class="preset-btn" onclick="setBadge1TextPreset('DESIGN')">Design</button>
+                <button type="button" class="preset-btn" onclick="setBadge1TextPreset('TEAM')">Team</button>
+                <button type="button" class="preset-btn" onclick="setBadge1TextPreset('OFFICIAL')">Official</button>
+              </div>
+
+              <!-- Sync Style with Series Bar -->
+              <div class="badge-style-sync-bar">
+                <div class="badge-style-sync-label">
+                  <span style="font-weight: 600; color: #a78bfa;">🎨 Series Style:</span>
+                  <span>Match colors &amp; font</span>
+                </div>
+                <div style="display: flex; gap: 4px;">
+                  <button type="button" class="btn-copy-badge-style" onclick="copyBadgeStyle('series', 'creator')" title="Copy colour and font settings from Series to Creator">
+                    <span>📥 Match Series Style</span>
+                  </button>
+                  <button type="button" class="btn-copy-badge-style" onclick="copyBadgeStyle('creator', 'series')" title="Copy current Creator colour and font settings to Series">
+                    <span>📤 Copy to Series</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Color & Gradient Studio Box for Creator -->
+              <div class="typo-controls-box" style="margin-top: 8px;">
+                <div class="form-label-row" style="margin-bottom: 2px;">
+                  <span class="typo-label-small">Badge Colors &amp; Gradient</span>
+                  <span class="form-val-badge" id="creatorColorModeBadge">Themes</span>
+                </div>
+
+                <!-- Color Mode Switcher -->
+                <div class="color-mode-nav">
+                  <button type="button" class="color-mode-btn active" id="btnCreatorColorTheme" onclick="setCreatorColorMode('theme')">🎨 Themes</button>
+                  <button type="button" class="color-mode-btn" id="btnCreatorColorGradient" onclick="setCreatorColorMode('gradient')">🌈 Gradient</button>
+                  <button type="button" class="color-mode-btn" id="btnCreatorColorSolid" onclick="setCreatorColorMode('solid')">🎯 Solid</button>
+                </div>
+
+                <!-- Themes Panel -->
+                <div id="creatorColorThemePanel">
+                  <div class="color-theme-grid" id="creatorColorThemes">
+                    <button type="button" class="theme-chip active" id="themeBtn1_cyan" onclick="setCreatorColorTheme('cyan')" title="Electric Cyan">
+                      <span class="theme-dot" style="background: #38bdf8;"></span>
+                      <span>Cyan</span>
+                    </button>
+                    <button type="button" class="theme-chip" id="themeBtn1_purple" onclick="setCreatorColorTheme('purple')" title="Neon Violet">
+                      <span class="theme-dot" style="background: #c084fc;"></span>
+                      <span>Violet</span>
+                    </button>
+                    <button type="button" class="theme-chip" id="themeBtn1_emerald" onclick="setCreatorColorTheme('emerald')" title="Emerald Transit">
+                      <span class="theme-dot" style="background: #34d399;"></span>
+                      <span>Emerald</span>
+                    </button>
+                    <button type="button" class="theme-chip" id="themeBtn1_amber" onclick="setCreatorColorTheme('amber')" title="Amber Caution">
+                      <span class="theme-dot" style="background: #fbbf24;"></span>
+                      <span>Amber</span>
+                    </button>
+                    <button type="button" class="theme-chip" id="themeBtn1_crimson" onclick="setCreatorColorTheme('crimson')" title="Crimson Red">
+                      <span class="theme-dot" style="background: #f43f5e;"></span>
+                      <span>Crimson</span>
+                    </button>
+                    <button type="button" class="theme-chip" id="themeBtn1_slate" onclick="setCreatorColorTheme('slate')" title="CS2 Slate">
+                      <span class="theme-dot" style="background: #94a3b8;"></span>
+                      <span>Slate</span>
+                    </button>
+                    <button type="button" class="theme-chip" id="themeBtn1_orange" onclick="setCreatorColorTheme('orange')" title="Sunset Orange">
+                      <span class="theme-dot" style="background: #fb923c;"></span>
+                      <span>Orange</span>
+                    </button>
+                    <button type="button" class="theme-chip" id="themeBtn1_gold" onclick="setCreatorColorTheme('gold')" title="VIP Gold">
+                      <span class="theme-dot" style="background: #fde047;"></span>
+                      <span>Gold</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Custom Gradient Panel -->
+                <div id="creatorCustomGradPanel" style="display: none;">
+                  <div class="gradient-preview-bar" id="creatorGradPreview" style="background: linear-gradient(135deg, #091524, #0e243d);"></div>
+                  
+                  <div style="font-size: 10px; color: var(--text-dim); margin-top: 2px;">Quick Gradient Presets:</div>
+                  <div class="preset-grad-grid">
+                    <button type="button" class="preset-grad-btn" onclick="applyCreatorGradPreset('#071a2e', '#0d324d', '#38bdf8', '#ffffff')">
+                      <span class="preset-grad-swatch" style="background: linear-gradient(135deg, #071a2e, #0d324d);"></span>Neon
+                    </button>
+                    <button type="button" class="preset-grad-btn" onclick="applyCreatorGradPreset('#151326', '#251336', '#c084fc', '#ffffff')">
+                      <span class="preset-grad-swatch" style="background: linear-gradient(135deg, #151326, #251336);"></span>Violet
+                    </button>
+                    <button type="button" class="preset-grad-btn" onclick="applyCreatorGradPreset('#06241a', '#0d3d2c', '#34d399', '#ffffff')">
+                      <span class="preset-grad-swatch" style="background: linear-gradient(135deg, #06241a, #0d3d2c);"></span>Forest
+                    </button>
+                    <button type="button" class="preset-grad-btn" onclick="applyCreatorGradPreset('#241806', '#3d2a0d', '#fbbf24', '#ffffff')">
+                      <span class="preset-grad-swatch" style="background: linear-gradient(135deg, #241806, #3d2a0d);"></span>Sunset
+                    </button>
+                    <button type="button" class="preset-grad-btn" onclick="applyCreatorGradPreset('#290913', '#451020', '#f43f5e', '#ffffff')">
+                      <span class="preset-grad-swatch" style="background: linear-gradient(135deg, #290913, #451020);"></span>Ruby
+                    </button>
+                    <button type="button" class="preset-grad-btn" onclick="applyCreatorGradPreset('#0a0f18', '#1e293b', '#94a3b8', '#ffffff')">
+                      <span class="preset-grad-swatch" style="background: linear-gradient(135deg, #0a0f18, #1e293b);"></span>Stealth
+                    </button>
+                    <button type="button" class="preset-grad-btn" onclick="applyCreatorGradPreset('#2b0638', '#09253d', '#ec4899', '#fdf2f8')">
+                      <span class="preset-grad-swatch" style="background: linear-gradient(135deg, #2b0638, #09253d);"></span>Cyber
+                    </button>
+                    <button type="button" class="preset-grad-btn" onclick="applyCreatorGradPreset('#2a2007', '#47360c', '#fde047', '#ffffff')">
+                      <span class="preset-grad-swatch" style="background: linear-gradient(135deg, #2a2007, #47360c);"></span>Gold
+                    </button>
+                  </div>
+
+                  <div class="grad-dir-selector">
+                    <span style="font-size: 10px; color: var(--text-dim); margin-right: 2px;">Angle:</span>
+                    <button type="button" class="grad-dir-btn active" id="btnCreatorGradDir_diag" onclick="setCreatorGradDirection('diagonal')">⤡ Diagonal</button>
+                    <button type="button" class="grad-dir-btn" id="btnCreatorGradDir_horiz" onclick="setCreatorGradDirection('horizontal')">⇄ Horizontal</button>
+                    <button type="button" class="grad-dir-btn" id="btnCreatorGradDir_vert" onclick="setCreatorGradDirection('vertical')">⇅ Vertical</button>
+                  </div>
+
+                  <div class="color-picker-grid">
+                    <div class="color-picker-row">
+                      <span class="color-picker-label">Color 1 (Start):</span>
+                      <div class="color-picker-wrap">
+                        <input type="color" id="creatorColor1" class="color-picker-input" value="#091524" oninput="onCreatorCustomColorInput()">
+                        <span class="color-hex-text" id="creatorColor1Hex">#091524</span>
+                      </div>
+                    </div>
+                    <div class="color-picker-row">
+                      <span class="color-picker-label">Color 2 (End):</span>
+                      <div class="color-picker-wrap">
+                        <input type="color" id="creatorColor2" class="color-picker-input" value="#0e243d" oninput="onCreatorCustomColorInput()">
+                        <span class="color-hex-text" id="creatorColor2Hex">#0e243d</span>
+                      </div>
+                    </div>
+                    <div class="color-picker-row">
+                      <span class="color-picker-label">Border Stroke:</span>
+                      <div class="color-picker-wrap">
+                        <input type="color" id="creatorStrokeColor" class="color-picker-input" value="#00a8ff" oninput="onCreatorCustomColorInput()">
+                        <span class="color-hex-text" id="creatorStrokeHex">#00a8ff</span>
+                      </div>
+                    </div>
+                    <div class="color-picker-row">
+                      <span class="color-picker-label">Text Color:</span>
+                      <div class="color-picker-wrap">
+                        <input type="color" id="creatorTextColor" class="color-picker-input" value="#ffffff" oninput="onCreatorCustomColorInput()">
+                        <span class="color-hex-text" id="creatorTextColorHex">#ffffff</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Custom Solid Panel -->
+                <div id="creatorCustomSolidPanel" style="display: none;">
+                  <div class="color-picker-grid">
+                    <div class="color-picker-row">
+                      <span class="color-picker-label">Background:</span>
+                      <div class="color-picker-wrap">
+                        <input type="color" id="creatorSolidBg" class="color-picker-input" value="#091524" oninput="onCreatorSolidColorInput()">
+                        <span class="color-hex-text" id="creatorSolidBgHex">#091524</span>
+                      </div>
+                    </div>
+                    <div class="color-picker-row">
+                      <span class="color-picker-label">Border Stroke:</span>
+                      <div class="color-picker-wrap">
+                        <input type="color" id="creatorSolidStroke" class="color-picker-input" value="#00a8ff" oninput="onCreatorSolidColorInput()">
+                        <span class="color-hex-text" id="creatorSolidStrokeHex">#00a8ff</span>
+                      </div>
+                    </div>
+                    <div class="color-picker-row" style="grid-column: span 2;">
+                      <span class="color-picker-label">Text Color:</span>
+                      <div class="color-picker-wrap">
+                        <input type="color" id="creatorSolidText" class="color-picker-input" value="#ffffff" oninput="onCreatorSolidColorInput()">
+                        <span class="color-hex-text" id="creatorSolidTextHex">#ffffff</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Typography Settings Box -->
+              <div class="typo-controls-box">
+                <div class="form-label-row" style="margin-bottom: 2px;">
+                  <span class="typo-label-small">Typography & Google Fonts</span>
+                  <button type="button" class="google-font-pill-btn" onclick="toggleGoogleFontInput('creator')">+ Google Font</button>
+                </div>
+                
+                <div class="google-font-input-box" id="creatorGoogleFontRow">
+                  <div class="google-font-row">
+                    <input type="text" id="creatorGoogleFontInput" class="google-font-text-input" placeholder="Google Font name (e.g. Audiowide, Fredoka, Lobster)" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomGoogleFontFromInput('creator');}">
+                    <button type="button" class="google-font-load-btn" onclick="addCustomGoogleFontFromInput('creator')">Load Font</button>
+                  </div>
+                  <div style="font-size: 10px; color: var(--text-dim); margin-top: 4px;">Type any font from Google Fonts (fonts.google.com) to load live.</div>
+                </div>
+
+                <div class="form-group" style="margin: 0;">
+                  <select id="badge1FontFamily" onchange="onBadge1FontChange()">
+                    <!-- Populated dynamically via JS -->
+                  </select>
+                </div>
+
+                <div class="typo-row" style="justify-content: space-between;">
+                  <div style="display: flex; gap: 6px; align-items: center;">
+                    <button type="button" class="typo-toggle-btn active" id="btnBadge1Bold" title="Toggle Bold" onclick="toggleBadge1Bold()">
+                      <strong>B</strong>
+                    </button>
+                    <button type="button" class="typo-toggle-btn" id="btnBadge1Italic" title="Toggle Italic" onclick="toggleBadge1Italic()">
+                      <em>I</em>
+                    </button>
+                    <button type="button" class="typo-toggle-btn" id="btnBadge1LetterSpacing" title="Toggle Wide Letter Spacing" onclick="toggleBadge1LetterSpacing()">
+                      <span style="font-size: 10px; letter-spacing: 2px;">A-V</span>
+                    </button>
+                  </div>
+
+                  <div style="display: flex; align-items: center; gap: 8px; flex: 1; margin-left: 10px;">
+                    <span style="font-size: 11px; color: var(--text-muted); white-space: nowrap;">Point Size:</span>
+                    <input type="range" id="badge1PtSize" min="8" max="32" step="1" value="13" style="flex: 1;" oninput="onBadge1PtSizeChange()">
+                    <span class="form-val-badge" id="badge1PtSizeVal" style="min-width: 42px; text-align: center;">13 pt</span>
+                  </div>
+                </div>
+
+                <!-- Text Gradient Section for Creator -->
+                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed rgba(255,255,255,0.08);">
+                  <div class="form-label-row" style="margin-bottom: 4px;">
+                    <span class="typo-label-small" style="display: flex; align-items: center; gap: 5px;">
+                      <span>✨ Text Gradient</span>
+                    </span>
+                    <label class="checkbox-row" style="margin: 0; font-size: 11px; cursor: pointer;">
+                      <input type="checkbox" id="badge1TextGradEnable" onchange="toggleBadge1TextGrad(this.checked)">
+                      <span style="font-size: 10.5px; color: #38bdf8; font-weight: 600;">Enable Gradient Text</span>
+                    </label>
+                  </div>
+                  <div id="badge1TextGradControls" style="display: none; margin-top: 6px;">
+                    <div class="color-picker-grid" style="grid-template-columns: 1fr 1fr; gap: 6px;">
+                      <div class="color-picker-row">
+                        <span class="color-picker-label" style="font-size: 9.5px;">Top / Start:</span>
+                        <div class="color-picker-wrap">
+                          <input type="color" id="badge1TextGrad1" class="color-picker-input" value="#ffffff" oninput="onBadge1TextGradInput()">
+                          <span class="color-hex-text" id="badge1TextGrad1Hex" style="font-size: 9px;">#ffffff</span>
+                        </div>
+                      </div>
+                      <div class="color-picker-row">
+                        <span class="color-picker-label" style="font-size: 9.5px;">Bottom / End:</span>
+                        <div class="color-picker-wrap">
+                          <input type="color" id="badge1TextGrad2" class="color-picker-input" value="#38bdf8" oninput="onBadge1TextGradInput()">
+                          <span class="color-hex-text" id="badge1TextGrad2Hex" style="font-size: 9px;">#38bdf8</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div style="display: flex; gap: 4px; align-items: center; justify-content: space-between; margin-top: 6px;">
+                      <div style="display: flex; gap: 4px; align-items: center;">
+                        <span style="font-size: 9.5px; color: var(--text-dim);">Angle:</span>
+                        <button type="button" class="grad-dir-btn active" id="btnBadge1TextDir_vert" style="padding: 2px 7px; font-size: 9.5px;" onclick="setBadge1TextGradDir('vertical')">⇅ Vert</button>
+                        <button type="button" class="grad-dir-btn" id="btnBadge1TextDir_horiz" style="padding: 2px 7px; font-size: 9.5px;" onclick="setBadge1TextGradDir('horizontal')">⇄ Horiz</button>
+                      </div>
+                      <div style="display: flex; gap: 3px;">
+                        <button type="button" class="preset-btn" style="font-size: 9px; padding: 1px 5px;" onclick="applyBadge1TextGradPreset('#ffffff', '#38bdf8')">Cyan</button>
+                        <button type="button" class="preset-btn" style="font-size: 9px; padding: 1px 5px;" onclick="applyBadge1TextGradPreset('#fff3bf', '#f59e0b')">Gold</button>
+                        <button type="button" class="preset-btn" style="font-size: 9px; padding: 1px 5px;" onclick="applyBadge1TextGradPreset('#ffffff', '#94a3b8')">Silver</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Back to presets shortcut -->
+              <div style="margin-top: 8px;">
+                <button type="button" class="btn-secondary" style="width: 100%; font-size: 11px; padding: 6px; text-align: center;" onclick="setCreatorBadgeMode('preset')">
+                  ← Switch back to Preset Creator Badges
+                </button>
+              </div>
+            </div>
+
+            <!-- Creator Custom Logo Image Upload View -->
+            <div id="creatorImageSection" class="form-group" style="display: none; margin-top: 8px;">
+              <div class="form-label-row">
+                <div class="form-label-left">
+                  <span>Custom Creator Logo</span>
+                  <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'iconSettings', event)" onmouseenter="showFieldHelp(this, 'iconSettings', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Creator Logo" title="Help for Creator Logo">?</button>
+                </div>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <input type="file" id="designerLogoInput" accept="image/png, image/svg+xml, image/jpeg" style="display:none;" onchange="handleDesignerLogoSelect(event)">
+                <button class="btn-secondary" style="flex: 1;" onclick="document.getElementById('designerLogoInput').click()">
+                  <span id="logoUploadBtnText">Upload Creator Logo...</span>
+                </button>
+                <button class="btn-secondary" id="btnClearLogo" style="padding: 7px 10px; display: none;" onclick="clearDesignerLogo()">✕</button>
+              </div>
+              <div style="font-size: 10px; color: var(--text-dim); margin-top: 4px;">
+                PNG or SVG author logo overlaid on icon corner
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 10px;">
+              <div class="form-label-row">
+                <div class="form-label-left">
+                  <span>Badge Position</span>
+                </div>
+              </div>
+              <select id="logoPosition" onchange="onCreatorPositionChange()">
+                <option value="custom" selected>📍 Free Position (Custom X / Y Anywhere)</option>
+                <option value="bottom-right">Bottom-Right Corner</option>
+                <option value="bottom-center">Bottom-Center</option>
+                <option value="bottom-left">Bottom-Left Corner</option>
+                <option value="top-right">Top-Right Corner</option>
+                <option value="top-center">Top-Center</option>
+                <option value="top-left">Top-Left Corner</option>
+                <option value="center">Center</option>
+              </select>
+
+              <!-- Free Coordinates Controls for Creator -->
+              <div id="creatorCustomPosContainer" style="display: block; background: rgba(9, 21, 36, 0.6); border: 1px dashed rgba(56, 189, 248, 0.35); border-radius: 6px; padding: 10px; margin-top: 8px;">
+                <div style="font-size: 11px; font-weight: 700; color: #38bdf8; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+                  <span>📍 Free Coordinate Positioning</span>
+                  <span style="font-size: 10px; color: var(--text-dim); font-weight: normal;">(0% = Left/Top, 100% = Right/Bottom)</span>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 8px;">
+                  <div class="form-label-row">
+                    <span style="font-size: 10.5px; color: var(--text-muted);">Horizontal Position (X):</span>
+                    <span class="form-val-badge" id="creatorPosXVal">85%</span>
+                  </div>
+                  <div class="slider-container">
+                    <input type="range" id="creatorPosX" min="0" max="100" step="1" value="85" oninput="onCreatorCoordChange()">
+                  </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 6px;">
+                  <div class="form-label-row">
+                    <span style="font-size: 10.5px; color: var(--text-muted);">Vertical Position (Y):</span>
+                    <span class="form-val-badge" id="creatorPosYVal">85%</span>
+                  </div>
+                  <div class="slider-container">
+                    <input type="range" id="creatorPosY" min="0" max="100" step="1" value="85" oninput="onCreatorCoordChange()">
+                  </div>
+                </div>
+
+                <div style="display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px;">
+                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapCreatorCoord(50, 50)">Center (50, 50)</button>
+                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapCreatorCoord(15, 15)">Top-Left</button>
+                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapCreatorCoord(85, 15)">Top-Right</button>
+                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapCreatorCoord(15, 85)">Bottom-Left</button>
+                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapCreatorCoord(85, 85)">Bottom-Right (Default)</button>
+                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapCreatorCoord(50, 15)">Top Mid</button>
+                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapCreatorCoord(50, 85)">Bottom Mid</button>
+                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapCreatorCoord(15, 50)">Left Mid</button>
+                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapCreatorCoord(85, 50)">Right Mid</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 10px;">
+              <div class="form-label-row">
+                <div class="form-label-left">
+                  <span>Badge Frame Style</span>
+                </div>
+              </div>
+              <select id="badge1Frame" onchange="renderAllMaps()">
+                <option value="circle" selected>Circular Seal (Dark Slate Disc)</option>
+                <option value="rounded">Squircle (Rounded Box)</option>
+                <option value="pill">Sleek Pill / Tag Ribbon</option>
+                <option value="raw">Clean / Raw (Transparent - No Disc)</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="margin-top: 10px;">
+              <div class="form-label-row">
+                <div class="form-label-left">
+                  <span>Badge Scale</span>
+                </div>
+                <span class="form-val-badge" id="badgeScaleVal">26%</span>
+              </div>
+              <div class="slider-container">
+                <input type="range" id="badgeScale" min="15" max="50" step="1" value="26" oninput="onIconBadgeScaleChange()">
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 10px;">
+              <div class="form-label-row">
+                <div class="form-label-left">
+                  <span>Badge Padding (Edge Inset)</span>
+                  <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'badgeEdgePadding', event)" onmouseenter="showFieldHelp(this, 'badgeEdgePadding', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Badge Padding" title="Help for Badge Padding">?</button>
+                </div>
+                <span class="form-val-badge" id="badge1PaddingVal">12 px</span>
+              </div>
+              <div class="slider-container">
+                <input type="range" id="badge1Padding" min="0" max="36" step="1" value="12" oninput="onBadge1PaddingChange()">
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 10px;">
+              <div class="form-label-row">
+                <div class="form-label-left">
+                  <span>Inner Ribbon Padding</span>
+                  <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'badgeInnerPadding', event)" onmouseenter="showFieldHelp(this, 'badgeInnerPadding', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Inner Ribbon Padding" title="Help for Inner Ribbon Padding">?</button>
+                </div>
+                <span class="form-val-badge" id="badge1InnerPaddingVal">8 px</span>
+              </div>
+              <div class="slider-container">
+                <input type="range" id="badge1InnerPadding" min="2" max="24" step="1" value="8" oninput="onBadge1InnerPaddingChange()">
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 10px;">
+              <div class="form-label-row">
+                <div class="form-label-left">
+                  <span>Badge Opacity</span>
+                </div>
+                <span class="form-val-badge" id="badgeOpacityVal">95%</span>
+              </div>
+              <div class="slider-container">
+                <input type="range" id="badgeOpacity" min="10" max="100" step="5" value="95" oninput="onIconBadgeOpacityChange()">
+              </div>
+            </div>
+          </div>
+
+          <!-- SUBPANEL 2: SERIES BADGE (OVERLAY 2) -->
+          <div class="badge-subpanel" id="panelBadgeSeries">
+            <label class="checkbox-row" style="margin-top: 0; margin-bottom: 10px;">
+              <input type="checkbox" id="enableBadge2" checked onchange="toggleBadge2Enable(this.checked)">
+              <span style="font-weight: 600; color: var(--text-main);">Enable Series / Pack Badge (e.g. Graffiti, Posters)</span>
+            </label>
+
+            <!-- Mode selector: Presets, Custom Text, or Custom Image Upload -->
+            <div class="form-group">
+              <div class="form-label-row">
+                <span style="font-size: 11px; color: var(--text-dim);">Series Badge Mode:</span>
+              </div>
+              <div class="series-type-selector">
+                <button type="button" class="series-type-btn active" id="btnSeriesModePreset" onclick="setSeriesBadgeMode('preset')">
+                  🎨 Presets
+                </button>
+                <button type="button" class="series-type-btn" id="btnSeriesModeText" onclick="setSeriesBadgeMode('text')">
+                  ✍️ Custom Text
+                </button>
+                <button type="button" class="series-type-btn" id="btnSeriesModeImage" onclick="setSeriesBadgeMode('image')">
+                  📁 Custom Logo
+                </button>
+              </div>
+            </div>
+
+            <!-- Series Quick Presets View -->
+            <div id="seriesPresetSection" class="form-group" style="margin-top: 8px;">
+              <div class="form-label-row">
+                <span style="font-size: 11px; color: var(--text-dim);">Pick Asset Series Preset:</span>
+              </div>
+              <div class="preset-pill-grid">
+                <button type="button" class="preset-btn" id="btnPresetGraffiti" onclick="applySeriesPreset('graffiti')">🎨 Graffiti</button>
+                <button type="button" class="preset-btn" id="btnPresetPoster" onclick="applySeriesPreset('poster')">🖼️ Posters</button>
+                <button type="button" class="preset-btn" id="btnPresetTransit" onclick="applySeriesPreset('transit')">🛣️ Transit</button>
+                <button type="button" class="preset-btn" id="btnPresetProps" onclick="applySeriesPreset('props')">🏙️ Props</button>
+                <button type="button" class="preset-btn" id="btnPresetHazard" onclick="applySeriesPreset('hazard')">⚠️ Hazard</button>
+                <button type="button" class="preset-btn" id="btnPresetNature" onclick="applySeriesPreset('nature')">🌿 Nature</button>
+                <button type="button" class="preset-btn" id="btnPresetSeriesCustom" onclick="setSeriesBadgeMode('text')" style="grid-column: span 3; border-color: rgba(192, 132, 252, 0.45); color: #d8b4fe; background: rgba(192, 132, 252, 0.08); font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 10px;">
+                  <span>✍️ Custom Text Option (Type Any Pack / Series Name) →</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Custom Text Tag View -->
+            <div id="seriesTextSection" class="form-group" style="display: none; margin-top: 8px;">
+              <div class="form-label-row">
+                <div class="form-label-left">
+                  <span style="font-size: 11px; font-weight: 600; color: var(--text-main);">Custom Series Text / Pack Name:</span>
+                  <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'seriesCustomText', event)" onmouseenter="showFieldHelp(this, 'seriesCustomText', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Series Custom Text" title="Help for Series Custom Text">?</button>
+                </div>
+                <span class="form-val-badge" id="seriesTextLengthBadge">8 / 20</span>
+              </div>
+              <input type="text" id="seriesTextInput" value="GRAFFITI" placeholder="e.g. POSTERS, UK ROADS, METRO, PACK 01" maxlength="20" oninput="onSeriesTextChange()" spellcheck="false" style="font-weight: 600; letter-spacing: 0.5px;">
+              
+              <div style="font-size: 10px; color: var(--text-dim); margin-top: 5px; display: flex; justify-content: space-between; align-items: center;">
+                <span>Quick Pack Suggestions:</span>
+                <button type="button" style="background: transparent; border: none; color: #a78bfa; cursor: pointer; padding: 0; font-size: 10px;" onclick="clearSeriesText()">✕ Clear</button>
+              </div>
+              <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;">
+                <button type="button" class="preset-btn" onclick="setSeriesTextPreset('POSTERS')">Posters</button>
+                <button type="button" class="preset-btn" onclick="setSeriesTextPreset('GRAFFITI')">Graffiti</button>
+                <button type="button" class="preset-btn" onclick="setSeriesTextPreset('ROADS')">Roads</button>
+                <button type="button" class="preset-btn" onclick="setSeriesTextPreset('MARKINGS')">Markings</button>
+                <button type="button" class="preset-btn" onclick="setSeriesTextPreset('SERIES 01')">Series 01</button>
+                <button type="button" class="preset-btn" onclick="setSeriesTextPreset('SIGNS')">Signs</button>
+                <button type="button" class="preset-btn" onclick="setSeriesTextPreset('TRANSIT')">Transit</button>
+                <button type="button" class="preset-btn" onclick="setSeriesTextPreset('PACK 01')">Pack 01</button>
+              </div>
+
+              <!-- Sync Style with Creator Bar -->
+              <div class="badge-style-sync-bar">
+                <div class="badge-style-sync-label">
+                  <span style="font-weight: 600; color: #38bdf8;">⭐ Creator Style:</span>
+                  <span>Match colors &amp; font</span>
+                </div>
+                <div style="display: flex; gap: 4px;">
+                  <button type="button" class="btn-copy-badge-style btn-copy-series" onclick="copyBadgeStyle('creator', 'series')" title="Copy colour and font settings from Creator to Series">
+                    <span>📥 Match Creator Style</span>
+                  </button>
+                  <button type="button" class="btn-copy-badge-style btn-copy-series" onclick="copyBadgeStyle('series', 'creator')" title="Copy current Series colour and font settings to Creator">
+                    <span>📤 Copy to Creator</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Color & Gradient Studio Box for Series -->
+              <div class="typo-controls-box" style="margin-top: 8px;">
+                <div class="form-label-row" style="margin-bottom: 2px;">
+                  <span class="typo-label-small">Badge Colors &amp; Gradient</span>
+                  <span class="form-val-badge" id="seriesColorModeBadge">Themes</span>
+                </div>
+
+                <!-- Color Mode Switcher -->
+                <div class="color-mode-nav">
+                  <button type="button" class="color-mode-btn active" id="btnSeriesColorTheme" onclick="setSeriesColorMode('theme')">🎨 Themes</button>
+                  <button type="button" class="color-mode-btn" id="btnSeriesColorGradient" onclick="setSeriesColorMode('gradient')">🌈 Gradient</button>
+                  <button type="button" class="color-mode-btn" id="btnSeriesColorSolid" onclick="setSeriesColorMode('solid')">🎯 Solid</button>
+                </div>
+
+                <!-- Themes Panel -->
+                <div id="seriesColorThemePanel">
+                  <div class="color-theme-grid" id="seriesColorThemes">
+                    <button type="button" class="theme-chip active" id="themeBtn_purple" onclick="setSeriesColorTheme('purple')" title="Neon Violet">
+                      <span class="theme-dot" style="background: #c084fc;"></span>
+                      <span>Violet</span>
+                    </button>
+                    <button type="button" class="theme-chip" id="themeBtn_cyan" onclick="setSeriesColorTheme('cyan')" title="Electric Cyan">
+                      <span class="theme-dot" style="background: #38bdf8;"></span>
+                      <span>Cyan</span>
+                    </button>
+                    <button type="button" class="theme-chip" id="themeBtn_emerald" onclick="setSeriesColorTheme('emerald')" title="Emerald Transit">
+                      <span class="theme-dot" style="background: #34d399;"></span>
+                      <span>Emerald</span>
+                    </button>
+                    <button type="button" class="theme-chip" id="themeBtn_amber" onclick="setSeriesColorTheme('amber')" title="Amber Caution">
+                      <span class="theme-dot" style="background: #fbbf24;"></span>
+                      <span>Amber</span>
+                    </button>
+                    <button type="button" class="theme-chip" id="themeBtn_crimson" onclick="setSeriesColorTheme('crimson')" title="Crimson Red">
+                      <span class="theme-dot" style="background: #f43f5e;"></span>
+                      <span>Crimson</span>
+                    </button>
+                    <button type="button" class="theme-chip" id="themeBtn_slate" onclick="setSeriesColorTheme('slate')" title="CS2 Slate">
+                      <span class="theme-dot" style="background: #94a3b8;"></span>
+                      <span>Slate</span>
+                    </button>
+                    <button type="button" class="theme-chip" id="themeBtn_orange" onclick="setSeriesColorTheme('orange')" title="Sunset Orange">
+                      <span class="theme-dot" style="background: #fb923c;"></span>
+                      <span>Orange</span>
+                    </button>
+                    <button type="button" class="theme-chip" id="themeBtn_gold" onclick="setSeriesColorTheme('gold')" title="VIP Gold">
+                      <span class="theme-dot" style="background: #fde047;"></span>
+                      <span>Gold</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Custom Gradient Panel -->
+                <div id="seriesCustomGradPanel" style="display: none;">
+                  <div class="gradient-preview-bar" id="seriesGradPreview" style="background: linear-gradient(135deg, #151326, #251336);"></div>
+                  
+                  <div style="font-size: 10px; color: var(--text-dim); margin-top: 2px;">Quick Gradient Presets:</div>
+                  <div class="preset-grad-grid">
+                    <button type="button" class="preset-grad-btn" onclick="applySeriesGradPreset('#151326', '#251336', '#c084fc', '#ffffff')">
+                      <span class="preset-grad-swatch" style="background: linear-gradient(135deg, #151326, #251336);"></span>Violet
+                    </button>
+                    <button type="button" class="preset-grad-btn" onclick="applySeriesGradPreset('#071a2e', '#0d324d', '#38bdf8', '#ffffff')">
+                      <span class="preset-grad-swatch" style="background: linear-gradient(135deg, #071a2e, #0d324d);"></span>Neon
+                    </button>
+                    <button type="button" class="preset-grad-btn" onclick="applySeriesGradPreset('#06241a', '#0d3d2c', '#34d399', '#ffffff')">
+                      <span class="preset-grad-swatch" style="background: linear-gradient(135deg, #06241a, #0d3d2c);"></span>Forest
+                    </button>
+                    <button type="button" class="preset-grad-btn" onclick="applySeriesGradPreset('#241806', '#3d2a0d', '#fbbf24', '#ffffff')">
+                      <span class="preset-grad-swatch" style="background: linear-gradient(135deg, #241806, #3d2a0d);"></span>Sunset
+                    </button>
+                    <button type="button" class="preset-grad-btn" onclick="applySeriesGradPreset('#290913', '#451020', '#f43f5e', '#ffffff')">
+                      <span class="preset-grad-swatch" style="background: linear-gradient(135deg, #290913, #451020);"></span>Ruby
+                    </button>
+                    <button type="button" class="preset-grad-btn" onclick="applySeriesGradPreset('#0a0f18', '#1e293b', '#94a3b8', '#ffffff')">
+                      <span class="preset-grad-swatch" style="background: linear-gradient(135deg, #0a0f18, #1e293b);"></span>Stealth
+                    </button>
+                    <button type="button" class="preset-grad-btn" onclick="applySeriesGradPreset('#2b0638', '#09253d', '#ec4899', '#fdf2f8')">
+                      <span class="preset-grad-swatch" style="background: linear-gradient(135deg, #2b0638, #09253d);"></span>Cyber
+                    </button>
+                    <button type="button" class="preset-grad-btn" onclick="applySeriesGradPreset('#2a2007', '#47360c', '#fde047', '#ffffff')">
+                      <span class="preset-grad-swatch" style="background: linear-gradient(135deg, #2a2007, #47360c);"></span>Gold
+                    </button>
+                  </div>
+
+                  <div class="grad-dir-selector">
+                    <span style="font-size: 10px; color: var(--text-dim); margin-right: 2px;">Angle:</span>
+                    <button type="button" class="grad-dir-btn active" id="btnSeriesGradDir_diag" onclick="setSeriesGradDirection('diagonal')">⤡ Diagonal</button>
+                    <button type="button" class="grad-dir-btn" id="btnSeriesGradDir_horiz" onclick="setSeriesGradDirection('horizontal')">⇄ Horizontal</button>
+                    <button type="button" class="grad-dir-btn" id="btnSeriesGradDir_vert" onclick="setSeriesGradDirection('vertical')">⇅ Vertical</button>
+                  </div>
+
+                  <div class="color-picker-grid">
+                    <div class="color-picker-row">
+                      <span class="color-picker-label">Color 1 (Start):</span>
+                      <div class="color-picker-wrap">
+                        <input type="color" id="seriesColor1" class="color-picker-input" value="#151326" oninput="onSeriesCustomColorInput()">
+                        <span class="color-hex-text" id="seriesColor1Hex">#151326</span>
+                      </div>
+                    </div>
+                    <div class="color-picker-row">
+                      <span class="color-picker-label">Color 2 (End):</span>
+                      <div class="color-picker-wrap">
+                        <input type="color" id="seriesColor2" class="color-picker-input" value="#251336" oninput="onSeriesCustomColorInput()">
+                        <span class="color-hex-text" id="seriesColor2Hex">#251336</span>
+                      </div>
+                    </div>
+                    <div class="color-picker-row">
+                      <span class="color-picker-label">Border Stroke:</span>
+                      <div class="color-picker-wrap">
+                        <input type="color" id="seriesStrokeColor" class="color-picker-input" value="#c084fc" oninput="onSeriesCustomColorInput()">
+                        <span class="color-hex-text" id="seriesStrokeHex">#c084fc</span>
+                      </div>
+                    </div>
+                    <div class="color-picker-row">
+                      <span class="color-picker-label">Text Color:</span>
+                      <div class="color-picker-wrap">
+                        <input type="color" id="seriesTextColor" class="color-picker-input" value="#ffffff" oninput="onSeriesCustomColorInput()">
+                        <span class="color-hex-text" id="seriesTextColorHex">#ffffff</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Custom Solid Panel -->
+                <div id="seriesCustomSolidPanel" style="display: none;">
+                  <div class="color-picker-grid">
+                    <div class="color-picker-row">
+                      <span class="color-picker-label">Background:</span>
+                      <div class="color-picker-wrap">
+                        <input type="color" id="seriesSolidBg" class="color-picker-input" value="#151326" oninput="onSeriesSolidColorInput()">
+                        <span class="color-hex-text" id="seriesSolidBgHex">#151326</span>
+                      </div>
+                    </div>
+                    <div class="color-picker-row">
+                      <span class="color-picker-label">Border Stroke:</span>
+                      <div class="color-picker-wrap">
+                        <input type="color" id="seriesSolidStroke" class="color-picker-input" value="#c084fc" oninput="onSeriesSolidColorInput()">
+                        <span class="color-hex-text" id="seriesSolidStrokeHex">#c084fc</span>
+                      </div>
+                    </div>
+                    <div class="color-picker-row" style="grid-column: span 2;">
+                      <span class="color-picker-label">Text Color:</span>
+                      <div class="color-picker-wrap">
+                        <input type="color" id="seriesSolidText" class="color-picker-input" value="#ffffff" oninput="onSeriesSolidColorInput()">
+                        <span class="color-hex-text" id="seriesSolidTextHex">#ffffff</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Typography Settings Box -->
+              <div class="typo-controls-box">
+                <div class="form-label-row" style="margin-bottom: 2px;">
+                  <span class="typo-label-small">Typography & Google Fonts</span>
+                  <button type="button" class="google-font-pill-btn" onclick="toggleGoogleFontInput('series')">+ Google Font</button>
+                </div>
+
+                <div class="google-font-input-box" id="seriesGoogleFontRow">
+                  <div class="google-font-row">
+                    <input type="text" id="seriesGoogleFontInput" class="google-font-text-input" placeholder="Google Font name (e.g. Audiowide, Fredoka, Lobster)" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomGoogleFontFromInput('series');}">
+                    <button type="button" class="google-font-load-btn" onclick="addCustomGoogleFontFromInput('series')">Load Font</button>
+                  </div>
+                  <div style="font-size: 10px; color: var(--text-dim); margin-top: 4px;">Type any font from Google Fonts (fonts.google.com) to load live.</div>
+                </div>
+
+                <div class="form-group" style="margin: 0;">
+                  <select id="seriesFontFamily" onchange="onSeriesFontChange()">
+                    <!-- Populated dynamically via JS -->
+                  </select>
+                </div>
+
+                <div class="typo-row" style="justify-content: space-between;">
+                  <div style="display: flex; gap: 6px; align-items: center;">
+                    <button type="button" class="typo-toggle-btn active" id="btnSeriesBold" title="Toggle Bold" onclick="toggleSeriesBold()">
+                      <strong>B</strong>
+                    </button>
+                    <button type="button" class="typo-toggle-btn" id="btnSeriesItalic" title="Toggle Italic" onclick="toggleSeriesItalic()">
+                      <em>I</em>
+                    </button>
+                    <button type="button" class="typo-toggle-btn" id="btnSeriesLetterSpacing" title="Toggle Wide Letter Spacing" onclick="toggleSeriesLetterSpacing()">
+                      <span style="font-size: 10px; letter-spacing: 2px;">A-V</span>
+                    </button>
+                  </div>
+
+                  <div style="display: flex; align-items: center; gap: 8px; flex: 1; margin-left: 10px;">
+                    <span style="font-size: 11px; color: var(--text-muted); white-space: nowrap;">Point Size:</span>
+                    <input type="range" id="seriesPtSize" min="8" max="32" step="1" value="13" style="flex: 1;" oninput="onSeriesPtSizeChange()">
+                    <span class="form-val-badge" id="seriesPtSizeVal" style="min-width: 42px; text-align: center;">13 pt</span>
+                  </div>
+                </div>
+
+                <!-- Text Gradient Section for Series -->
+                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed rgba(255,255,255,0.08);">
+                  <div class="form-label-row" style="margin-bottom: 4px;">
+                    <span class="typo-label-small" style="display: flex; align-items: gap: 5px;">
+                      <span>✨ Text Gradient</span>
+                    </span>
+                    <label class="checkbox-row" style="margin: 0; font-size: 11px; cursor: pointer;">
+                      <input type="checkbox" id="badge2TextGradEnable" onchange="toggleBadge2TextGrad(this.checked)">
+                      <span style="font-size: 10.5px; color: #c084fc; font-weight: 600;">Enable Gradient Text</span>
+                    </label>
+                  </div>
+                  <div id="badge2TextGradControls" style="display: none; margin-top: 6px;">
+                    <div class="color-picker-grid" style="grid-template-columns: 1fr 1fr; gap: 6px;">
+                      <div class="color-picker-row">
+                        <span class="color-picker-label" style="font-size: 9.5px;">Top / Start:</span>
+                        <div class="color-picker-wrap">
+                          <input type="color" id="badge2TextGrad1" class="color-picker-input" value="#ffffff" oninput="onBadge2TextGradInput()">
+                          <span class="color-hex-text" id="badge2TextGrad1Hex" style="font-size: 9px;">#ffffff</span>
+                        </div>
+                      </div>
+                      <div class="color-picker-row">
+                        <span class="color-picker-label" style="font-size: 9.5px;">Bottom / End:</span>
+                        <div class="color-picker-wrap">
+                          <input type="color" id="badge2TextGrad2" class="color-picker-input" value="#c084fc" oninput="onBadge2TextGradInput()">
+                          <span class="color-hex-text" id="badge2TextGrad2Hex" style="font-size: 9px;">#c084fc</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div style="display: flex; gap: 4px; align-items: center; justify-content: space-between; margin-top: 6px;">
+                      <div style="display: flex; gap: 4px; align-items: center;">
+                        <span style="font-size: 9.5px; color: var(--text-dim);">Angle:</span>
+                        <button type="button" class="grad-dir-btn active" id="btnBadge2TextDir_vert" style="padding: 2px 7px; font-size: 9.5px;" onclick="setBadge2TextGradDir('vertical')">⇅ Vert</button>
+                        <button type="button" class="grad-dir-btn" id="btnBadge2TextDir_horiz" style="padding: 2px 7px; font-size: 9.5px;" onclick="setBadge2TextGradDir('horizontal')">⇄ Horiz</button>
+                      </div>
+                      <div style="display: flex; gap: 3px;">
+                        <button type="button" class="preset-btn" style="font-size: 9px; padding: 1px 5px;" onclick="applyBadge2TextGradPreset('#ffffff', '#c084fc')">Violet</button>
+                        <button type="button" class="preset-btn" style="font-size: 9px; padding: 1px 5px;" onclick="applyBadge2TextGradPreset('#fff3bf', '#f59e0b')">Gold</button>
+                        <button type="button" class="preset-btn" style="font-size: 9px; padding: 1px 5px;" onclick="applyBadge2TextGradPreset('#ffffff', '#94a3b8')">Silver</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Back to presets shortcut -->
+              <div style="margin-top: 8px;">
+                <button type="button" class="btn-secondary" style="width: 100%; font-size: 11px; padding: 6px; text-align: center;" onclick="setSeriesBadgeMode('preset')">
+                  ← Switch back to Preset Series Badges
+                </button>
+              </div>
+            </div>
+
+            <!-- Custom Series Logo Image Upload View -->
+            <div id="seriesImageSection" class="form-group" style="display: none; margin-top: 8px;">
+              <div class="form-label-row">
+                <span style="font-size: 11px; color: var(--text-main);">Upload Series Logo Graphic:</span>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <input type="file" id="seriesLogoInput" accept="image/png, image/svg+xml, image/jpeg" style="display:none;" onchange="handleSeriesLogoSelect(event)">
+                <button class="btn-secondary" style="flex: 1;" onclick="document.getElementById('seriesLogoInput').click()">
+                  <span id="seriesLogoUploadBtnText">Upload Series Logo...</span>
+                </button>
+                <button class="btn-secondary" id="btnClearSeriesLogo" style="padding: 7px 10px; display: none;" onclick="clearSeriesLogo()">✕</button>
+              </div>
+            </div>
+
+            <!-- Position -->
+            <div class="form-group" style="margin-top: 10px;">
+              <div class="form-label-row">
+                <div class="form-label-left">
+                  <span>Badge Position</span>
+                </div>
+              </div>
+              <select id="seriesPosition" onchange="onSeriesPositionChange()">
+                <option value="custom" selected>📍 Free Position (Custom X / Y Anywhere)</option>
+                <option value="top-left">Top-Left Corner</option>
+                <option value="top-center">Top-Center (Header Banner / Arch)</option>
+                <option value="top-right">Top-Right Corner</option>
+                <option value="bottom-left">Bottom-Left Corner</option>
+                <option value="bottom-center">Bottom-Center (Footer Ribbon)</option>
+                <option value="bottom-right">Bottom-Right Corner</option>
+                <option value="center">Center</option>
+              </select>
+
+              <!-- Free Coordinates Controls for Series -->
+              <div id="seriesCustomPosContainer" style="display: block; background: rgba(21, 19, 38, 0.65); border: 1px dashed rgba(192, 132, 252, 0.35); border-radius: 6px; padding: 10px; margin-top: 8px;">
+                <div style="font-size: 11px; font-weight: 700; color: #c084fc; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+                  <span>📍 Free Coordinate Positioning</span>
+                  <span style="font-size: 10px; color: var(--text-dim); font-weight: normal;">(0% = Left/Top, 100% = Right/Bottom)</span>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 8px;">
+                  <div class="form-label-row">
+                    <span style="font-size: 10.5px; color: var(--text-muted);">Horizontal Position (X):</span>
+                    <span class="form-val-badge" id="seriesPosXVal">15%</span>
+                  </div>
+                  <div class="slider-container">
+                    <input type="range" id="seriesPosX" min="0" max="100" step="1" value="15" oninput="onSeriesCoordChange()">
+                  </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 6px;">
+                  <div class="form-label-row">
+                    <span style="font-size: 10.5px; color: var(--text-muted);">Vertical Position (Y):</span>
+                    <span class="form-val-badge" id="seriesPosYVal">15%</span>
+                  </div>
+                  <div class="slider-container">
+                    <input type="range" id="seriesPosY" min="0" max="100" step="1" value="15" oninput="onSeriesCoordChange()">
+                  </div>
+                </div>
+
+                <div style="display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px;">
+                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapSeriesCoord(50, 50)">Center (50, 50)</button>
+                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapSeriesCoord(15, 15)">Top-Left (Default)</button>
+                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapSeriesCoord(85, 15)">Top-Right</button>
+                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapSeriesCoord(15, 85)">Bottom-Left</button>
+                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapSeriesCoord(85, 85)">Bottom-Right</button>
+                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapSeriesCoord(50, 15)">Top Mid</button>
+                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapSeriesCoord(50, 85)">Bottom Mid</button>
+                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapSeriesCoord(15, 50)">Left Mid</button>
+                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapSeriesCoord(85, 50)">Right Mid</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Frame Style -->
+            <div class="form-group" style="margin-top: 10px;">
+              <div class="form-label-row">
+                <div class="form-label-left">
+                  <span>Series Frame Style</span>
+                </div>
+              </div>
+              <select id="badge2Frame" onchange="renderAllMaps()">
+                <option value="pill" selected>Sleek Pill / Tag Ribbon</option>
+                <option value="rounded">Squircle (Rounded Box)</option>
+                <option value="circle">Circular Seal</option>
+                <option value="raw">Clean / Raw (Transparent - No Backing)</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="margin-top: 10px;">
+              <div class="form-label-row">
+                <div class="form-label-left">
+                  <span>Series Badge Scale</span>
+                </div>
+                <span class="form-val-badge" id="seriesScaleVal">24%</span>
+              </div>
+              <div class="slider-container">
+                <input type="range" id="seriesScale" min="15" max="50" step="1" value="24" oninput="onSeriesBadgeScaleChange()">
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 10px;">
+              <div class="form-label-row">
+                <div class="form-label-left">
+                  <span>Series Padding (Edge Inset)</span>
+                  <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'badgeEdgePadding', event)" onmouseenter="showFieldHelp(this, 'badgeEdgePadding', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Series Padding" title="Help for Series Padding">?</button>
+                </div>
+                <span class="form-val-badge" id="seriesPaddingVal">12 px</span>
+              </div>
+              <div class="slider-container">
+                <input type="range" id="seriesPadding" min="0" max="36" step="1" value="12" oninput="onSeriesPaddingChange()">
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 10px;">
+              <div class="form-label-row">
+                <div class="form-label-left">
+                  <span>Series Inner Ribbon Padding</span>
+                  <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'badgeInnerPadding', event)" onmouseenter="showFieldHelp(this, 'badgeInnerPadding', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Series Inner Ribbon Padding" title="Help for Series Inner Ribbon Padding">?</button>
+                </div>
+                <span class="form-val-badge" id="seriesInnerPaddingVal">8 px</span>
+              </div>
+              <div class="slider-container">
+                <input type="range" id="seriesInnerPadding" min="2" max="24" step="1" value="8" oninput="onSeriesInnerPaddingChange()">
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 10px;">
+              <div class="form-label-row">
+                <div class="form-label-left">
+                  <span>Series Badge Opacity</span>
+                </div>
+                <span class="form-val-badge" id="seriesOpacityVal">95%</span>
+              </div>
+              <div class="slider-container">
+                <input type="range" id="seriesOpacity" min="10" max="100" step="5" value="95" oninput="onSeriesBadgeOpacityChange()">
+              </div>
+            </div>
+          </div>
+
+          <!-- SUBPANEL 3: EXTRA 1 BADGE (OVERLAY 3) -->
+          <div class="badge-subpanel" id="panelBadgeExtra1">
+            <label class="checkbox-row" style="margin-top: 0; margin-bottom: 10px;">
+              <input type="checkbox" id="enableBadge3" onchange="toggleBadge3Enable(this.checked)">
+              <span style="font-weight: 600; color: var(--text-main);">Enable Extra 1 Watermark Badge</span>
+            </label>
+
+            <!-- Mode selector -->
+            <div class="form-group">
+              <div class="form-label-row">
+                <span style="font-size: 11px; color: var(--text-dim);">Extra 1 Badge Mode:</span>
+              </div>
+              <div class="series-type-selector">
+                <button type="button" class="series-type-btn active" id="btnExtra1ModeText" onclick="setExtra1BadgeMode('text')">
+                  ✍️ Custom Text
+                </button>
+                <button type="button" class="series-type-btn" id="btnExtra1ModePreset" onclick="setExtra1BadgeMode('preset')">
+                  🎨 Presets
+                </button>
+                <button type="button" class="series-type-btn" id="btnExtra1ModeImage" onclick="setExtra1BadgeMode('image')">
+                  📁 Custom Logo
+                </button>
+              </div>
+            </div>
+
+            <!-- Custom Text View (Default for Extra 1) -->
+            <div id="extra1TextSection" class="form-group" style="margin-top: 8px;">
+              <div class="form-label-row">
+                <div class="form-label-left">
+                  <span style="font-size: 11px; font-weight: 600; color: var(--text-main);">Extra 1 Custom Text:</span>
+                </div>
+                <span class="form-val-badge" id="extra1TextLengthBadge">7 / 20</span>
+              </div>
+              <input type="text" id="extra1TextInput" value="EXTRA 1" placeholder="e.g. V1.0, 4K, PROPS, ASSET, CUSTOM" maxlength="20" oninput="onExtra1TextChange()" spellcheck="false" style="font-weight: 600; letter-spacing: 0.5px;">
+              
+              <div style="font-size: 10px; color: var(--text-dim); margin-top: 5px; display: flex; justify-content: space-between; align-items: center;">
+                <span>Quick Suggestions:</span>
+                <button type="button" style="background: transparent; border: none; color: #34d399; cursor: pointer; padding: 0; font-size: 10px;" onclick="clearExtra1Text()">✕ Clear</button>
+              </div>
+              <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;">
+                <button type="button" class="preset-btn" onclick="setExtra1TextPreset('V1.0')">V1.0</button>
+                <button type="button" class="preset-btn" onclick="setExtra1TextPreset('4K RES')">4K Res</button>
+                <button type="button" class="preset-btn" onclick="setExtra1TextPreset('PROPS')">Props</button>
+                <button type="button" class="preset-btn" onclick="setExtra1TextPreset('CUSTOM')">Custom</button>
+                <button type="button" class="preset-btn" onclick="setExtra1TextPreset('HIGH-RES')">High-Res</button>
+                <button type="button" class="preset-btn" onclick="setExtra1TextPreset('LOD')">LOD</button>
+                <button type="button" class="preset-btn" onclick="setExtra1TextPreset('VARIANT')">Variant</button>
+                <button type="button" class="preset-btn" onclick="setExtra1TextPreset('HQ')">HQ</button>
+              </div>
+
+              <!-- Sync Style with Creator / Series -->
+              <div class="badge-style-sync-bar">
+                <div class="badge-style-sync-label">
+                  <span style="font-weight: 600; color: #34d399;">📋 Sync:</span>
+                  <span>Match style</span>
+                </div>
+                <div style="display: flex; gap: 4px;">
+                  <button type="button" class="btn-copy-badge-style" onclick="copyBadgeStyle('creator', 'extra1')" title="Copy style from Creator to Extra 1">
+                    <span>⭐ Match Creator</span>
+                  </button>
+                  <button type="button" class="btn-copy-badge-style btn-copy-series" onclick="copyBadgeStyle('series', 'extra1')" title="Copy style from Series to Extra 1">
+                    <span>🎨 Match Series</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Color & Gradient Studio Box for Extra 1 -->
+              <div class="typo-controls-box" style="margin-top: 8px;">
+                <div class="form-label-row" style="margin-bottom: 2px;">
+                  <span class="typo-label-small">Badge Colors &amp; Gradient</span>
+                  <span class="form-val-badge" id="extra1ColorModeBadge">Themes</span>
+                </div>
+
+                <div class="color-mode-nav">
+                  <button type="button" class="color-mode-btn active" id="btnExtra1ColorTheme" onclick="setExtra1ColorMode('theme')">🎨 Themes</button>
+                  <button type="button" class="color-mode-btn" id="btnExtra1ColorGradient" onclick="setExtra1ColorMode('gradient')">🌈 Gradient</button>
+                  <button type="button" class="color-mode-btn" id="btnExtra1ColorSolid" onclick="setExtra1ColorMode('solid')">🎯 Solid</button>
+                </div>
+
+                <!-- Themes Panel -->
+                <div id="extra1ColorThemePanel">
+                  <div class="color-theme-grid" id="extra1ColorThemes">
+                    <button type="button" class="theme-chip active" id="themeBtnExtra1_emerald" onclick="setExtra1ColorTheme('emerald')" title="Emerald Transit">
+                      <span class="theme-dot" style="background: #34d399;"></span>
+                      <span>Emerald</span>
+                    </button>
+                    <button type="button" class="theme-chip" id="themeBtnExtra1_cyan" onclick="setExtra1ColorTheme('cyan')" title="Electric Cyan">
+                      <span class="theme-dot" style="background: #38bdf8;"></span>
+                      <span>Cyan</span>
+                    </button>
+                    <button type="button" class="theme-chip" id="themeBtnExtra1_purple" onclick="setExtra1ColorTheme('purple')" title="Neon Violet">
+                      <span class="theme-dot" style="background: #c084fc;"></span>
+                      <span>Violet</span>
+                    </button>
+                    <button type="button" class="theme-chip" id="themeBtnExtra1_amber" onclick="setExtra1ColorTheme('amber')" title="Amber Caution">
+                      <span class="theme-dot" style="background: #fbbf24;"></span>
+                      <span>Amber</span>
+                    </button>
+                    <button type="button" class="theme-chip" id="themeBtnExtra1_crimson" onclick="setExtra1ColorTheme('crimson')" title="Crimson Red">
+                      <span class="theme-dot" style="background: #f43f5e;"></span>
+                      <span>Crimson</span>
+                    </button>
+                    <button type="button" class="theme-chip" id="themeBtnExtra1_slate" onclick="setExtra1ColorTheme('slate')" title="CS2 Slate">
+                      <span class="theme-dot" style="background: #94a3b8;"></span>
+                      <span>Slate</span>
+                    </button>
+                    <button type="button" class="theme-chip" id="themeBtnExtra1_orange" onclick="setExtra1ColorTheme('orange')" title="Sunset Orange">
+                      <span class="theme-dot" style="background: #fb923c;"></span>
+                      <span>Orange</span>
+                    </button>
+                    <button type="button" class="theme-chip" id="themeBtnExtra1_gold" onclick="setExtra1ColorTheme('gold')" title="VIP Gold">
+                      <span class="theme-dot" style="background: #fde047;"></span>
+                      <span>Gold</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Custom Gradient Panel -->
+                <div id="extra1CustomGradPanel" style="display: none;">
+                  <div class="gradient-preview-bar" id="extra1GradPreview" style="background: linear-gradient(135deg, #06241a, #0d3d2c);"></div>
+                  <div class="color-picker-grid" style="margin-top: 6px;">
+                    <div class="color-picker-row">
+                      <span class="color-picker-label">Color 1 (Start):</span>
+                      <div class="color-picker-wrap">
+                        <input type="color" id="extra1Color1" class="color-picker-input" value="#06241a" oninput="onExtra1CustomColorInput()">
+                        <span class="color-hex-text" id="extra1Color1Hex">#06241a</span>
+                      </div>
+                    </div>
+                    <div class="color-picker-row">
+                      <span class="color-picker-label">Color 2 (End):</span>
+                      <div class="color-picker-wrap">
+                        <input type="color" id="extra1Color2" class="color-picker-input" value="#0d3d2c" oninput="onExtra1CustomColorInput()">
+                        <span class="color-hex-text" id="extra1Color2Hex">#0d3d2c</span>
+                      </div>
+                    </div>
+                    <div class="color-picker-row">
+                      <span class="color-picker-label">Border Stroke:</span>
+                      <div class="color-picker-wrap">
+                        <input type="color" id="extra1StrokeColor" class="color-picker-input" value="#34d399" oninput="onExtra1CustomColorInput()">
+                        <span class="color-hex-text" id="extra1StrokeHex">#34d399</span>
+                      </div>
+                    </div>
+                    <div class="color-picker-row">
+                      <span class="color-picker-label">Text Color:</span>
+                      <div class="color-picker-wrap">
+                        <input type="color" id="extra1TextColor" class="color-picker-input" value="#ffffff" oninput="onExtra1CustomColorInput()">
+                        <span class="color-hex-text" id="extra1TextColorHex">#ffffff</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Custom Solid Panel -->
+                <div id="extra1CustomSolidPanel" style="display: none;">
+                  <div class="color-picker-grid">
+                    <div class="color-picker-row">
+                      <span class="color-picker-label">Background:</span>
+                      <div class="color-picker-wrap">
+                        <input type="color" id="extra1SolidBg" class="color-picker-input" value="#06241a" oninput="onExtra1SolidColorInput()">
+                        <span class="color-hex-text" id="extra1SolidBgHex">#06241a</span>
+                      </div>
+                    </div>
+                    <div class="color-picker-row">
+                      <span class="color-picker-label">Border Stroke:</span>
+                      <div class="color-picker-wrap">
+                        <input type="color" id="extra1SolidStroke" class="color-picker-input" value="#34d399" oninput="onExtra1SolidColorInput()">
+                        <span class="color-hex-text" id="extra1SolidStrokeHex">#34d399</span>
+                      </div>
+                    </div>
+                    <div class="color-picker-row" style="grid-column: span 2;">
+                      <span class="color-picker-label">Text Color:</span>
+                      <div class="color-picker-wrap">
+                        <input type="color" id="extra1SolidText" class="color-picker-input" value="#ffffff" oninput="onExtra1SolidColorInput()">
+                        <span class="color-hex-text" id="extra1SolidTextHex">#ffffff</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Typography Settings Box -->
+              <div class="typo-controls-box">
+                <div class="form-label-row" style="margin-bottom: 2px;">
+                  <span class="typo-label-small">Typography &amp; Fonts</span>
+                  <button type="button" class="google-font-pill-btn" onclick="toggleGoogleFontInput('extra1')">+ Google Font</button>
+                </div>
+
+                <div class="google-font-input-box" id="extra1GoogleFontRow">
+                  <div class="google-font-row">
+                    <input type="text" id="extra1GoogleFontInput" class="google-font-text-input" placeholder="Google Font name" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomGoogleFontFromInput('extra1');}">
+                    <button type="button" class="google-font-load-btn" onclick="addCustomGoogleFontFromInput('extra1')">Load</button>
+                  </div>
+                </div>
+
+                <div class="form-group" style="margin: 0;">
+                  <select id="extra1FontFamily" onchange="onExtra1FontChange()">
+                    <!-- Populated dynamically via JS -->
+                  </select>
+                </div>
+
+                <div class="typo-row" style="justify-content: space-between;">
+                  <div style="display: flex; gap: 6px; align-items: center;">
+                    <button type="button" class="typo-toggle-btn active" id="btnExtra1Bold" title="Toggle Bold" onclick="toggleExtra1Bold()">
+                      <strong>B</strong>
+                    </button>
+                    <button type="button" class="typo-toggle-btn" id="btnExtra1Italic" title="Toggle Italic" onclick="toggleExtra1Italic()">
+                      <em>I</em>
+                    </button>
+                    <button type="button" class="typo-toggle-btn" id="btnExtra1LetterSpacing" title="Toggle Wide Letter Spacing" onclick="toggleExtra1LetterSpacing()">
+                      <span style="font-size: 10px; letter-spacing: 2px;">A-V</span>
+                    </button>
+                  </div>
+
+                  <div style="display: flex; align-items: center; gap: 8px; flex: 1; margin-left: 10px;">
+                    <span style="font-size: 11px; color: var(--text-muted); white-space: nowrap;">Pt:</span>
+                    <input type="range" id="extra1PtSize" min="8" max="32" step="1" value="13" style="flex: 1;" oninput="onExtra1PtSizeChange()">
+                    <span class="form-val-badge" id="extra1PtSizeVal" style="min-width: 42px; text-align: center;">13 pt</span>
+                  </div>
+                </div>
+
+                <!-- Text Gradient Section for Extra 1 -->
+                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed rgba(255,255,255,0.08);">
+                  <div class="form-label-row" style="margin-bottom: 4px;">
+                    <span class="typo-label-small" style="display: flex; align-items: center; gap: 5px;">
+                      <span>✨ Text Gradient</span>
+                    </span>
+                    <label class="checkbox-row" style="margin: 0; font-size: 11px; cursor: pointer;">
+                      <input type="checkbox" id="badge3TextGradEnable" onchange="toggleBadge3TextGrad(this.checked)">
+                      <span style="font-size: 10.5px; color: #34d399; font-weight: 600;">Enable Gradient Text</span>
+                    </label>
+                  </div>
+                  <div id="badge3TextGradControls" style="display: none; margin-top: 6px;">
+                    <div class="color-picker-grid" style="grid-template-columns: 1fr 1fr; gap: 6px;">
+                      <div class="color-picker-row">
+                        <span class="color-picker-label" style="font-size: 9.5px;">Top / Start:</span>
+                        <div class="color-picker-wrap">
+                          <input type="color" id="badge3TextGrad1" class="color-picker-input" value="#ffffff" oninput="onBadge3TextGradInput()">
+                          <span class="color-hex-text" id="badge3TextGrad1Hex" style="font-size: 9px;">#ffffff</span>
+                        </div>
+                      </div>
+                      <div class="color-picker-row">
+                        <span class="color-picker-label" style="font-size: 9.5px;">Bottom / End:</span>
+                        <div class="color-picker-wrap">
+                          <input type="color" id="badge3TextGrad2" class="color-picker-input" value="#34d399" oninput="onBadge3TextGradInput()">
+                          <span class="color-hex-text" id="badge3TextGrad2Hex" style="font-size: 9px;">#34d399</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div style="display: flex; gap: 4px; align-items: center; justify-content: space-between; margin-top: 6px;">
+                      <div style="display: flex; gap: 4px; align-items: center;">
+                        <span style="font-size: 9.5px; color: var(--text-dim);">Angle:</span>
+                        <button type="button" class="grad-dir-btn active" id="btnBadge3TextDir_vert" style="padding: 2px 7px; font-size: 9.5px;" onclick="setBadge3TextGradDir('vertical')">⇅ Vert</button>
+                        <button type="button" class="grad-dir-btn" id="btnBadge3TextDir_horiz" style="padding: 2px 7px; font-size: 9.5px;" onclick="setBadge3TextGradDir('horizontal')">⇄ Horiz</button>
+                      </div>
+                      <div style="display: flex; gap: 3px;">
+                        <button type="button" class="preset-btn" style="font-size: 9px; padding: 1px 5px;" onclick="applyBadge3TextGradPreset('#ffffff', '#34d399')">Emerald</button>
+                        <button type="button" class="preset-btn" style="font-size: 9px; padding: 1px 5px;" onclick="applyBadge3TextGradPreset('#fff3bf', '#f59e0b')">Gold</button>
+                        <button type="button" class="preset-btn" style="font-size: 9px; padding: 1px 5px;" onclick="applyBadge3TextGradPreset('#ffffff', '#94a3b8')">Silver</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Presets View -->
+            <div id="extra1PresetSection" class="form-group" style="display: none; margin-top: 8px;">
+              <div class="form-label-row">
+                <span style="font-size: 11px; color: var(--text-dim);">Pick Extra 1 Preset:</span>
+              </div>
+              <div class="preset-pill-grid">
+                <button type="button" class="preset-btn" onclick="applyExtra1Preset('props')">🏙️ Props</button>
+                <button type="button" class="preset-btn" onclick="applyExtra1Preset('transit')">🛣️ Transit</button>
+                <button type="button" class="preset-btn" onclick="applyExtra1Preset('hazard')">⚠️ Hazard</button>
+                <button type="button" class="preset-btn" onclick="applyExtra1Preset('nature')">🌿 Nature</button>
+                <button type="button" class="preset-btn" onclick="applyExtra1Preset('graffiti')">🎨 Graffiti</button>
+                <button type="button" class="preset-btn" onclick="applyExtra1Preset('poster')">🖼️ Posters</button>
+              </div>
+            </div>
+
+            <!-- Custom Logo Image View -->
+            <div id="extra1ImageSection" class="form-group" style="display: none; margin-top: 8px;">
+              <div class="form-label-row">
+                <span style="font-size: 11px; color: var(--text-main);">Upload Extra 1 Graphic:</span>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <input type="file" id="extra1LogoInput" accept="image/png, image/svg+xml, image/jpeg" style="display:none;" onchange="handleExtra1LogoSelect(event)">
+                <button class="btn-secondary" style="flex: 1;" onclick="document.getElementById('extra1LogoInput').click()">
+                  <span id="extra1LogoUploadBtnText">Upload Graphic...</span>
+                </button>
+                <button class="btn-secondary" id="btnClearExtra1Logo" style="padding: 7px 10px; display: none;" onclick="clearExtra1Logo()">✕</button>
+              </div>
+            </div>
+
+            <!-- Position -->
+            <div class="form-group" style="margin-top: 10px;">
+              <div class="form-label-row">
+                <div class="form-label-left">
+                  <span>Badge Position</span>
+                </div>
+              </div>
+              <select id="extra1Position" onchange="onExtra1PositionChange()">
+                <option value="custom" selected>📍 Free Position (Custom X / Y Anywhere)</option>
+                <option value="bottom-left">Bottom-Left Corner</option>
+                <option value="top-left">Top-Left Corner</option>
+                <option value="top-center">Top-Center (Header Banner)</option>
+                <option value="top-right">Top-Right Corner</option>
+                <option value="bottom-center">Bottom-Center (Footer Ribbon)</option>
+                <option value="bottom-right">Bottom-Right Corner</option>
+                <option value="center">Center</option>
+              </select>
+
+              <!-- Free Coordinates Controls for Extra 1 -->
+              <div id="extra1CustomPosContainer" style="display: block; background: rgba(6, 36, 26, 0.45); border: 1px dashed rgba(52, 211, 153, 0.35); border-radius: 6px; padding: 10px; margin-top: 8px;">
+                <div style="font-size: 11px; font-weight: 700; color: #34d399; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+                  <span>📍 Free Coordinate Positioning</span>
+                  <span style="font-size: 10px; color: var(--text-dim); font-weight: normal;">(0% = Left/Top, 100% = Right/Bottom)</span>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 8px;">
+                  <div class="form-label-row">
+                    <span style="font-size: 10.5px; color: var(--text-muted);">Horizontal Position (X):</span>
+                    <span class="form-val-badge" id="extra1PosXVal">15%</span>
+                  </div>
+                  <div class="slider-container">
+                    <input type="range" id="extra1PosX" min="0" max="100" step="1" value="15" oninput="onExtra1CoordChange()">
+                  </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 6px;">
+                  <div class="form-label-row">
+                    <span style="font-size: 10.5px; color: var(--text-muted);">Vertical Position (Y):</span>
+                    <span class="form-val-badge" id="extra1PosYVal">85%</span>
+                  </div>
+                  <div class="slider-container">
+                    <input type="range" id="extra1PosY" min="0" max="100" step="1" value="85" oninput="onExtra1CoordChange()">
+                  </div>
+                </div>
+
+                <div style="display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px;">
+                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapExtra1Coord(50, 50)">Center (50, 50)</button>
+                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapExtra1Coord(15, 15)">Top-Left</button>
+                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapExtra1Coord(85, 15)">Top-Right</button>
+                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapExtra1Coord(15, 85)">Bottom-Left (Default)</button>
+                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapExtra1Coord(85, 85)">Bottom-Right</button>
+                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapExtra1Coord(50, 15)">Top Mid</button>
+                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapExtra1Coord(50, 85)">Bottom Mid</button>
+                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapExtra1Coord(15, 50)">Left Mid</button>
+                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapExtra1Coord(85, 50)">Right Mid</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Frame Style -->
+            <div class="form-group" style="margin-top: 10px;">
+              <div class="form-label-row">
+                <div class="form-label-left">
+                  <span>Frame Style</span>
+                </div>
+              </div>
+              <select id="badge3Frame" onchange="renderAllMaps()">
+                <option value="pill" selected>Sleek Pill / Tag Ribbon</option>
+                <option value="rounded">Squircle (Rounded Box)</option>
+                <option value="circle">Circular Seal</option>
+                <option value="raw">Clean / Raw (Transparent - No Backing)</option>
+              </select>
+            </div>
+
+            <!-- Scale & Layout -->
+            <div class="form-group" style="margin-top: 10px;">
+              <div class="form-label-row">
+                <div class="form-label-left">
+                  <span>Badge Scale</span>
+                </div>
+                <span class="form-val-badge" id="extra1ScaleVal">24%</span>
+              </div>
+              <div class="slider-container">
+                <input type="range" id="extra1Scale" min="15" max="50" step="1" value="24" oninput="onExtra1ScaleChange()">
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 10px;">
+              <div class="form-label-row">
+                <div class="form-label-left">
+                  <span>Padding (Edge Inset)</span>
+                </div>
+                <span class="form-val-badge" id="extra1PaddingVal">12 px</span>
+              </div>
+              <div class="slider-container">
+                <input type="range" id="extra1Padding" min="0" max="36" step="1" value="12" oninput="onExtra1PaddingChange()">
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 10px;">
+              <div class="form-label-row">
+                <div class="form-label-left">
+                  <span>Badge Opacity</span>
+                </div>
+                <span class="form-val-badge" id="extra1OpacityVal">95%</span>
+              </div>
+              <div class="slider-container">
+                <input type="range" id="extra1Opacity" min="10" max="100" step="5" value="95" oninput="onExtra1OpacityChange()">
+              </div>
+            </div>
+          </div>
+
+          <!-- SUBPANEL 4: EXTRA 2 BADGE (OVERLAY 4) -->
+          <div class="badge-subpanel" id="panelBadgeExtra2">
+            <label class="checkbox-row" style="margin-top: 0; margin-bottom: 10px;">
+              <input type="checkbox" id="enableBadge4" onchange="toggleBadge4Enable(this.checked)">
+              <span style="font-weight: 600; color: var(--text-main);">Enable Extra 2 Watermark Badge</span>
+            </label>
+
+            <!-- Mode selector -->
+            <div class="form-group">
+              <div class="form-label-row">
+                <span style="font-size: 11px; color: var(--text-dim);">Extra 2 Badge Mode:</span>
+              </div>
+              <div class="series-type-selector">
+                <button type="button" class="series-type-btn active" id="btnExtra2ModeText" onclick="setExtra2BadgeMode('text')">
+                  ✍️ Custom Text
+                </button>
+                <button type="button" class="series-type-btn" id="btnExtra2ModePreset" onclick="setExtra2BadgeMode('preset')">
+                  🎨 Presets
+                </button>
+                <button type="button" class="series-type-btn" id="btnExtra2ModeImage" onclick="setExtra2BadgeMode('image')">
+                  📁 Custom Logo
+                </button>
+              </div>
+            </div>
+
+            <!-- Custom Text View (Default for Extra 2) -->
+            <div id="extra2TextSection" class="form-group" style="margin-top: 8px;">
+              <div class="form-label-row">
+                <div class="form-label-left">
+                  <span style="font-size: 11px; font-weight: 600; color: var(--text-main);">Extra 2 Custom Text:</span>
+                </div>
+                <span class="form-val-badge" id="extra2TextLengthBadge">7 / 20</span>
+              </div>
+              <input type="text" id="extra2TextInput" value="EXTRA 2" placeholder="e.g. DECAL, NIGHT, CAUTION, CS2" maxlength="20" oninput="onExtra2TextChange()" spellcheck="false" style="font-weight: 600; letter-spacing: 0.5px;">
+              
+              <div style="font-size: 10px; color: var(--text-dim); margin-top: 5px; display: flex; justify-content: space-between; align-items: center;">
+                <span>Quick Suggestions:</span>
+                <button type="button" style="background: transparent; border: none; color: #fbbf24; cursor: pointer; padding: 0; font-size: 10px;" onclick="clearExtra2Text()">✕ Clear</button>
+              </div>
+              <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;">
+                <button type="button" class="preset-btn" onclick="setExtra2TextPreset('DECAL')">Decal</button>
+                <button type="button" class="preset-btn" onclick="setExtra2TextPreset('NIGHT')">Night</button>
+                <button type="button" class="preset-btn" onclick="setExtra2TextPreset('CAUTION')">Caution</button>
+                <button type="button" class="preset-btn" onclick="setExtra2TextPreset('CS2')">CS2</button>
+                <button type="button" class="preset-btn" onclick="setExtra2TextPreset('SPECIAL')">Special</button>
+                <button type="button" class="preset-btn" onclick="setExtra2TextPreset('BETA')">Beta</button>
+                <button type="button" class="preset-btn" onclick="setExtra2TextPreset('ROAD')">Road</button>
+                <button type="button" class="preset-btn" onclick="setExtra2TextPreset('SIGN')">Sign</button>
+              </div>
+
+              <!-- Sync Style with Creator / Series -->
+              <div class="badge-style-sync-bar">
+                <div class="badge-style-sync-label">
+                  <span style="font-weight: 600; color: #fbbf24;">📋 Sync:</span>
+                  <span>Match style</span>
+                </div>
+                <div style="display: flex; gap: 4px;">
+                  <button type="button" class="btn-copy-badge-style" onclick="copyBadgeStyle('creator', 'extra2')" title="Copy style from Creator to Extra 2">
+                    <span>⭐ Match Creator</span>
+                  </button>
+                  <button type="button" class="btn-copy-badge-style btn-copy-series" onclick="copyBadgeStyle('series', 'extra2')" title="Copy style from Series to Extra 2">
+                    <span>🎨 Match Series</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Color & Gradient Studio Box for Extra 2 -->
+              <div class="typo-controls-box" style="margin-top: 8px;">
+                <div class="form-label-row" style="margin-bottom: 2px;">
+                  <span class="typo-label-small">Badge Colors &amp; Gradient</span>
+                  <span class="form-val-badge" id="extra2ColorModeBadge">Themes</span>
+                </div>
+
+                <div class="color-mode-nav">
+                  <button type="button" class="color-mode-btn active" id="btnExtra2ColorTheme" onclick="setExtra2ColorMode('theme')">🎨 Themes</button>
+                  <button type="button" class="color-mode-btn" id="btnExtra2ColorGradient" onclick="setExtra2ColorMode('gradient')">🌈 Gradient</button>
+                  <button type="button" class="color-mode-btn" id="btnExtra2ColorSolid" onclick="setExtra2ColorMode('solid')">🎯 Solid</button>
+                </div>
+
+                <!-- Themes Panel -->
+                <div id="extra2ColorThemePanel">
+                  <div class="color-theme-grid" id="extra2ColorThemes">
+                    <button type="button" class="theme-chip active" id="themeBtnExtra2_amber" onclick="setExtra2ColorTheme('amber')" title="Amber Caution">
+                      <span class="theme-dot" style="background: #fbbf24;"></span>
+                      <span>Amber</span>
+                    </button>
+                    <button type="button" class="theme-chip" id="themeBtnExtra2_emerald" onclick="setExtra2ColorTheme('emerald')" title="Emerald Transit">
+                      <span class="theme-dot" style="background: #34d399;"></span>
+                      <span>Emerald</span>
+                    </button>
+                    <button type="button" class="theme-chip" id="themeBtnExtra2_cyan" onclick="setExtra2ColorTheme('cyan')" title="Electric Cyan">
+                      <span class="theme-dot" style="background: #38bdf8;"></span>
+                      <span>Cyan</span>
+                    </button>
+                    <button type="button" class="theme-chip" id="themeBtnExtra2_purple" onclick="setExtra2ColorTheme('purple')" title="Neon Violet">
+                      <span class="theme-dot" style="background: #c084fc;"></span>
+                      <span>Violet</span>
+                    </button>
+                    <button type="button" class="theme-chip" id="themeBtnExtra2_crimson" onclick="setExtra2ColorTheme('crimson')" title="Crimson Red">
+                      <span class="theme-dot" style="background: #f43f5e;"></span>
+                      <span>Crimson</span>
+                    </button>
+                    <button type="button" class="theme-chip" id="themeBtnExtra2_slate" onclick="setExtra2ColorTheme('slate')" title="CS2 Slate">
+                      <span class="theme-dot" style="background: #94a3b8;"></span>
+                      <span>Slate</span>
+                    </button>
+                    <button type="button" class="theme-chip" id="themeBtnExtra2_orange" onclick="setExtra2ColorTheme('orange')" title="Sunset Orange">
+                      <span class="theme-dot" style="background: #fb923c;"></span>
+                      <span>Orange</span>
+                    </button>
+                    <button type="button" class="theme-chip" id="themeBtnExtra2_gold" onclick="setExtra2ColorTheme('gold')" title="VIP Gold">
+                      <span class="theme-dot" style="background: #fde047;"></span>
+                      <span>Gold</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Custom Gradient Panel -->
+                <div id="extra2CustomGradPanel" style="display: none;">
+                  <div class="gradient-preview-bar" id="extra2GradPreview" style="background: linear-gradient(135deg, #241806, #3d2a0d);"></div>
+                  <div class="color-picker-grid" style="margin-top: 6px;">
+                    <div class="color-picker-row">
+                      <span class="color-picker-label">Color 1 (Start):</span>
+                      <div class="color-picker-wrap">
+                        <input type="color" id="extra2Color1" class="color-picker-input" value="#241806" oninput="onExtra2CustomColorInput()">
+                        <span class="color-hex-text" id="extra2Color1Hex">#241806</span>
+                      </div>
+                    </div>
+                    <div class="color-picker-row">
+                      <span class="color-picker-label">Color 2 (End):</span>
+                      <div class="color-picker-wrap">
+                        <input type="color" id="extra2Color2" class="color-picker-input" value="#3d2a0d" oninput="onExtra2CustomColorInput()">
+                        <span class="color-hex-text" id="extra2Color2Hex">#3d2a0d</span>
+                      </div>
+                    </div>
+                    <div class="color-picker-row">
+                      <span class="color-picker-label">Border Stroke:</span>
+                      <div class="color-picker-wrap">
+                        <input type="color" id="extra2StrokeColor" class="color-picker-input" value="#fbbf24" oninput="onExtra2CustomColorInput()">
+                        <span class="color-hex-text" id="extra2StrokeHex">#fbbf24</span>
+                      </div>
+                    </div>
+                    <div class="color-picker-row">
+                      <span class="color-picker-label">Text Color:</span>
+                      <div class="color-picker-wrap">
+                        <input type="color" id="extra2TextColor" class="color-picker-input" value="#ffffff" oninput="onExtra2CustomColorInput()">
+                        <span class="color-hex-text" id="extra2TextColorHex">#ffffff</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Custom Solid Panel -->
+                <div id="extra2CustomSolidPanel" style="display: none;">
+                  <div class="color-picker-grid">
+                    <div class="color-picker-row">
+                      <span class="color-picker-label">Background:</span>
+                      <div class="color-picker-wrap">
+                        <input type="color" id="extra2SolidBg" class="color-picker-input" value="#241806" oninput="onExtra2SolidColorInput()">
+                        <span class="color-hex-text" id="extra2SolidBgHex">#241806</span>
+                      </div>
+                    </div>
+                    <div class="color-picker-row">
+                      <span class="color-picker-label">Border Stroke:</span>
+                      <div class="color-picker-wrap">
+                        <input type="color" id="extra2SolidStroke" class="color-picker-input" value="#fbbf24" oninput="onExtra2SolidColorInput()">
+                        <span class="color-hex-text" id="extra2SolidStrokeHex">#fbbf24</span>
+                      </div>
+                    </div>
+                    <div class="color-picker-row" style="grid-column: span 2;">
+                      <span class="color-picker-label">Text Color:</span>
+                      <div class="color-picker-wrap">
+                        <input type="color" id="extra2SolidText" class="color-picker-input" value="#ffffff" oninput="onExtra2SolidColorInput()">
+                        <span class="color-hex-text" id="extra2SolidTextHex">#ffffff</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Typography Settings Box -->
+              <div class="typo-controls-box">
+                <div class="form-label-row" style="margin-bottom: 2px;">
+                  <span class="typo-label-small">Typography &amp; Fonts</span>
+                  <button type="button" class="google-font-pill-btn" onclick="toggleGoogleFontInput('extra2')">+ Google Font</button>
+                </div>
+
+                <div class="google-font-input-box" id="extra2GoogleFontRow">
+                  <div class="google-font-row">
+                    <input type="text" id="extra2GoogleFontInput" class="google-font-text-input" placeholder="Google Font name" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomGoogleFontFromInput('extra2');}">
+                    <button type="button" class="google-font-load-btn" onclick="addCustomGoogleFontFromInput('extra2')">Load</button>
+                  </div>
+                </div>
+
+                <div class="form-group" style="margin: 0;">
+                  <select id="extra2FontFamily" onchange="onExtra2FontChange()">
+                    <!-- Populated dynamically via JS -->
+                  </select>
+                </div>
+
+                <div class="typo-row" style="justify-content: space-between;">
+                  <div style="display: flex; gap: 6px; align-items: center;">
+                    <button type="button" class="typo-toggle-btn active" id="btnExtra2Bold" title="Toggle Bold" onclick="toggleExtra2Bold()">
+                      <strong>B</strong>
+                    </button>
+                    <button type="button" class="typo-toggle-btn" id="btnExtra2Italic" title="Toggle Italic" onclick="toggleExtra2Italic()">
+                      <em>I</em>
+                    </button>
+                    <button type="button" class="typo-toggle-btn" id="btnExtra2LetterSpacing" title="Toggle Wide Letter Spacing" onclick="toggleExtra2LetterSpacing()">
+                      <span style="font-size: 10px; letter-spacing: 2px;">A-V</span>
+                    </button>
+                  </div>
+
+                  <div style="display: flex; align-items: center; gap: 8px; flex: 1; margin-left: 10px;">
+                    <span style="font-size: 11px; color: var(--text-muted); white-space: nowrap;">Pt:</span>
+                    <input type="range" id="extra2PtSize" min="8" max="32" step="1" value="13" style="flex: 1;" oninput="onExtra2PtSizeChange()">
+                    <span class="form-val-badge" id="extra2PtSizeVal" style="min-width: 42px; text-align: center;">13 pt</span>
+                  </div>
+                </div>
+
+                <!-- Text Gradient Section for Extra 2 -->
+                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed rgba(255,255,255,0.08);">
+                  <div class="form-label-row" style="margin-bottom: 4px;">
+                    <span class="typo-label-small" style="display: flex; align-items: center; gap: 5px;">
+                      <span>✨ Text Gradient</span>
+                    </span>
+                    <label class="checkbox-row" style="margin: 0; font-size: 11px; cursor: pointer;">
+                      <input type="checkbox" id="badge4TextGradEnable" onchange="toggleBadge4TextGrad(this.checked)">
+                      <span style="font-size: 10.5px; color: #fbbf24; font-weight: 600;">Enable Gradient Text</span>
+                    </label>
+                  </div>
+                  <div id="badge4TextGradControls" style="display: none; margin-top: 6px;">
+                    <div class="color-picker-grid" style="grid-template-columns: 1fr 1fr; gap: 6px;">
+                      <div class="color-picker-row">
+                        <span class="color-picker-label" style="font-size: 9.5px;">Top / Start:</span>
+                        <div class="color-picker-wrap">
+                          <input type="color" id="badge4TextGrad1" class="color-picker-input" value="#ffffff" oninput="onBadge4TextGradInput()">
+                          <span class="color-hex-text" id="badge4TextGrad1Hex" style="font-size: 9px;">#ffffff</span>
+                        </div>
+                      </div>
+                      <div class="color-picker-row">
+                        <span class="color-picker-label" style="font-size: 9.5px;">Bottom / End:</span>
+                        <div class="color-picker-wrap">
+                          <input type="color" id="badge4TextGrad2" class="color-picker-input" value="#fbbf24" oninput="onBadge4TextGradInput()">
+                          <span class="color-hex-text" id="badge4TextGrad2Hex" style="font-size: 9px;">#fbbf24</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div style="display: flex; gap: 4px; align-items: center; justify-content: space-between; margin-top: 6px;">
+                      <div style="display: flex; gap: 4px; align-items: center;">
+                        <span style="font-size: 9.5px; color: var(--text-dim);">Angle:</span>
+                        <button type="button" class="grad-dir-btn active" id="btnBadge4TextDir_vert" style="padding: 2px 7px; font-size: 9.5px;" onclick="setBadge4TextGradDir('vertical')">⇅ Vert</button>
+                        <button type="button" class="grad-dir-btn" id="btnBadge4TextDir_horiz" style="padding: 2px 7px; font-size: 9.5px;" onclick="setBadge4TextGradDir('horizontal')">⇄ Horiz</button>
+                      </div>
+                      <div style="display: flex; gap: 3px;">
+                        <button type="button" class="preset-btn" style="font-size: 9px; padding: 1px 5px;" onclick="applyBadge4TextGradPreset('#ffffff', '#fbbf24')">Amber</button>
+                        <button type="button" class="preset-btn" style="font-size: 9px; padding: 1px 5px;" onclick="applyBadge4TextGradPreset('#fff3bf', '#f59e0b')">Gold</button>
+                        <button type="button" class="preset-btn" style="font-size: 9px; padding: 1px 5px;" onclick="applyBadge4TextGradPreset('#ffffff', '#94a3b8')">Silver</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Presets View -->
+            <div id="extra2PresetSection" class="form-group" style="display: none; margin-top: 8px;">
+              <div class="form-label-row">
+                <span style="font-size: 11px; color: var(--text-dim);">Pick Extra 2 Preset:</span>
+              </div>
+              <div class="preset-pill-grid">
+                <button type="button" class="preset-btn" onclick="applyExtra2Preset('hazard')">⚠️ Hazard</button>
+                <button type="button" class="preset-btn" onclick="applyExtra2Preset('props')">🏙️ Props</button>
+                <button type="button" class="preset-btn" onclick="applyExtra2Preset('transit')">🛣️ Transit</button>
+                <button type="button" class="preset-btn" onclick="applyExtra2Preset('nature')">🌿 Nature</button>
+                <button type="button" class="preset-btn" onclick="applyExtra2Preset('graffiti')">🎨 Graffiti</button>
+                <button type="button" class="preset-btn" onclick="applyExtra2Preset('poster')">🖼️ Posters</button>
+              </div>
+            </div>
+
+            <!-- Custom Logo Image View -->
+            <div id="extra2ImageSection" class="form-group" style="display: none; margin-top: 8px;">
+              <div class="form-label-row">
+                <span style="font-size: 11px; color: var(--text-main);">Upload Extra 2 Graphic:</span>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <input type="file" id="extra2LogoInput" accept="image/png, image/svg+xml, image/jpeg" style="display:none;" onchange="handleExtra2LogoSelect(event)">
+                <button class="btn-secondary" style="flex: 1;" onclick="document.getElementById('extra2LogoInput').click()">
+                  <span id="extra2LogoUploadBtnText">Upload Graphic...</span>
+                </button>
+                <button class="btn-secondary" id="btnClearExtra2Logo" style="padding: 7px 10px; display: none;" onclick="clearExtra2Logo()">✕</button>
+              </div>
+            </div>
+
+            <!-- Position -->
+            <div class="form-group" style="margin-top: 10px;">
+              <div class="form-label-row">
+                <div class="form-label-left">
+                  <span>Badge Position</span>
+                </div>
+              </div>
+              <select id="extra2Position" onchange="onExtra2PositionChange()">
+                <option value="custom" selected>📍 Free Position (Custom X / Y Anywhere)</option>
+                <option value="top-right">Top-Right Corner</option>
+                <option value="top-left">Top-Left Corner</option>
+                <option value="top-center">Top-Center (Header Banner)</option>
+                <option value="bottom-left">Bottom-Left Corner</option>
+                <option value="bottom-center">Bottom-Center (Footer Ribbon)</option>
+                <option value="bottom-right">Bottom-Right Corner</option>
+                <option value="center">Center</option>
+              </select>
+
+              <!-- Free Coordinates Controls for Extra 2 -->
+              <div id="extra2CustomPosContainer" style="display: block; background: rgba(36, 24, 6, 0.45); border: 1px dashed rgba(251, 191, 36, 0.35); border-radius: 6px; padding: 10px; margin-top: 8px;">
+                <div style="font-size: 11px; font-weight: 700; color: #fbbf24; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+                  <span>📍 Free Coordinate Positioning</span>
+                  <span style="font-size: 10px; color: var(--text-dim); font-weight: normal;">(0% = Left/Top, 100% = Right/Bottom)</span>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 8px;">
+                  <div class="form-label-row">
+                    <span style="font-size: 10.5px; color: var(--text-muted);">Horizontal Position (X):</span>
+                    <span class="form-val-badge" id="extra2PosXVal">85%</span>
+                  </div>
+                  <div class="slider-container">
+                    <input type="range" id="extra2PosX" min="0" max="100" step="1" value="85" oninput="onExtra2CoordChange()">
+                  </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 6px;">
+                  <div class="form-label-row">
+                    <span style="font-size: 10.5px; color: var(--text-muted);">Vertical Position (Y):</span>
+                    <span class="form-val-badge" id="extra2PosYVal">15%</span>
+                  </div>
+                  <div class="slider-container">
+                    <input type="range" id="extra2PosY" min="0" max="100" step="1" value="15" oninput="onExtra2CoordChange()">
+                  </div>
+                </div>
+
+                <div style="display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px;">
+                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapExtra2Coord(50, 50)">Center (50, 50)</button>
+                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapExtra2Coord(15, 15)">Top-Left</button>
+                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapExtra2Coord(85, 15)">Top-Right (Default)</button>
+                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapExtra2Coord(15, 85)">Bottom-Left</button>
+                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapExtra2Coord(85, 85)">Bottom-Right</button>
+                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapExtra2Coord(50, 15)">Top Mid</button>
+                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapExtra2Coord(50, 85)">Bottom Mid</button>
+                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapExtra2Coord(15, 50)">Left Mid</button>
+                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapExtra2Coord(85, 50)">Right Mid</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Frame Style -->
+            <div class="form-group" style="margin-top: 10px;">
+              <div class="form-label-row">
+                <div class="form-label-left">
+                  <span>Frame Style</span>
+                </div>
+              </div>
+              <select id="badge4Frame" onchange="renderAllMaps()">
+                <option value="pill" selected>Sleek Pill / Tag Ribbon</option>
+                <option value="rounded">Squircle (Rounded Box)</option>
+                <option value="circle">Circular Seal</option>
+                <option value="raw">Clean / Raw (Transparent - No Backing)</option>
+              </select>
+            </div>
+
+            <!-- Scale & Layout -->
+            <div class="form-group" style="margin-top: 10px;">
+              <div class="form-label-row">
+                <div class="form-label-left">
+                  <span>Badge Scale</span>
+                </div>
+                <span class="form-val-badge" id="extra2ScaleVal">24%</span>
+              </div>
+              <div class="slider-container">
+                <input type="range" id="extra2Scale" min="15" max="50" step="1" value="24" oninput="onExtra2ScaleChange()">
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 10px;">
+              <div class="form-label-row">
+                <div class="form-label-left">
+                  <span>Padding (Edge Inset)</span>
+                </div>
+                <span class="form-val-badge" id="extra2PaddingVal">12 px</span>
+              </div>
+              <div class="slider-container">
+                <input type="range" id="extra2Padding" min="0" max="36" step="1" value="12" oninput="onExtra2PaddingChange()">
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 10px;">
+              <div class="form-label-row">
+                <div class="form-label-left">
+                  <span>Badge Opacity</span>
+                </div>
+                <span class="form-val-badge" id="extra2OpacityVal">95%</span>
+              </div>
+              <div class="slider-container">
+                <input type="range" id="extra2Opacity" min="10" max="100" step="5" value="95" oninput="onExtra2OpacityChange()">
+              </div>
+            </div>
+          </div>
+
+          <!-- SUBPANEL 5: DEFAULT BADGES MANAGEMENT -->
+          <div class="badge-subpanel" id="panelBadgeDefaults">
+            <div class="defaults-status-card" id="badgeDefaultsStatus">
+              <div style="font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between;">
+                <span id="badgeDefaultsStatusTitle">ℹ️ Default Badges Status</span>
+                <span id="badgeDefaultsStatusBadge" style="font-size: 10px; padding: 1px 6px; border-radius: 4px; background: rgba(255,255,255,0.1);">Not Stored</span>
+              </div>
+              <div id="badgeDefaultsStatusDesc" style="color: var(--text-dim); font-size: 11px; line-height: 1.45;">
+                Configure your Creator Logo and Series Badge in the tabs above, then click <strong>"Save Current Badges as Default"</strong>. They will stay stored in your browser so you don't have to reload them every time!
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <button type="button" class="btn-primary" style="padding: 10px 14px; font-size: 13px;" onclick="saveIconBadgeDefaults()">
+                <span>💾 Save Current Badges as Default</span>
+              </button>
+              
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                <button type="button" class="btn-secondary" style="padding: 7px 8px; font-size: 11.5px;" onclick="loadIconBadgeDefaults(false)">
+                  🔄 Apply Defaults
+                </button>
+                <button type="button" class="btn-secondary" style="padding: 7px 8px; font-size: 11.5px; color: #f87171;" onclick="clearIconBadgeDefaults()">
+                  🗑️ Clear Defaults
+                </button>
+              </div>
+
+              <label class="checkbox-row" style="margin-top: 8px; font-size: 11.5px;">
+                <input type="checkbox" id="autoApplyBadgeDefaults" checked onchange="toggleAutoApplyDefaults(this.checked)">
+                <span>Automatically load default badges on app startup</span>
+              </label>
+            </div>
+          </div>
+
+        </div>
+        </div>
+      </div>

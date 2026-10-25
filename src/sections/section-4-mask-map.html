@@ -1,0 +1,64 @@
+      <div class="collapsible-section" id="secToolsMask">
+        <div class="section-title collapsible-header" onclick="toggleSection('secToolsMask')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleSection('secToolsMask');}" tabindex="0" role="button" aria-expanded="true">
+          <div class="section-header-left">
+            <svg class="section-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            <div class="form-label-left">
+              <span>4. Channel-Packed Mask Map</span>
+              <button type="button" class="help-q-btn" onclick="event.stopPropagation(); toggleFieldHelp(this, 'metallicChannel', event)" onmouseenter="showFieldHelp(this, 'metallicChannel', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Mask Map" title="Help for Mask Map">?</button>
+            </div>
+          </div>
+          <div class="section-header-right">
+            <span style="font-size: 10px; color: var(--text-dim); font-weight: normal;">R:Metal | A:Smooth</span>
+          </div>
+        </div>
+        <div class="collapsible-content">
+          <div class="panel-box">
+          <div class="form-group">
+            <div class="form-label-row">
+              <div class="form-label-left">
+                <span>Metallic / Metalness (Red Channel)</span>
+                <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'metallicChannel', event)" onmouseenter="showFieldHelp(this, 'metallicChannel', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Metallic Channel" title="Help for Metallic Channel">?</button>
+              </div>
+              <span class="form-val-badge" id="metalVal">0 (0%)</span>
+            </div>
+            <div class="slider-container">
+              <input type="range" id="metallic" min="0" max="255" step="1" value="0" oninput="onMetalChange()">
+            </div>
+            <div style="font-size: 10px; color: var(--text-dim); margin-top: 2px;">
+              0 for stone/asphalt/dirt, 255 for metal plates/manholes
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top: 12px;">
+            <div class="form-label-row">
+              <div class="form-label-left">
+                <span>Shininess / Smoothness (Alpha Channel)</span>
+                <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'smoothnessChannel', event)" onmouseenter="showFieldHelp(this, 'smoothnessChannel', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Smoothness Channel" title="Help for Smoothness Channel">?</button>
+              </div>
+              <span class="form-val-badge" id="smoothVal">40 (16%)</span>
+            </div>
+            <div class="slider-container">
+              <input type="range" id="smoothness" min="0" max="255" step="1" value="40" oninput="onSmoothChange()">
+            </div>
+            <div style="font-size: 10px; color: var(--text-dim); margin-top: 2px;">
+              Lower = rough matte terrain; Higher = polished wet / specular shine
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 10px;">
+            <label class="checkbox-row" style="margin: 0;">
+              <input type="checkbox" id="maskWithDecalAlpha" checked onchange="renderAllMaps()">
+              <span id="maskAlphaLabel">Modulate Mask with Base Decal Alpha (Transparent edges)</span>
+            </label>
+            <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'maskModulation', event)" onmouseenter="showFieldHelp(this, 'maskModulation', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Mask Modulation" title="Help for Mask Modulation">?</button>
+          </div>
+
+          <div style="margin-top: 10px; padding: 6px 10px; background: var(--bg-input); border-radius: 4px; font-size: 10px; color: var(--text-muted); display: flex; gap: 8px;">
+            <span class="channel-pill pill-red">R: Metal</span>
+            <span class="channel-pill pill-green">G: 0</span>
+            <span class="channel-pill pill-blue">B: 0</span>
+            <span class="channel-pill pill-alpha">A: Smooth</span>
+          </div>
+        </div>
+        </div>
+      </div>

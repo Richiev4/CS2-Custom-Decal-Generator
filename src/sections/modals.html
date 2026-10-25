@@ -1,0 +1,413 @@
+  <!-- Saved Assets Library Modal -->
+  <div class="modal-overlay" id="libraryModal" onclick="closeLibraryModalOnBackdrop(event)">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          Saved Decals & Surfaces Library
+        </div>
+        <button class="preset-btn" style="padding: 4px 8px;" onclick="closeLibraryModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="display: flex; gap: 8px; justify-content: space-between; align-items: center; padding-bottom: 8px; border-bottom: 1px solid var(--border-color); flex-wrap: wrap;">
+          <span style="font-size: 12px; color: var(--text-muted);">Browser Storage (Persisted across sessions)</span>
+          <div style="display: flex; gap: 6px;">
+            <button class="btn-secondary" style="width: auto; padding: 5px 10px; font-size: 11px; color: var(--accent-cyan); border-color: rgba(56, 189, 248, 0.35);" onclick="openRibbonFromLibrary()" title="View current series in the bottom ribbon">
+              🎞️ Open in Series Ribbon
+            </button>
+            <button class="btn-primary" style="width: auto; padding: 5px 12px; font-size: 11px;" onclick="saveCurrentToBrowser()">+ Save Current Asset</button>
+          </div>
+        </div>
+
+        <!-- Series Filter & Search Toolbar -->
+        <div style="display: flex; gap: 8px; align-items: center; background: rgba(15, 23, 42, 0.6); padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border-color);">
+          <div style="display: flex; align-items: center; gap: 6px; flex: 1;">
+            <span style="font-size: 11px; color: var(--text-dim); white-space: nowrap;">Series:</span>
+            <select id="librarySeriesFilter" onchange="filterLibraryBySeries(this.value)" style="flex: 1; padding: 4px 8px; font-size: 11px;">
+              <option value="all">All Series</option>
+            </select>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px; flex: 1.2;">
+            <input type="text" id="librarySearchInput" placeholder="Filter by asset name or mode..." oninput="filterLibraryBySearch(this.value)" style="width: 100%; padding: 4px 8px; font-size: 11px;">
+          </div>
+        </div>
+
+        <div id="savedAssetsList" style="display: flex; flex-direction: column; gap: 8px;">
+          <!-- Dynamically populated list of saved assets -->
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Unsaved Changes Guard Confirmation Modal -->
+  <div class="modal-overlay" id="unsavedGuardModal" onclick="closeUnsavedModalOnBackdrop(event)">
+    <div class="modal-card" style="max-width: 480px; border-color: rgba(245, 158, 11, 0.45); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);">
+      <div class="modal-header" style="background: #141c28;">
+        <div class="modal-title" style="color: #f59e0b; display: flex; align-items: center; gap: 8px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <span>Unsaved Custom Asset</span>
+        </div>
+        <button class="preset-btn" style="padding: 4px 8px;" onclick="cancelGuardAction()">✕</button>
+      </div>
+
+      <div class="modal-body" style="padding: 20px; gap: 14px;">
+        <p style="font-size: 13px; line-height: 1.5; color: #e2e8f0; margin: 0;">
+          You currently have a custom image / asset loaded (<strong id="unsavedAssetName" style="color: var(--primary);">CustomDecal</strong>). Opening a preset or loading another file will replace your current workspace.
+        </p>
+
+        <div style="background: rgba(245, 158, 11, 0.1); border-left: 3px solid #f59e0b; padding: 10px 14px; border-radius: 0 6px 6px 0; font-size: 12px; color: #fde68a;">
+          Do you want to save your current asset project before continuing?
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px;">
+          <!-- Option 1: Save & Continue -->
+          <button class="btn-primary" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35); font-size: 13px; padding: 10px 14px;" onclick="confirmGuardSaveAndContinue()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Save Project & Continue
+          </button>
+
+          <!-- Option 2: Continue Without Saving -->
+          <button class="btn-secondary" style="background: rgba(239, 68, 68, 0.12); border-color: rgba(239, 68, 68, 0.4); color: #f87171; font-weight: 700; font-size: 12px; padding: 9px 14px; display: flex; align-items: center; justify-content: center; gap: 6px;" onclick="confirmGuardContinueWithoutSaving()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            Continue Without Saving
+          </button>
+
+          <!-- Option 3: Cancel -->
+          <button class="btn-secondary" style="font-size: 12px; padding: 9px 14px; color: var(--text-muted); display: flex; align-items: center; justify-content: center;" onclick="cancelGuardAction()">
+            Cancel (Stay on Current Asset)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Help & Knowledge Base Modal -->
+  <div class="modal-overlay" id="helpModal" onclick="closeHelpModalOnBackdrop(event)">
+    <div class="modal-card help-modal-card">
+      <div class="modal-header">
+        <div class="modal-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Cities: Skylines 2 Custom Asset Guide & FAQ
+        </div>
+        <button class="preset-btn" style="padding: 4px 8px;" onclick="closeHelpModal()">✕</button>
+      </div>
+
+      <div class="modal-body" style="padding: 18px 20px;">
+        <!-- Live Instant Search -->
+        <div class="help-search-box">
+          <svg class="help-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="helpSearchInput" class="help-search-input" placeholder="Search questions & topics (e.g. resizing, normal map, export, tiling, path)..." oninput="filterHelpTopics(this.value)">
+        </div>
+
+        <!-- Category Filters -->
+        <div class="help-filter-pills" id="helpFilterPills">
+          <button type="button" class="help-filter-btn active" onclick="setHelpCategory('all')">All Questions</button>
+          <button type="button" class="help-filter-btn" onclick="setHelpCategory('wiki')">Paradox Wiki Reference</button>
+          <button type="button" class="help-filter-btn" onclick="setHelpCategory('resolution')">Resolution & Export</button>
+          <button type="button" class="help-filter-btn" onclick="setHelpCategory('normal-mask')">Normal & Mask Maps</button>
+          <button type="button" class="help-filter-btn" onclick="setHelpCategory('tiling-lit')">Tiling & 3D Simulation</button>
+          <button type="button" class="help-filter-btn" onclick="setHelpCategory('modes')">Decal vs Surface vs NetLane</button>
+          <button type="button" class="help-filter-btn" onclick="setHelpCategory('install')">Installation & Modding</button>
+        </div>
+
+        <!-- Search empty message -->
+        <div id="helpNoResults" style="display: none; padding: 30px; text-align: center; color: var(--text-dim); font-size: 13px;">
+          No help articles match your search. Try different keywords like "normal", "resolution", "export", or "tiling".
+        </div>
+
+        <!-- Knowledge Base Cards List -->
+        <div class="help-items-list" id="helpItemsList">
+
+          <!-- WIKI 1: Paradox Wiki Findings & Official Pipeline -->
+          <details class="help-card" data-category="wiki" open>
+            <summary class="help-summary">
+              <span>What did we verify from the official Cities: Skylines II Paradox Wiki?</span>
+              <span class="help-badge help-badge-green">Paradox Wiki Spec</span>
+            </summary>
+            <div class="help-content">
+              <p><strong class="help-highlight">All asset parameters, texture layouts, bitmasks, and shader pipelines were directly verified against the official Cities: Skylines II Paradox Wiki:</strong></p>
+              <ul>
+                <li><strong>Complete Decal Layer Masking (<code>_colossal_DecalLayerMask</code>):</strong>
+                  The game engine calculates which surfaces project decals using bitwise addition:
+                  <ul>
+                    <li><code>1</code> = <strong>Terrain</strong> (Natural ground, cliffs, soil)</li>
+                    <li><code>2</code> = <strong>Roads</strong> (Asphalt, highways, pavement)</li>
+                    <li><code>4</code> = <strong>Buildings</strong> (Zoned lots, signature buildings, walls)</li>
+                    <li><code>8</code> = <strong>Vehicles</strong> (Cars, trucks, trains, buses)</li>
+                    <li><code>16</code> = <strong>Creatures</strong> (Pedestrians, citizens, dogs, wildlife)</li>
+                    <li><code>32</code> = <strong>Props / Other</strong> (Curbs, jersey barriers, street furniture, rocks)</li>
+                  </ul>
+                  <em>Example:</em> Terrain (1) + Roads (2) + Buildings (4) = <code>7</code>. Adding Props (32) = <code>39</code>.
+                </li>
+                <li><strong>Normal Map Opacity (<code>_NormalOpacity</code>):</strong> 
+                  Documented under official <em>Assets: Importing Decals</em>. A float property (0.0 to 1.0) inside <code>settings.json</code>. Setting it to <code>0.0</code> removes normal bump height so underlying asphalt roughness shows through flat painted road stripes. Setting it to <code>1.0</code> uses full 3D relief (e.g. manhole iron rims).
+                </li>
+                <li><strong>Dual Pipeline Support:</strong> 
+                  Our export package generates both <code>decal.json</code> / <code>surface.json</code> / <code>netlane.json</code> for the <em>ExtraAssetsImporter</em> mod, AND the official <code>settings.json</code> with <code>"materialTemplate": "DefaultDecal"</code> for native in-game Editor / PDX Mods imports.
+                </li>
+                <li><strong>Net Lane Spline Constraints:</strong> 
+                  Netlanes are extruded line meshes. Wiki notes standard road marking decals should not exceed <strong>5 meters in width</strong> without custom wide netlane handling, and texture orientation must match driving flow.
+                </li>
+                <li><strong>Surface Draw Order Warning:</strong> 
+                  Surfaces must stay within <code>-170 to 0</code> (Default: <code>-50</code>). Setting higher draw orders can cause ground polygons to bleed over elevated highway bridges and viaduct ramps!
+                </li>
+              </ul>
+            </div>
+          </details>
+
+          <!-- WIKI 2: Texture Rotation & Driving Direction -->
+          <details class="help-card" data-category="wiki">
+            <summary class="help-summary">
+              <span>How do Texture Rotation and Spline Flow align road arrows and lines?</span>
+              <span class="help-badge help-badge-green">Rotation & Splines</span>
+            </summary>
+            <div class="help-content">
+              <p>In Cities: Skylines 2, road arrows, chevrons, and netlane curbs follow the spline drawing direction (from start node to end node):</p>
+              <ul>
+                <li><strong>Texture Rotation (0°, 90°, 180°, 270°):</strong> Applies a matrix transformation directly to the canvas rendering pipeline before generating Base Color, Normal, and Mask maps.</li>
+                <li><strong>Left-Hand vs Right-Hand Traffic (LHT vs RHT):</strong> Use <em>⇄ Flip Horizontal</em> to quickly mirror angled turn arrows or lane merger chevrons to match your city's driving side.</li>
+                <li><strong>Netlane Spline Orientation:</strong> If road markings appear perpendicular to the road, rotate 90° CW or 270° CW to align the graphic along the extrusion axis.</li>
+              </ul>
+            </div>
+          </details>
+
+          <!-- Q1: Export Resizing -->
+          <details class="help-card" data-category="resolution">
+            <summary class="help-summary">
+              <span>When I export a package, does the app resize the textures?</span>
+              <span class="help-badge help-badge-blue">Export</span>
+            </summary>
+            <div class="help-content">
+              <p><strong class="help-highlight">No. The app does not resize or re-compress textures at the moment of export.</strong></p>
+              <p>When you click <em>"Export Asset Package (.zip)"</em>, the app takes the exact canvases currently rendered in your viewport (sized according to your chosen <strong>Target Texture Resolution</strong>: 512×512, 1024×1024, 2048×2048, or 4096×4096) and converts them straight into pristine PNG files.</p>
+              <div class="help-callout">
+                Resizing happens upfront when you drop an image or adjust the Target Resolution dropdown in the sidebar—never in the background during packaging.
+              </div>
+            </div>
+          </details>
+
+          <!-- Q2: Resolution switching & Upscaling -->
+          <details class="help-card" data-category="resolution" open>
+            <summary class="help-summary">
+              <span>If I drop an image in at 512×512 and switch to 2048×2048, will I lose resolution?</span>
+              <span class="help-badge help-badge-blue">Resolution</span>
+            </summary>
+            <div class="help-content">
+              <p><strong class="help-highlight">It depends on the original resolution of your source file:</strong></p>
+              <ul>
+                <li><strong>If your source image is 2048×2048 (or higher):</strong> You lose <span class="help-highlight">zero resolution</span>. The app keeps your original image in its raw, full-resolution state in memory. Changing the dropdown to 2048×2048 redraws directly from your uncompressed original file straight onto the 2048 canvas.</li>
+                <li><strong>If your source image was originally only 512×512:</strong> The browser smoothly interpolates (bicubic scale) the 512px image to fill the 2048px canvas. It won't look degraded, but upscaling cannot invent new microscopic camera detail.</li>
+              </ul>
+              <div class="help-callout help-callout-green">
+                <strong>Bonus for Procedural Normal & Mask Maps:</strong> Even if your color image was 512px, switching the target to 2048×2048 causes the procedural normal and mask generators to compute gradients across a true 2048×2048 pixel grid, resulting in much smoother normal vectors and cleaner lighting!
+              </div>
+            </div>
+          </details>
+
+          <!-- Q3: Saving Project files (.cs2asset) -->
+          <details class="help-card" data-category="resolution">
+            <summary class="help-summary">
+              <span>When I save a project (.cs2asset), does it save my full-resolution image?</span>
+              <span class="help-badge help-badge-blue">Save & Load</span>
+            </summary>
+            <div class="help-content">
+              <p><strong class="help-highlight">Yes! Project files (.cs2asset) preserve your base image at its true native dimensions.</strong></p>
+              <p>When you click <em>"Save Project (.cs2asset)"</em> or save to the browser library:</p>
+              <ul>
+                <li>The base texture is serialized at its original, native image dimensions (<code>naturalWidth</code> × <code>naturalHeight</code>), whether that is 512, 1024, 2048, or 4096.</li>
+                <li>Any custom normal maps and designer logos are also preserved at their original resolutions.</li>
+                <li>All sliders, physical meter dimensions, categories, and layer masks are stored.</li>
+              </ul>
+              <p>When you reload the project in the future, you can freely switch target output resolutions without generational loss.</p>
+            </div>
+          </details>
+
+          <!-- Q4: 3D Lit Surface single tile -->
+          <details class="help-card" data-category="tiling-lit">
+            <summary class="help-summary">
+              <span>Why does the 'In-Game Lit Surface Simulation' tab only show a single image/tile?</span>
+              <span class="help-badge help-badge-green">3D Lit View</span>
+            </summary>
+            <div class="help-content">
+              <p>The <strong>In-Game Lit Surface Simulation</strong> tab is engineered as a focused, single-tile 1:1 lighting inspection tool:</p>
+              <ul>
+                <li>It simulates how your asset looks projected onto wet roadway asphalt or terrain under Cities: Skylines 2 PBR lighting.</li>
+                <li>By moving your mouse across the surface, you dynamically adjust the sun vector angle to verify how your normal bump grooves catch shadows and how specular glossiness highlights the surface.</li>
+                <li>It intentionally displays a single unrepeated tile so you can inspect individual decal edges and fine reliefs without repeat distortion.</li>
+              </ul>
+              <div class="help-callout help-callout-green">
+                To inspect repeating tiles and seam lines across borders, switch to the dedicated <strong>Tiled Pattern</strong> tab!
+              </div>
+            </div>
+          </details>
+
+          <!-- Q5: Tiled Pattern Tab & Slider -->
+          <details class="help-card" data-category="tiling-lit">
+            <summary class="help-summary">
+              <span>How does the 'Tiled Pattern' tab slider and repeat system work?</span>
+              <span class="help-badge help-badge-green">Tiling Slider</span>
+            </summary>
+            <div class="help-content">
+              <p>The <strong>Tiled Pattern</strong> tab is dedicated to verifying pattern repetition and seamless edge matching:</p>
+              <ul>
+                <li><strong>Repeated Tiles Slider (1× to 16×):</strong> Drag the glowing emerald slider or use the <code>[−]</code> and <code>[+]</code> buttons to adjust repetitions from 1 tile (1×1) up to 256 tiles (16×16).</li>
+                <li><strong>Quick Presets:</strong> Instantly jump to 1×, 2×, 4×, 6×, 8×, 12×, or 16× repeats.</li>
+                <li><strong>Seams Toggle:</strong> Displays high-visibility dashed cyan lines at each tile boundary, allowing you to instantly spot visual seams or misalignments.</li>
+                <li><strong>Map Source Switcher:</strong> Inspect tiling on the <em>Base Color</em>, <em>Normal Map</em>, <em>Mask Map</em>, or the <em>3D Lit</em> preview.</li>
+              </ul>
+            </div>
+          </details>
+
+          <!-- Q6: Custom Normal Maps & Relief Height -->
+          <details class="help-card" data-category="normal-mask">
+            <summary class="help-summary">
+              <span>Can I insert my own custom _NormalMap.png and adjust bump height?</span>
+              <span class="help-badge help-badge-orange">Normal Maps</span>
+            </summary>
+            <div class="help-content">
+              <p><strong class="help-highlight">Yes! You can insert your own baked normal map or use auto-generated normals.</strong></p>
+              <ul>
+                <li><strong>Insert Custom Normal:</strong> Click <em>"Insert Custom _NormalMap..."</em> under Section 2 to load any tangent-space normal map (from Blender, Substance Painter, Photoshop, etc.).</li>
+                <li><strong>Relief Height / Depth Slider:</strong> When a custom normal is active, this slider acts as a vector multiplier:
+                  <ul>
+                    <li><code>1.0×</code> = 100% exact original relief of your normal map.</li>
+                    <li><code>&gt; 1.0×</code> = Steeper, deeper grooves and more dramatic shadows.</li>
+                    <li><code>&lt; 1.0×</code> = Softer, flatter relief.</li>
+                  </ul>
+                </li>
+                <li><strong>Flip Green (Y) Axis:</strong> Cities: Skylines 2 uses <span class="help-highlight">OpenGL format (+Y up)</span>. If your normal map was baked in <span class="help-highlight">DirectX format (-Y down)</span>, check this box to invert the Y channel so bumps don't render inside-out in game!</li>
+              </ul>
+            </div>
+          </details>
+
+          <!-- Q7: Mask Map Channel Packing -->
+          <details class="help-card" data-category="normal-mask">
+            <summary class="help-summary">
+              <span>How does Cities: Skylines 2 pack channels in _MaskMap.png?</span>
+              <span class="help-badge help-badge-orange">Mask Packing</span>
+            </summary>
+            <div class="help-content">
+              <p>Cities: Skylines 2 uses channel-packed textures for physical material properties:</p>
+              <ul>
+                <li><strong>Red (R) — Metallic:</strong> 0 = non-metallic (asphalt, concrete, rubber, paint), 255 = fully metallic (iron, steel, brass).</li>
+                <li><strong>Green (G) — Unused:</strong> Always set to 0.</li>
+                <li><strong>Blue (B) — Unused:</strong> Always set to 0.</li>
+                <li><strong>Alpha (A) — Smoothness:</strong> 0 = completely rough/matte, 255 = mirror-smooth specular glossiness. This is the inverse of roughness (Smoothness = 1.0 - Roughness).</li>
+              </ul>
+              <div class="help-callout">
+                <strong>Modulate Mask with Decal Alpha:</strong> When checked, pixels that are transparent on the decal will also have 0 metallic and 0 smoothness in the mask, preventing ugly shiny halos on the road around your decal.
+              </div>
+            </div>
+          </details>
+
+          <!-- Q8: Decal vs Surface vs Net Lane -->
+          <details class="help-card" data-category="modes">
+            <summary class="help-summary">
+              <span>What is the difference between Decal, Surface, and Net Lane modes?</span>
+              <span class="help-badge help-badge-purple">Asset Types</span>
+            </summary>
+            <div class="help-content">
+              <p>Each mode targets a different asset class supported by ExtraAssetsImporter in Cities: Skylines 2:</p>
+              <ul>
+                <li><strong>Decal Mode:</strong> Projected onto terrain, roads, or building walls via an oriented 3D bounding box (Width × Height × Depth in meters). Ideal for manhole covers, arrows, road markings, stains, and graffiti. Supports transparency.</li>
+                <li><strong>Surface Mode:</strong> Painted with the surface tool as infinite, tileable terrain ground covers. Requires seamless textures without transparent borders. Configured with <code>uvScale</code> (tiling density) and category (Pavement, Cobblestones, Asphalt, Grass, Dirt, Industrial).</li>
+                <li><strong>Net Lane Mode:</strong> Extruded along curves, roads, and networks. Configured with <code>width</code> (stripe/curb thickness in meters) and <code>length</code> (texture stretch distance before repeating). Ideal for highway lane markings, double yellow lines, curbs, guardrails, and train tracks.</li>
+              </ul>
+            </div>
+          </details>
+
+          <!-- Q9: Draw Order Priorities -->
+          <details class="help-card" data-category="modes">
+            <summary class="help-summary">
+              <span>How does Render Draw Order Priority work?</span>
+              <span class="help-badge help-badge-purple">Draw Order</span>
+            </summary>
+            <div class="help-content">
+              <p>Draw Order controls which asset renders on top when multiple decals or surfaces overlap in the same location:</p>
+              <ul>
+                <li><strong>Decals:</strong> Range <code>0 to 200</code> (Default: <code>50</code>). Higher numbers render on top of lower numbers (e.g. fresh paint over an oil stain).</li>
+                <li><strong>Surfaces:</strong> Range <code>-170 to 0</code> (Default: <code>-50</code>). Surfaces render beneath decals but above base terrain layers.</li>
+                <li><strong>Net Lanes:</strong> Range <code>0 to 200</code> (Default: <code>60</code>). Higher numbers render over base road pavement and lower markings.</li>
+              </ul>
+            </div>
+          </details>
+
+          <!-- Q10: Installation & In-Game Paths -->
+          <details class="help-card" data-category="install">
+            <summary class="help-summary">
+              <span>Where do I extract my exported package files for Cities: Skylines 2?</span>
+              <span class="help-badge help-badge-blue">Installation</span>
+            </summary>
+            <div class="help-content">
+              <p>Extract your exported <code>.zip</code> package directly into the corresponding ExtraAssetsImporter mod directory:</p>
+              
+              <p><strong>Custom Decals:</strong></p>
+              <div class="help-callout" style="font-family: monospace; font-size: 11px;">
+                %AppData%\..\LocalLow\Colossal Order\Cities Skylines II\Mods\ExtraAssetsImporter\CustomDecals\&lt;Asset_Name&gt;\
+              </div>
+
+              <p><strong>Custom Surfaces:</strong></p>
+              <div class="help-callout" style="font-family: monospace; font-size: 11px;">
+                %AppData%\..\LocalLow\Colossal Order\Cities Skylines II\Mods\ExtraAssetsImporter\CustomSurfaces\&lt;Category&gt;\&lt;Asset_Name&gt;\
+              </div>
+
+              <p><strong>Custom Net Lanes:</strong></p>
+              <div class="help-callout" style="font-family: monospace; font-size: 11px;">
+                %AppData%\..\LocalLow\Colossal Order\Cities Skylines II\Mods\ExtraAssetsImporter\CustomNetlanes\&lt;Category&gt;\&lt;Asset_Name&gt;\
+              </div>
+
+              <p style="margin-top: 10px;"><strong>In-Game Access:</strong></p>
+              <ol style="margin-left: 18px; margin-bottom: 6px;">
+                <li>Make sure the <strong>ExtraAssetsImporter</strong> mod is installed via Paradox Mods.</li>
+                <li>Launch Cities: Skylines 2.</li>
+                <li>Open the ExtraAssetsImporter tool menu in-game to select and place your new custom decal, surface, or net lane!</li>
+              </ol>
+            </div>
+          </details>
+
+          <!-- Q11: Dual Watermark Badges & Default Badges Management -->
+          <details class="help-card" data-category="install">
+            <summary class="help-summary">
+              <span>How do Dual Badges (Creator + Series) and Default Watermarks work?</span>
+              <span class="help-badge help-badge-purple">Dual Badges</span>
+            </summary>
+            <div class="help-content">
+              <p><strong class="help-highlight">Cities: Skylines 2 UI thumbnails (<code>_Icon.png</code>) can now feature TWO separate overlays simultaneously:</strong></p>
+              <ul>
+                <li><strong>1. Creator Logo / Author Watermark:</strong> Displays your brand, studio crest, or verified author mark (⭐ Star, ✓ Verified, ⚡ CS2 Mod, 👑 Studio, 🛡️ Crest, or your custom PNG logo). Typically placed in the bottom-right corner.</li>
+                <li><strong>2. Series / Collection Badge:</strong> Identifies your pack or release category (🎨 Graffiti, 🖼️ Posters, 🛣️ Transit, 🏙️ Props, ⚠️ Hazard, 🌿 Nature, or <strong>Custom Text</strong> with 8 color themes, Google Fonts, point sizing, and letter spacing like "UK ROADS", "SPEED BUMPS", "METRO", or "PACK 01"). Typically placed in top-center or top-left.</li>
+                <li><strong>Smart Collision Prevention:</strong> Even if both badges are assigned to the same corner, the generator automatically calculates an offset so neither badge covers the other.</li>
+                <li><strong>Save as Default (No Reloading Needed!):</strong> In the <em>Defaults</em> tab, click <strong>"Save Current Badges as Default"</strong>. Both logos, custom text, presets, color themes, scales, opacities, and positions are stored in browser memory and automatically apply to every new decal or session!</li>
+              </ul>
+            </div>
+          </details>
+
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Interactive Field Help Popover -->
+  <div id="fieldHelpPopover" class="field-help-popover" onmouseenter="clearPopoverHideTimer()" onmouseleave="scheduleHideFieldHelp()">
+    <div class="popover-header">
+      <div class="popover-title-group">
+        <span class="popover-title" id="popoverTitle">Field Title</span>
+        <span class="popover-badge channel-pill pill-blue" id="popoverBadge">INFO</span>
+      </div>
+      <button type="button" class="popover-close-btn" onclick="hideFieldHelp(true)" title="Close (Esc)">✕</button>
+    </div>
+    <div class="popover-body" id="popoverBody">
+      Field explanation content
+    </div>
+    <div class="popover-footer">
+      <button type="button" class="popover-learn-more-btn" id="popoverLearnMoreBtn" onclick="openPopoverTopicInGuide()">
+        Open in Guide &amp; FAQ ↗
+      </button>
+      <span class="popover-pin-hint" id="popoverPinHint">Click ? to pin open</span>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast">Copied to clipboard!</div>

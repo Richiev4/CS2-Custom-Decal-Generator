@@ -1,0 +1,6 @@
+{
+  "name": "CS2 Custom Decal Generator",
+  "description": "Generate Cities: Skylines 2 custom decals, terrain surfaces, and net lanes (BaseColor, Normal, Mask) and geometry JSON for ExtraAssetsImporter.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

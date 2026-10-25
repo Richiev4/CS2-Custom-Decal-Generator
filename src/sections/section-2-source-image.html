@@ -1,0 +1,22 @@
+      <div class="collapsible-section" id="secToolsSource">
+        <div class="section-title collapsible-header" onclick="toggleSection('secToolsSource')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleSection('secToolsSource');}" tabindex="0" role="button" aria-expanded="true">
+          <div class="section-header-left">
+            <svg class="section-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            <div class="form-label-left">
+              <span>2. Source Image Input</span>
+              <button type="button" class="help-q-btn" onclick="event.stopPropagation(); toggleFieldHelp(this, 'sourceImage', event)" onmouseenter="showFieldHelp(this, 'sourceImage', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Source Image Input" title="Help for Source Image Input">?</button>
+            </div>
+          </div>
+          <div class="section-header-right">
+            <span id="sourceImageStatusBadge" style="font-size: 10px; color: var(--text-dim); font-weight: normal;">1:1 Ratio</span>
+          </div>
+        </div>
+        <div class="collapsible-content">
+          <div class="drop-zone" id="dropZone">
+            <input type="file" id="fileInput" accept="image/png, image/jpeg, image/webp" onchange="handleFileSelect(event)">
+            <div class="drop-icon">⤓</div>
+            <div class="drop-title" id="dropTitleText">Drop PNG or JPG decal texture</div>
+            <div class="drop-hint" id="dropHintText">Square 1:1 ratio • Transparent or solid</div>
+          </div>
+        </div>
+      </div>

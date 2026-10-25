@@ -1,0 +1,187 @@
+    <div class="preview-area">
+      <!-- Tabs -->
+      <div class="view-tabs">
+        <button class="tab-btn active" id="tabGrid" onclick="switchTab('grid')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          All Texture Maps
+        </button>
+        <button class="tab-btn" id="tab3d" onclick="switchTab('3d')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+          <span id="tab3dLabel">In-Game Lit Surface Simulation</span>
+        </button>
+        <button class="tab-btn" id="tabTiled" onclick="switchTab('tiled')" style="display: flex; align-items: center; gap: 6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h7v7H3z"/><path d="M14 3h7v7h-7z"/><path d="M14 14h7v7h-7z"/><path d="M3 14h7v7H3z"/></svg>
+          <span id="tabTiledLabel">Tiled Pattern</span>
+          <span id="tabTileBadge" style="font-size: 10px; font-weight: 700; color: var(--accent-emerald); background: rgba(16, 185, 129, 0.2); padding: 1px 6px; border-radius: 4px; border: 1px solid rgba(16, 185, 129, 0.3);">4× Slider</span>
+        </button>
+        <button class="tab-btn" id="tabBase" onclick="switchTab('base')">_BaseColorMap</button>
+        <button class="tab-btn" id="tabNormal" onclick="switchTab('normal')">_NormalMap</button>
+        <button class="tab-btn" id="tabMask" onclick="switchTab('mask')">_MaskMap</button>
+        <button class="tab-btn" id="tabIcon" onclick="switchTab('icon')">_Icon</button>
+      </div>
+
+      <!-- Canvas Render Views -->
+      <div class="preview-canvas-container">
+
+        <!-- 3-Map Grid View -->
+        <div id="viewGrid" class="texture-grid">
+          
+          <!-- Base Color Map Card -->
+          <div class="texture-card">
+            <div class="texture-card-header">
+              <span class="texture-name" id="nameCardBase">_BaseColorMap.png</span>
+              <button class="btn-secondary" style="padding: 2px 8px; font-size: 11px;" onclick="downloadTexture('base')">Save</button>
+            </div>
+            <div class="texture-card-body">
+              <div class="texture-canvas-box checkerboard">
+                <canvas id="canvasBase"></canvas>
+              </div>
+            </div>
+            <div class="texture-footer">
+              <span>RGBA Albedo Color</span>
+              <span class="resolution-badge" id="resBadge1">1024×1024</span>
+            </div>
+          </div>
+
+          <!-- Normal Map Card -->
+          <div class="texture-card">
+            <div class="texture-card-header">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span class="texture-name" id="nameCardNormal">_NormalMap.png</span>
+                <span id="cardNormalBadge" style="font-size: 9px; padding: 1px 5px; border-radius: 3px; background: rgba(56, 189, 248, 0.15); color: var(--primary);">Auto</span>
+              </div>
+              <button class="btn-secondary" style="padding: 2px 8px; font-size: 11px;" onclick="downloadTexture('normal')">Save</button>
+            </div>
+            <div class="texture-card-body">
+              <div class="texture-canvas-box" style="background: #8080ff;">
+                <canvas id="canvasNormal"></canvas>
+              </div>
+            </div>
+            <div class="texture-footer">
+              <span id="cardNormalFooter">OpenGL Tangent Normal (+X, +Y)</span>
+              <span class="resolution-badge" id="resBadge2">1024×1024</span>
+            </div>
+          </div>
+
+          <!-- Mask Map Card -->
+          <div class="texture-card">
+            <div class="texture-card-header">
+              <span class="texture-name" id="nameCardMask">_MaskMap.png</span>
+              <button class="btn-secondary" style="padding: 2px 8px; font-size: 11px;" onclick="downloadTexture('mask')">Save</button>
+            </div>
+            <div class="texture-card-body">
+              <div class="texture-canvas-box checkerboard">
+                <canvas id="canvasMask"></canvas>
+              </div>
+            </div>
+            <div class="texture-footer">
+              <span>R:Metallic, G:0, B:0, A:Smooth</span>
+              <span class="resolution-badge" id="resBadge3">1024×1024</span>
+            </div>
+          </div>
+
+          <!-- In-Game Icon Card -->
+          <div class="texture-card" id="cardIcon">
+            <div class="texture-card-header">
+              <span class="texture-name" id="nameCardIcon">_Icon.png</span>
+              <button class="btn-secondary" style="padding: 2px 8px; font-size: 11px;" onclick="downloadTexture('icon')">Save</button>
+            </div>
+            <div class="texture-card-body">
+              <div class="texture-canvas-box checkerboard">
+                <canvas id="canvasIcon" width="256" height="256"></canvas>
+              </div>
+            </div>
+            <div class="texture-footer">
+              <span>CS2 UI Menu Thumbnail</span>
+              <span class="resolution-badge">256×256</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- In-Game Lit Surface Simulation (Single Image/Tile) -->
+        <div id="view3D" class="preview-viewport" style="display: none;">
+          <div class="sim-surface" id="simContainer">
+            <canvas id="canvasSim" width="512" height="512"></canvas>
+            <div class="sim-hint">
+              💡 Move cursor across surface to change sun lighting angle & observe specular reflection!
+            </div>
+          </div>
+          <div style="margin-top: 12px; font-size: 12px; color: var(--text-muted); text-align: center;" id="simDescText">
+            Simulating single tile with real-time Blinn-Phong lighting computed from Normal & Mask maps.
+          </div>
+        </div>
+
+        <!-- Dedicated Tiled Pattern View -->
+        <div id="viewTiled" class="preview-viewport" style="display: none;">
+          <!-- Top Controls Bar: Presets, Map Dropdown & Seams Toggle -->
+          <div style="width: 100%; max-width: 602px; margin-bottom: 12px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 8px 14px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35); display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase;">Presets:</span>
+              <div class="tiling-btn-group" id="tiledGroup">
+                <button type="button" class="tiling-pill" data-tile="1" onclick="setSurfaceTiling(1)">1×</button>
+                <button type="button" class="tiling-pill" data-tile="2" onclick="setSurfaceTiling(2)">2×</button>
+                <button type="button" class="tiling-pill active" data-tile="4" onclick="setSurfaceTiling(4)">4×</button>
+                <button type="button" class="tiling-pill" data-tile="6" onclick="setSurfaceTiling(6)">6×</button>
+                <button type="button" class="tiling-pill" data-tile="8" onclick="setSurfaceTiling(8)">8×</button>
+                <button type="button" class="tiling-pill" data-tile="12" onclick="setSurfaceTiling(12)">12×</button>
+                <button type="button" class="tiling-pill" data-tile="16" onclick="setSurfaceTiling(16)">16×</button>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 11px; font-weight: 600; color: var(--text-dim);">Map:</span>
+                <select id="tiledMapSource" style="padding: 4px 8px; font-size: 11px; width: auto; background: var(--bg-input); border-radius: 4px; border: 1px solid var(--border-color); color: var(--text-main);" onchange="renderTiledView()">
+                  <option value="base" selected>Base Color</option>
+                  <option value="normal">Normal Map</option>
+                  <option value="mask">Mask Map</option>
+                  <option value="lit">3D Lit</option>
+                </select>
+              </div>
+              <label class="checkbox-row" style="margin: 0; font-size: 11px; color: var(--text-dim); gap: 4px; cursor: pointer;">
+                <input type="checkbox" id="tiledShowSeams" onchange="onTiledSeamChange()">
+                <span>Seams</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Main Viewport: Vertical Slider Dock on Left + 512x512 Canvas on Right -->
+          <div style="display: flex; align-items: center; justify-content: center; gap: 14px;">
+            <!-- Left Vertical Slider Dock -->
+            <div class="tiled-vertical-dock">
+              <span style="font-size: 9px; font-weight: 800; color: var(--text-dim); letter-spacing: 0.5px;">REPEATS</span>
+              <span id="tiledSliderVal" style="font-size: 13px; font-weight: 800; color: var(--accent-emerald); background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); padding: 2px 6px; border-radius: 4px; font-family: monospace;">4×</span>
+              <button type="button" class="btn-secondary" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800; border-radius: 6px; color: var(--accent-emerald);" onclick="stepTiling(1)" title="Increase repeated tiles">+</button>
+              <span style="font-size: 9px; color: var(--text-dim); font-weight: 600;">16×</span>
+
+              <input type="range" class="tiled-vertical-slider" id="tiledSlider" min="1" max="16" value="4" step="1" oninput="onTiledSliderInput(this.value)" orient="vertical" title="Slide up to increase, down to decrease tiles">
+
+              <span style="font-size: 9px; color: var(--text-dim); font-weight: 600;">1×</span>
+              <button type="button" class="btn-secondary" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800; border-radius: 6px; color: var(--accent-emerald);" onclick="stepTiling(-1)" title="Decrease repeated tiles">−</button>
+              <span id="tiledGridCountText" style="font-size: 9px; color: var(--text-dim); font-family: monospace; white-space: nowrap;">4×4 = 16</span>
+            </div>
+
+            <!-- Right: 512x512 Tiled Canvas -->
+            <div class="canvas-wrapper checkerboard" style="width: 512px; height: 512px; position: relative;">
+              <canvas id="canvasTiled" width="512" height="512"></canvas>
+            </div>
+          </div>
+
+          <div style="margin-top: 10px; font-size: 12px; color: var(--text-muted); text-align: center;" id="tiledInfoText">
+            Viewing 4× (4×4 grid = 16 repeated tiles) to verify seamless edges across borders.
+          </div>
+        </div>
+
+        <!-- Single Focus View -->
+        <div id="viewSingle" class="preview-viewport" style="display: none;">
+          <div class="canvas-wrapper checkerboard">
+            <canvas id="canvasSingle"></canvas>
+          </div>
+          <div style="margin-top: 12px; font-size: 13px; font-family: monospace; color: var(--accent-cyan);" id="singleName">
+            _BaseColorMap.png
+          </div>
+        </div>
+
+      </div>
+    </div>

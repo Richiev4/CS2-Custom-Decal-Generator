@@ -1,0 +1,84 @@
+  <header>
+    <div class="brand-group">
+      <div class="logo-badge">CS2 MODDING</div>
+      <div>
+        <div class="brand-title" id="mainAppTitle">
+          Cities: Skylines 2 Custom Asset Generator
+        </div>
+        <div class="brand-subtitle">
+          ExtraAssetsImporter Pipeline • PBR Texture Packing • OpenGL Normal (+X, +Y)
+        </div>
+      </div>
+    </div>
+
+    <!-- Mode Selector: Decal vs Surface vs Net Lane -->
+    <div class="mode-switch-wrapper">
+      <button class="mode-btn active-decal" id="btnModeDecal" onclick="setMode('decal')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="7"/></svg>
+        Decal Mode
+      </button>
+      <button class="mode-btn" id="btnModeSurface" onclick="setMode('surface')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Surface Mode
+      </button>
+      <button class="mode-btn" id="btnModeNetlane" onclick="setMode('netlane')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 19c4-4 4-10 8-14 4 4 4 10 8 14"/><path d="M12 4v16" stroke-dasharray="2 2"/></svg>
+        Net Lane Mode
+      </button>
+    </div>
+
+    <!-- Presets -->
+    <div class="quick-presets">
+      <span style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Presets:</span>
+      <span id="presetButtonsGroup">
+        <button class="preset-btn" onclick="loadSample('manhole')">Manhole</button>
+        <button class="preset-btn" onclick="loadSample('arrow')">Turn Arrow</button>
+        <button class="preset-btn" onclick="loadSample('crack')">Asphalt Crack</button>
+      </span>
+    </div>
+
+    <!-- Project Save & Load Actions -->
+    <div class="project-actions-group">
+      <input type="file" id="projectFileInput" accept=".cs2asset, .json" style="display:none;" onchange="handleProjectFileLoad(event)">
+      <input type="file" id="communityZipInput" accept=".zip,application/zip,application/x-zip-compressed" style="display:none;" onchange="handleCommunityZipImport(event)">
+      <input type="file" id="communityFolderInput" webkitdirectory directory multiple style="display:none;" onchange="handleCommunityFolderImport(event)">
+      <input type="file" id="communityFilesInput" multiple accept=".png,.jpg,.jpeg,.json,.txt" style="display:none;" onchange="handleCommunityFilesImport(event)">
+
+      <button class="project-btn" onclick="saveProjectToFile()" title="Export complete project state as a .cs2asset file">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Save
+      </button>
+      <button class="project-btn" onclick="document.getElementById('projectFileInput').click()" title="Load a saved .cs2asset project file">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Load
+      </button>
+
+      <!-- Import Community Asset Dropdown -->
+      <div style="position: relative; display: inline-block;">
+        <button class="project-btn" id="btnImportAsset" onclick="toggleImportDropdown(event)" title="Load a community asset package from a .zip or extracted folder" style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); color: var(--accent-emerald);">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Import ▾
+        </button>
+        <div id="importDropdownMenu" style="display: none; position: absolute; top: calc(100% + 6px); right: 0; background: #0f172a; border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 6px; box-shadow: 0 10px 25px rgba(0,0,0,0.85); z-index: 999; min-width: 220px; padding: 6px;">
+          <button type="button" class="project-btn" style="width: 100%; justify-content: flex-start; padding: 8px 10px; margin-bottom: 2px;" onclick="document.getElementById('communityZipInput').click(); toggleImportDropdown(false);">
+            📦 <span style="margin-left: 6px;">Import <strong>.ZIP Archive</strong></span>
+          </button>
+          <button type="button" class="project-btn" style="width: 100%; justify-content: flex-start; padding: 8px 10px; margin-bottom: 2px;" onclick="document.getElementById('communityFolderInput').click(); toggleImportDropdown(false);">
+            📁 <span style="margin-left: 6px;">Import <strong>Extracted Folder</strong></span>
+          </button>
+          <button type="button" class="project-btn" style="width: 100%; justify-content: flex-start; padding: 8px 10px;" onclick="document.getElementById('communityFilesInput').click(); toggleImportDropdown(false);">
+            📄 <span style="margin-left: 6px;">Select <strong>Extracted Files</strong></span>
+          </button>
+        </div>
+      </div>
+
+      <button class="project-btn" onclick="openSavedLibraryModal()" title="View browser-saved decal & surface library">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        Library (<span id="savedCountBadge">0</span>)
+      </button>
+      <button class="project-btn" style="background: rgba(56, 189, 248, 0.12); border-color: rgba(56, 189, 248, 0.4); color: var(--primary);" onclick="openHelpModal()" title="Open Comprehensive Modding Guide & FAQ">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Help & FAQ
+      </button>
+    </div>
+  </header>

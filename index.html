@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cities: Skylines 2 Custom Asset Creator (Decals, Surfaces & Net Lanes)</title>
+  <meta name="description" content="Generate Cities: Skylines 2 custom decals, terrain surfaces, and net lanes with BaseColor, Normal, and Mask maps for ExtraAssetsImporter.">
+  <meta property="og:title" content="Cities: Skylines 2 Custom Asset Generator (Decals, Surfaces & Net Lanes)">
+  <meta property="og:description" content="Generate Cities: Skylines 2 custom decals, terrain surfaces, and net lanes with BaseColor, Normal, and Mask maps for ExtraAssetsImporter.">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <!-- Google Fonts for Custom Badges and Creator Seals -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Cinzel:wght@600;800&family=Inter:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Montserrat:ital,wght@0,600;0,800;1,600;1,800&family=Orbitron:wght@600;800&family=Oswald:wght@600;700&family=Permanent+Marker&family=Poppins:ital,wght@0,600;0,800;1,600&family=Press+Start+2P&family=Rajdhani:wght@600;700&family=Righteous&family=Teko:wght@600;700&display=swap" rel="stylesheet">
+  
+  <!-- JSZip for client-side packaging -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+  <!-- Extracted Stylesheet -->
+  <link rel="stylesheet" href="/src/styles/app.css">
+</head>
+<body>
+
+  <!-- Top Navigation & Header -->
+  <include src="/src/sections/header.html" />
+
+  <!-- Main Work Area -->
+  <div class="container">
+    <!-- Left Column: Controls & Settings Sidebar -->
+    <div class="sidebar">
+      <include src="/src/sections/sidebar-toolbar.html" />
+      <include src="/src/sections/section-1-asset-settings.html" />
+      <include src="/src/sections/section-2-source-image.html" />
+      <include src="/src/sections/section-3-normal-map.html" />
+      <include src="/src/sections/section-4-mask-map.html" />
+      <include src="/src/sections/section-5-icon-badges.html" />
+      <include src="/src/sections/section-6-export.html" />
+    </div>
+
+    <!-- Right Column: Interactive Real-Time Preview Area -->
+    <include src="/src/sections/preview-area.html" />
+  </div>
+
+  <!-- Footer: Directory & Mod Installation Guide -->
+  <include src="/src/sections/footer-guide.html" />
+
+  <!-- Modals, Overlays & Popovers -->
+  <include src="/src/sections/modals.html" />
+
+  <!-- Main Application Script -->
+  <script type="module" src="/src/js/app.js"></script>
+</body>
+</html>

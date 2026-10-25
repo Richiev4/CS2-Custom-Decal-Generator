@@ -1,0 +1,550 @@
+      <div class="collapsible-section" id="secToolsAsset">
+        <div class="section-title collapsible-header" onclick="toggleSection('secToolsAsset')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleSection('secToolsAsset');}" tabindex="0" role="button" aria-expanded="true">
+          <div class="section-header-left">
+            <svg class="section-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            <span id="sec1Title">1. Decal Settings & Geometry</span>
+          </div>
+          <div class="section-header-right">
+            <span id="modeBadge" style="font-size: 10px; color: var(--primary); font-weight: bold;">DECAL</span>
+          </div>
+        </div>
+        <div class="collapsible-content">
+          <div class="panel-box">
+          <div class="form-group">
+            <div class="form-label-row">
+              <div class="form-label-left">
+                <span id="assetNameLabel">Asset Name</span>
+                <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'assetName', event)" onmouseenter="showFieldHelp(this, 'assetName', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Asset Name" title="Help for Asset Name">?</button>
+                <span id="rotationNameFlag" class="transform-flag-badge" style="display: none;" onclick="focusAndHighlightAssetName()" title="Orientation changed! Click to edit and rename this variant.">
+                  <span class="flag-pulse-dot"></span>
+                  <span id="rotationNameFlagText">Variant Active</span>
+                </span>
+              </div>
+            </div>
+            <input type="text" id="assetName" value="CustomRoadMarking_01" placeholder="e.g. StopMarking_01" spellcheck="false" oninput="onAssetNameInput()">
+            
+            <!-- Dynamic Reminder Card when Texture is Rotated or Flipped -->
+            <div id="rotationNameReminder" class="rotation-name-reminder" style="display: none;">
+              <div class="reminder-header">
+                <div class="reminder-title-wrap">
+                  <span class="reminder-icon">⚠️</span>
+                  <span class="reminder-title" id="reminderTitleText">Flipped / Rotated Variant</span>
+                </div>
+                <button type="button" class="reminder-dismiss" onclick="dismissRotationReminder()" title="Dismiss reminder">✕</button>
+              </div>
+              <div class="reminder-desc" id="reminderDescText">
+                You've rotated or flipped this texture. Remember to give this variant a unique <strong>Asset Name</strong> so it doesn't overwrite your other exports in CS2.
+              </div>
+              <div class="reminder-quick-actions">
+                <span class="reminder-chip-label">Quick Rename:</span>
+                <button type="button" class="reminder-chip auto-chip" onclick="applySmartTransformedName()" title="Automatically swap Left/Right or append variant tag">
+                  ⚡ Auto-Rename
+                </button>
+                <button type="button" class="reminder-chip" onclick="applySuggestedNameSuffix('_Left')" title="Append _Left to name">+ "_Left"</button>
+                <button type="button" class="reminder-chip" onclick="applySuggestedNameSuffix('_Right')" title="Append _Right to name">+ "_Right"</button>
+                <button type="button" class="reminder-chip" onclick="applySuggestedNameSuffix('_Flipped')" title="Append _Flipped to name">+ "_Flipped"</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Asset Series / Pack Name (for Series Ribbon & Multi-Asset Collections) -->
+          <div class="form-group" style="margin-top: 10px;">
+            <div class="form-label-row">
+              <div class="form-label-left">
+                <span id="assetSeriesLabel">Asset Series / Pack</span>
+                <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'assetSeries', event)" onmouseenter="showFieldHelp(this, 'assetSeries', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Asset Series" title="Help for Asset Series">?</button>
+              </div>
+              <span class="form-val-badge" id="activeSeriesBadge">Road Markings</span>
+            </div>
+            <div style="display: flex; gap: 6px;">
+              <input type="text" id="assetSeries" value="Road Markings" placeholder="e.g. UK Roads, Speed Bumps, Graffiti..." spellcheck="false" oninput="onAssetSeriesInput()" style="flex: 1;">
+              <select id="seriesQuickPicker" onchange="applySeriesQuickPick(this.value)" style="width: 130px;">
+                <option value="Road Markings" selected>Road Markings</option>
+                <option value="City Utilities">City Utilities</option>
+                <option value="Asphalt Wear">Asphalt Wear</option>
+                <option value="Highway Signs">Highway Signs</option>
+                <option value="Plaza Surfaces">Plaza Surfaces</option>
+                <option value="Graffiti Pack">Graffiti Pack</option>
+              </select>
+            </div>
+            <div class="series-chip-row" id="seriesChipRow" style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px;">
+              <!-- Dynamic chips for existing series -->
+            </div>
+            <div style="font-size: 10px; color: var(--text-dim); margin-top: 3px; display: flex; justify-content: space-between; align-items: center;">
+              <span>Groups assets in the bottom Series Ribbon.</span>
+              <button type="button" style="color: var(--accent-cyan); background: none; border: none; font-size: 10px; cursor: pointer; text-decoration: underline; padding: 0;" onclick="syncWithSeriesBadge()">Sync with Icon Badge</button>
+            </div>
+          </div>
+
+          <!-- Asset Category (Subfolder text input + quick picker) -->
+          <div class="form-group" style="margin-top: 10px;">
+            <div class="form-label-row">
+              <div class="form-label-left">
+                <span>Asset Category (Subfolder)</span>
+                <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'assetCategory', event)" onmouseenter="showFieldHelp(this, 'assetCategory', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Asset Category" title="Help for Asset Category">?</button>
+              </div>
+              <span class="form-val-badge" id="categorySubfolderBadge">RoadMarkings</span>
+            </div>
+            <div style="display: flex; gap: 6px;">
+              <input type="text" id="assetCategory" value="RoadMarkings" placeholder="Category folder name..." spellcheck="false" oninput="updateConfigJson()" style="flex: 1;">
+              <input type="hidden" id="surfaceCategory" value="RoadMarkings">
+              <select id="categoryQuickPicker" onchange="applyCategoryQuickPick()" style="width: 130px;">
+                <option value="RoadMarkings" selected>RoadMarkings</option>
+                <option value="Utilities">Utilities</option>
+                <option value="Manholes">Manholes</option>
+                <option value="Graffiti">Graffiti</option>
+                <option value="Signage">Signage</option>
+                <option value="Cracks">Cracks / Wear</option>
+              </select>
+            </div>
+            <div style="font-size: 10px; color: var(--text-dim); margin-top: 3px;">
+              Subfolder in ExtraAssetsImporter for grouping and cataloging in-game.
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top: 10px;">
+            <div class="form-label-row">
+              <div class="form-label-left">
+                <span>Target Resolution (Power-of-2)</span>
+                <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'targetResolution', event)" onmouseenter="showFieldHelp(this, 'targetResolution', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Target Resolution" title="Help for Target Resolution">?</button>
+              </div>
+            </div>
+            <select id="targetRes" onchange="onResolutionChange()">
+              <option value="512">512 × 512 px (Low / Distant)</option>
+              <option value="1024" selected>1024 × 1024 px (Standard / High Detail)</option>
+              <option value="2048">2048 × 2048 px (Ultra / 2K Crisp)</option>
+              <option value="4096">4096 × 4096 px (Maximum / 4K UHD)</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="margin-top: 10px;">
+            <div class="form-label-row">
+              <div class="form-label-left">
+                <span>Aspect Ratio Strategy</span>
+                <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'aspectRatioStrategy', event)" onmouseenter="showFieldHelp(this, 'aspectRatioStrategy', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Aspect Ratio Strategy" title="Help for Aspect Ratio Strategy">?</button>
+              </div>
+            </div>
+            <select id="fitStrategy" onchange="renderAllMaps()">
+              <option value="cover" selected>Square Crop & Center (Cover)</option>
+              <option value="contain">Fit & Pad Transparent Borders (Contain)</option>
+            </select>
+          </div>
+
+          <!-- Texture Rotation Utilities -->
+          <div class="form-group" style="margin-top: 10px;">
+            <div class="form-label-row">
+              <div class="form-label-left">
+                <span>Texture Rotation</span>
+                <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'textureRotation', event)" onmouseenter="showFieldHelp(this, 'textureRotation', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Texture Rotation" title="Help for Texture Rotation">?</button>
+              </div>
+              <span class="form-val-badge" id="rotationVal">0° (Default)</span>
+            </div>
+            <div class="segmented-control" id="rotationControl">
+              <button type="button" class="rot-btn active" id="rotBtn0" onclick="setTextureRotation(0)">0° (Default)</button>
+              <button type="button" class="rot-btn" id="rotBtn90" onclick="setTextureRotation(90)">90° CW</button>
+              <button type="button" class="rot-btn" id="rotBtn180" onclick="setTextureRotation(180)">180° Flip</button>
+              <button type="button" class="rot-btn" id="rotBtn270" onclick="setTextureRotation(270)">270° CW</button>
+            </div>
+            <div style="display: flex; gap: 6px; margin-top: 6px;">
+              <button type="button" class="preset-btn" id="btnFlipH" style="flex: 1; text-align: center;" onclick="toggleFlipHorizontal()">⇄ Flip Horizontal</button>
+              <button type="button" class="preset-btn" id="btnFlipV" style="flex: 1; text-align: center;" onclick="toggleFlipVertical()">⇅ Flip Vertical</button>
+            </div>
+            
+            <!-- Quick Link / Reminder Banner under Rotation Controls -->
+            <div id="rotationHintBanner" class="rotation-hint-banner" style="display: none;">
+              <div style="display: flex; align-items: center; gap: 5px; min-width: 0;">
+                <span>💡</span>
+                <span id="rotationHintText" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Orientation active: remember to update <strong>Asset Name</strong>.</span>
+              </div>
+              <button type="button" class="rotation-hint-link" onclick="focusAndHighlightAssetName()">Edit Name ↑</button>
+            </div>
+
+            <div style="font-size: 10px; color: var(--text-dim); margin-top: 4px;">
+              Applies a translation and rotation matrix directly to the canvas rendering pipeline.
+            </div>
+          </div>
+
+          <!-- Contextual Inputs: Decal 3D Geometry Dimensions -->
+          <div id="sectionDecalGeometry" class="form-group" style="margin-top: 12px;">
+            <div class="form-label-row">
+              <div class="form-label-left">
+                <span>Projected Decal Dimensions (Meters)</span>
+                <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'decalDimensions', event)" onmouseenter="showFieldHelp(this, 'decalDimensions', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Decal Dimensions" title="Help for Decal Dimensions">?</button>
+              </div>
+              <span class="form-val-badge" id="decalFootprintSummary">2.0m × 2.0m (4.0 m²)</span>
+            </div>
+
+            <div class="dim-sliders-group" style="display: flex; flex-direction: column; gap: 10px; margin-top: 6px;">
+              <!-- Width Slider & Numeric Input -->
+              <div class="dim-control-item">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px;">
+                  <div style="display: flex; align-items: baseline; gap: 6px;">
+                    <span style="font-size: 11px; font-weight: 600; color: var(--text-main);">Width</span>
+                    <span style="font-size: 9px; color: var(--text-dim); font-family: monospace;">(0.1 – 10m slider)</span>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 4px;">
+                    <input type="number" id="dimWidth" value="2.0" step="0.1" min="0.1" max="100" oninput="onDecalDimInputChange('width', this.value)" style="width: 80px; padding: 3px 6px; font-size: 11px; text-align: right; height: 26px;" title="Enter any custom size up to 100 meters">
+                    <span style="font-size: 10px; color: var(--text-dim);">m</span>
+                  </div>
+                </div>
+                <div class="slider-container">
+                  <input type="range" id="dimWidthSlider" min="0.1" max="10.0" step="0.1" value="2.0" oninput="onDecalDimSliderChange('width', this.value)">
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 9px; color: var(--text-dim); font-family: monospace; margin-top: 1px;">
+                  <span>0.1m</span>
+                  <span style="color: var(--accent-cyan); cursor: pointer;" onclick="onDecalDimSliderChange('width', 8.0);" title="Jump to 1 CS2 zoning cell (8m)">8m (1 Cell)</span>
+                  <span id="dimWidthMaxLabel">10m</span>
+                </div>
+              </div>
+
+              <!-- Height Slider & Numeric Input -->
+              <div class="dim-control-item">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px;">
+                  <div style="display: flex; align-items: baseline; gap: 6px;">
+                    <span style="font-size: 11px; font-weight: 600; color: var(--text-main);">Height</span>
+                    <span style="font-size: 9px; color: var(--text-dim); font-family: monospace;">(0.1 – 10m slider)</span>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 4px;">
+                    <input type="number" id="dimHeight" value="2.0" step="0.1" min="0.1" max="100" oninput="onDecalDimInputChange('height', this.value)" style="width: 80px; padding: 3px 6px; font-size: 11px; text-align: right; height: 26px;" title="Enter any custom size up to 100 meters">
+                    <span style="font-size: 10px; color: var(--text-dim);">m</span>
+                  </div>
+                </div>
+                <div class="slider-container">
+                  <input type="range" id="dimHeightSlider" min="0.1" max="10.0" step="0.1" value="2.0" oninput="onDecalDimSliderChange('height', this.value)">
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 9px; color: var(--text-dim); font-family: monospace; margin-top: 1px;">
+                  <span>0.1m</span>
+                  <span style="color: var(--accent-cyan); cursor: pointer;" onclick="onDecalDimSliderChange('height', 8.0);" title="Jump to 1 CS2 zoning cell (8m)">8m (1 Cell)</span>
+                  <span id="dimHeightMaxLabel">10m</span>
+                </div>
+              </div>
+
+              <!-- Depth Slider & Numeric Input -->
+              <div class="dim-control-item">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px;">
+                  <div style="display: flex; align-items: baseline; gap: 6px;">
+                    <span style="font-size: 11px; font-weight: 600; color: var(--text-main);">Depth (Projection Box)</span>
+                    <span style="font-size: 9px; color: var(--text-dim); font-family: monospace;">(0.1 – 10m slider)</span>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 4px;">
+                    <input type="number" id="dimDepth" value="1.0" step="0.1" min="0.1" max="20" oninput="onDecalDimInputChange('depth', this.value)" style="width: 80px; padding: 3px 6px; font-size: 11px; text-align: right; height: 26px;" title="Enter any projection depth up to 20 meters">
+                    <span style="font-size: 10px; color: var(--text-dim);">m</span>
+                  </div>
+                </div>
+                <div class="slider-container">
+                  <input type="range" id="dimDepthSlider" min="0.1" max="10.0" step="0.1" value="1.0" oninput="onDecalDimSliderChange('depth', this.value)">
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 9px; color: var(--text-dim); font-family: monospace; margin-top: 1px;">
+                  <span>0.1m</span>
+                  <span style="color: var(--accent-cyan); cursor: pointer;" onclick="onDecalDimSliderChange('depth', 1.0);" title="Default CS2 projection depth (1m)">1.0m (Standard)</span>
+                  <span id="dimDepthMaxLabel">10m</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Scale Presets -->
+            <div style="margin-top: 10px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <span style="font-size: 10px; font-weight: 700; color: var(--text-dim); text-transform: uppercase;">CS2 Common Presets:</span>
+                <span style="font-size: 10px; color: var(--text-dim);">1 unit = 1 meter</span>
+              </div>
+              <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                <button type="button" class="preset-btn" style="padding: 2px 7px; font-size: 10px;" onclick="applyDecalDimPreset(0.8, 0.8, 1.0)">Manhole (0.8m)</button>
+                <button type="button" class="preset-btn" style="padding: 2px 7px; font-size: 10px;" onclick="applyDecalDimPreset(3.0, 0.6, 1.0)">Crosswalk (3×0.6m)</button>
+                <button type="button" class="preset-btn" style="padding: 2px 7px; font-size: 10px;" onclick="applyDecalDimPreset(1.5, 4.0, 1.0)">Road Arrow (1.5×4m)</button>
+                <button type="button" class="preset-btn" style="padding: 2px 7px; font-size: 10px;" onclick="applyDecalDimPreset(2.0, 2.0, 1.0)">Standard (2×2m)</button>
+                <button type="button" class="preset-btn" style="padding: 2px 7px; font-size: 10px;" onclick="applyDecalDimPreset(8.0, 8.0, 1.0)">1 Cell (8×8m)</button>
+              </div>
+            </div>
+
+            <!-- Docking Placeholder when floating -->
+            <div id="decalScaleDockSlot" style="margin-top: 10px;">
+              <div id="decalScaleFloatingNotice" style="display: none; padding: 8px 10px; border-radius: 6px; background: rgba(0, 168, 255, 0.08); border: 1px dashed rgba(0, 168, 255, 0.35); font-size: 11px; align-items: center; justify-content: space-between;">
+                <span style="color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
+                  <span>↗</span> In-game scale reference is floating
+                </span>
+                <button type="button" class="btn-secondary" style="padding: 2px 8px; font-size: 10px;" onclick="toggleFloatingScaleCard(false)">📌 Dock Back</button>
+              </div>
+
+              <!-- Live In-Game Scale Indicator Card (Can dock or float) -->
+              <div id="decalScaleCard" class="decal-scale-card">
+                <div class="scale-card-header" id="decalScaleCardHeader">
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <span class="scale-drag-grip" title="Drag to reposition when floating">⋮⋮</span>
+                    <span style="font-size: 13px;">📐</span>
+                    <span style="font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.3px;">In-Game Scale Reference</span>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <span id="decalScaleAspectBadge" style="font-size: 10px; font-family: monospace; color: var(--accent-cyan); background: rgba(0, 229, 255, 0.1); padding: 1px 6px; border-radius: 4px; border: 1px solid rgba(0, 229, 255, 0.2);">1.00 : 1</span>
+                    <button type="button" id="btnMinimizeScaleCard" class="scale-header-btn" onclick="toggleMinimizeScaleCard()" title="Minimize / Expand">_</button>
+                    <button type="button" id="toggleFloatScaleBtn" class="scale-header-btn" onclick="toggleFloatingScaleCard()" title="Toggle Floating Mode">↗ Float</button>
+                  </div>
+                </div>
+
+                <div id="decalScaleCardBody" class="scale-card-body">
+                  <div style="display: flex; gap: 10px; align-items: center; margin-top: 8px;">
+                    <!-- Proportional 8m x 8m Zoning Cell Footprint Preview -->
+                    <div style="flex-shrink: 0; width: 68px; height: 68px; background: #0b121b; border: 1px dashed rgba(255, 255, 255, 0.25); border-radius: 4px; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden;" title="Proportional footprint inside 1 standard 8m × 8m Cities: Skylines II zoning cell">
+                      <!-- Dotted center guidelines for cell -->
+                      <div style="position: absolute; inset: 0; background-image: linear-gradient(to right, rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.06) 1px, transparent 1px); background-size: 17px 17px;"></div>
+                      <div id="decalMiniBox" style="width: 25%; height: 25%; background: rgba(0, 168, 255, 0.35); border: 1.5px solid var(--primary); border-radius: 2px; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; z-index: 2;"></div>
+                      <span style="position: absolute; bottom: 2px; right: 3px; font-size: 8px; color: var(--text-dim); font-family: monospace; z-index: 1;">8m cell</span>
+                    </div>
+
+                    <!-- Live Metrics against CS2 Game Standards -->
+                    <div style="flex: 1; min-width: 0; font-size: 11px; display: flex; flex-direction: column; gap: 4px;">
+                      <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 4px;">
+                        <span style="color: var(--text-muted); font-size: 10px;">CS2 Zoning Cell (8m):</span>
+                        <strong id="decalCellPct" style="color: var(--text-main); font-size: 10px; text-align: right; font-family: monospace;">25% W × 25% H (6% area)</strong>
+                      </div>
+                      <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 4px;">
+                        <span style="color: var(--text-muted); font-size: 10px;">Road Lane (~3.2m):</span>
+                        <span id="decalLaneRef" style="color: var(--accent-emerald); font-size: 10px; font-weight: 600; text-align: right;">~0.6× lane width</span>
+                      </div>
+                      <div id="decalComparisonDesc" style="font-size: 10px; color: var(--accent-cyan); line-height: 1.3; margin-top: 2px;">
+                        🚗 Standard prop / marking size (fits within 1 traffic lane)
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style="font-size: 9px; color: var(--text-dim); margin-top: 6px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 5px;">
+                    Cities: Skylines II meshes use 1:1 metric scale. Decals project through their 3D bounding box volume (depth: 1.0m).
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Contextual Inputs: Surface UV Scale -->
+          <div id="sectionSurfaceUv" class="form-group" style="display: none; margin-top: 12px;">
+            <div class="form-label-row">
+              <div class="form-label-left">
+                <span>UV Scale (Tiling Frequency)</span>
+                <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'uvScale', event)" onmouseenter="showFieldHelp(this, 'uvScale', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for UV Scale" title="Help for UV Scale">?</button>
+              </div>
+              <span class="form-val-badge" id="uvScaleVal">1.0</span>
+            </div>
+            <div class="slider-container">
+              <input type="range" id="uvScaleSlider" min="0.1" max="8.0" step="0.1" value="1.0" oninput="onUvScaleChange()">
+            </div>
+            <div style="display: flex; gap: 4px; margin-top: 6px;">
+              <button type="button" class="preset-btn" style="padding: 2px 8px; font-size: 10px;" onclick="setUvScale(1.0)">1×</button>
+              <button type="button" class="preset-btn" style="padding: 2px 8px; font-size: 10px;" onclick="setUvScale(2.0)">2×</button>
+              <button type="button" class="preset-btn" style="padding: 2px 8px; font-size: 10px;" onclick="setUvScale(4.0)">4×</button>
+              <button type="button" class="preset-btn" style="padding: 2px 8px; font-size: 10px;" onclick="setUvScale(8.0)">8×</button>
+            </div>
+            <div style="font-size: 10px; color: var(--text-dim); margin-top: 4px;">
+              Dictates in-game terrain uvScale: 1× (1.0), 4× (4.0), 8× (8.0) density.
+            </div>
+            <button type="button" class="btn-secondary" style="width: 100%; margin-top: 10px; font-size: 11px; padding: 6px; display: flex; align-items: center; justify-content: center; gap: 6px; border-color: rgba(16, 185, 129, 0.4); color: var(--accent-emerald);" onclick="switchTab('tiled')">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h7v7H3z"/><path d="M14 3h7v7h-7z"/><path d="M14 14h7v7h-7z"/><path d="M3 14h7v7H3z"/></svg>
+              Open Tiled Pattern (Tile Slider View) →
+            </button>
+          </div>
+
+          <!-- Contextual Inputs: Net Lane Parameters (Width & Length) -->
+          <div id="sectionNetlaneParams" class="form-group" style="display: none; margin-top: 12px;">
+            <div class="form-label-row">
+              <div class="form-label-left">
+                <span>Lane Width (Meters)</span>
+                <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'laneWidth', event)" onmouseenter="showFieldHelp(this, 'laneWidth', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Lane Width" title="Help for Lane Width">?</button>
+              </div>
+              <span class="form-val-badge" id="netlaneWidthVal">1.0 m</span>
+            </div>
+            <div class="slider-container">
+              <input type="range" id="netlaneWidthSlider" min="0.1" max="15.0" step="0.1" value="1.0" oninput="onNetlaneParamChange()">
+            </div>
+            <div style="font-size: 10px; color: var(--text-dim); margin-top: 3px;">
+              Thickness of line or curb network. Paradox Wiki note: CS2 default netlanes are designed ≤ 5.0m.
+            </div>
+
+            <div class="form-label-row" style="margin-top: 10px;">
+              <div class="form-label-left">
+                <span>Texture Length (Meters)</span>
+                <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'textureLength', event)" onmouseenter="showFieldHelp(this, 'textureLength', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Texture Length" title="Help for Texture Length">?</button>
+              </div>
+              <span class="form-val-badge" id="netlaneLengthVal">2.0 m</span>
+            </div>
+            <div class="slider-container">
+              <input type="range" id="netlaneLengthSlider" min="0.5" max="30.0" step="0.5" value="2.0" oninput="onNetlaneParamChange()">
+            </div>
+            <div style="font-size: 10px; color: var(--text-dim); margin-top: 3px;">
+              Distance texture stretches along curves before repeating.
+            </div>
+          </div>
+
+          <!-- 1. Layer Masking Options (Decal Mode Only: _colossal_DecalLayerMask) -->
+          <div id="sectionDecalLayers" class="form-group" style="margin-top: 12px;">
+            <div class="form-label-row">
+              <div class="form-label-left">
+                <span>Render Target Layers</span>
+                <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'renderTargetLayers', event)" onmouseenter="showFieldHelp(this, 'renderTargetLayers', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Render Target Layers" title="Help for Render Target Layers">?</button>
+              </div>
+              <span class="form-val-badge" id="layerMaskVal">Mask: 7</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 4px;">
+              <label class="checkbox-row" style="margin: 0;">
+                <input type="checkbox" id="layerTerrain" value="1" checked onchange="onLayerMaskChange()">
+                <span>Terrain (1)</span>
+              </label>
+              <label class="checkbox-row" style="margin: 0;">
+                <input type="checkbox" id="layerRoads" value="2" checked onchange="onLayerMaskChange()">
+                <span>Roads (2)</span>
+              </label>
+              <label class="checkbox-row" style="margin: 0;">
+                <input type="checkbox" id="layerBuildings" value="4" checked onchange="onLayerMaskChange()">
+                <span>Buildings (4)</span>
+              </label>
+              <label class="checkbox-row" style="margin: 0;">
+                <input type="checkbox" id="layerVehicles" value="8" onchange="onLayerMaskChange()">
+                <span>Vehicles (8)</span>
+              </label>
+              <label class="checkbox-row" style="margin: 0;">
+                <input type="checkbox" id="layerCreatures" value="16" onchange="onLayerMaskChange()">
+                <span>Creatures (16)</span>
+              </label>
+              <label class="checkbox-row" style="margin: 0;">
+                <input type="checkbox" id="layerProps" value="32" onchange="onLayerMaskChange()">
+                <span>Props / Other (32)</span>
+              </label>
+            </div>
+            <div style="font-size: 10px; color: var(--text-dim); margin-top: 4px;">
+              Colossal Order bitmask combination. Summed into _colossal_DecalLayerMask.
+            </div>
+          </div>
+
+          <!-- Decal Normal Opacity (Paradox Wiki Spec: _NormalOpacity) -->
+          <div id="sectionDecalNormalOpacity" class="form-group" style="margin-top: 12px;">
+            <div class="form-label-row">
+              <div class="form-label-left">
+                <span>Normal Map Opacity (_NormalOpacity)</span>
+                <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'normalOpacity', event)" onmouseenter="showFieldHelp(this, 'normalOpacity', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Normal Map Opacity" title="Help for Normal Map Opacity">?</button>
+              </div>
+              <span class="form-val-badge" id="normalOpacityVal">1.00</span>
+            </div>
+            <div class="slider-container">
+              <input type="range" id="normalOpacitySlider" min="0.0" max="1.0" step="0.05" value="1.0" oninput="onNormalOpacityChange()">
+            </div>
+            <div style="font-size: 10px; color: var(--text-dim); margin-top: 3px;">
+              Wiki spec: 1.0 = Full normal relief; 0.0 = Flat normal (allows underlying asphalt roughness to bleed through).
+            </div>
+          </div>
+
+          <!-- Additional Opacity Controls (Extended Shader Properties) -->
+          <div class="form-group" style="margin-top: 12px;">
+            <div class="form-label-row">
+              <div class="form-label-left">
+                <span>Base Color Opacity (_BaseOpacity)</span>
+              </div>
+              <span class="form-val-badge" id="baseOpacityVal">1.00</span>
+            </div>
+            <div class="slider-container">
+              <input type="range" id="baseOpacitySlider" min="0.0" max="1.0" step="0.05" value="1.0" oninput="onBaseOpacityChange()">
+            </div>
+            <div style="font-size: 10px; color: var(--text-dim); margin-top: 3px;">
+              1.0 = Fully opaque albedo cutout; lower values blend transparency.
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top: 12px;">
+            <div class="form-label-row">
+              <div class="form-label-left">
+                <span>Metallic Opacity (_MetallicOpacity)</span>
+              </div>
+              <span class="form-val-badge" id="metallicOpacityVal">0.00</span>
+            </div>
+            <div class="slider-container">
+              <input type="range" id="metallicOpacitySlider" min="0.0" max="1.0" step="0.05" value="0.0" oninput="onMetallicOpacityChange()">
+            </div>
+            <div style="font-size: 10px; color: var(--text-dim); margin-top: 3px;">
+              Metallic map blend multiplier (default: 0.0 for standard road markings/decals).
+            </div>
+          </div>
+
+          <!-- UI Priority (Toolbar Menu Order) -->
+          <div class="form-group" style="margin-top: 12px;">
+            <div class="form-label-row">
+              <div class="form-label-left">
+                <span>UI Priority (Menu Order: UiPriority)</span>
+              </div>
+              <span class="form-val-badge" id="uiPriorityVal">41</span>
+            </div>
+            <div class="slider-container">
+              <input type="range" id="uiPrioritySlider" min="0" max="100" step="1" value="41" oninput="onUiPriorityChange()">
+            </div>
+            <div style="font-size: 10px; color: var(--text-dim); margin-top: 3px;">
+              Controls the asset's sorting position within the ExtraAssetsImporter toolbar menu.
+            </div>
+          </div>
+
+          <!-- 2. Draw Order Sorting Priority (_Draw Order) -->
+          <div class="form-group" style="margin-top: 12px;">
+            <div class="form-label-row">
+              <div class="form-label-left">
+                <span>Render Draw Order Priority</span>
+                <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'drawOrder', event)" onmouseenter="showFieldHelp(this, 'drawOrder', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Draw Order Priority" title="Help for Draw Order Priority">?</button>
+              </div>
+              <span class="form-val-badge" id="drawOrderVal">50</span>
+            </div>
+            <div class="slider-container">
+              <input type="range" id="drawOrderSlider" min="0" max="200" step="1" value="50" oninput="onDrawOrderChange()">
+            </div>
+            <div style="font-size: 10px; color: var(--text-dim); margin-top: 3px;" id="drawOrderHint">
+              Decal sorting range: 0 to 200 (Default: 50). Higher renders on top.
+            </div>
+          </div>
+
+          <!-- 3. Global Material Fallbacks (Optional Override) -->
+          <details class="form-group" style="margin-top: 12px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px 10px;">
+            <summary style="font-size: 12px; font-weight: 600; color: var(--accent-cyan); cursor: pointer; user-select: none;">
+              <div class="form-label-left" style="display: inline-flex;">
+                <span>Global Material Fallbacks (No Mask Map Overrides)</span>
+                <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'globalFallbacks', event); event.stopPropagation();" onmouseenter="showFieldHelp(this, 'globalFallbacks', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Global Material Fallbacks" title="Help for Global Material Fallbacks">?</button>
+              </div>
+            </summary>
+            <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 10px;">
+              <div style="font-size: 11px; color: var(--text-dim); line-height: 1.4;">
+                These settings are overridden if a custom physical _MaskMap.png texture is generated and bundled.
+              </div>
+              <div>
+                <div class="form-label-row">
+                  <span>Global Metallic Factor (_Metallic)</span>
+                  <span class="form-val-badge" id="globalMetallicVal">0.00</span>
+                </div>
+                <div class="slider-container">
+                  <input type="range" id="globalMetallicSlider" min="0.0" max="1.0" step="0.05" value="0.0" oninput="onGlobalMaterialChange()">
+                </div>
+              </div>
+              <div>
+                <div class="form-label-row">
+                  <span>Global Smoothness Factor (_Smoothness)</span>
+                  <span class="form-val-badge" id="globalSmoothnessVal">0.00</span>
+                </div>
+                <div class="slider-container">
+                  <input type="range" id="globalSmoothnessSlider" min="0.0" max="1.0" step="0.05" value="0.0" oninput="onGlobalMaterialChange()">
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <!-- JSON Output Preview (decal.json or surface.json) -->
+          <div class="form-group" style="margin-top: 12px;">
+            <div class="form-label-row" style="align-items: center; justify-content: space-between;">
+              <span id="jsonLabel">Generated decal.json</span>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <label for="jsonSchemaFormat" style="font-size: 10px; color: var(--text-dim);">Schema:</label>
+                <select id="jsonSchemaFormat" onchange="updateConfigJson()" style="font-size: 10px; padding: 2px 6px; height: 22px; width: auto; background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px;">
+                  <option value="extended" selected>Extended (Float/Vector)</option>
+                  <option value="simple">Simple (Flat)</option>
+                </select>
+              </div>
+            </div>
+            <div class="json-code" id="jsonPreview">
+              <button class="copy-json-btn" onclick="copyConfigJson()">Copy</button>
+              <span id="jsonCodeText">{ "width": 4.0, "height": 4.0, "depth": 1.0 }</span>
+            </div>
+          </div>
+
+        </div>
+        </div>
+      </div>
