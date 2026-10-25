@@ -34,41 +34,37 @@
             </select>
           </div>
 
-          <!-- Overlay Sub-navigation Tabs -->
-          <div class="badge-subtabs" style="margin-top: 12px; flex-wrap: wrap;">
-            <button type="button" class="badge-subtab-btn active" id="badgeSubtabCreator" onclick="switchBadgeSubtab('creator')">
-              <span class="badge-tab-indicator active-dot" id="dotBadge1"></span>
-              <span>⭐ 1. Creator</span>
-            </button>
-            <button type="button" class="badge-subtab-btn" id="badgeSubtabSeries" onclick="switchBadgeSubtab('series')">
-              <span class="badge-tab-indicator active-dot" id="dotBadge2"></span>
-              <span>🎨 2. Series</span>
-            </button>
-            <button type="button" class="badge-subtab-btn" id="badgeSubtabExtra1" onclick="switchBadgeSubtab('extra1')">
-              <span class="badge-tab-indicator" id="dotBadge3"></span>
-              <span>🏷️ 3. Extra 1</span>
-            </button>
-            <button type="button" class="badge-subtab-btn" id="badgeSubtabExtra2" onclick="switchBadgeSubtab('extra2')">
-              <span class="badge-tab-indicator" id="dotBadge4"></span>
-              <span>✨ 4. Extra 2</span>
-            </button>
-            <button type="button" class="badge-subtab-btn" id="badgeSubtabDefaults" onclick="switchBadgeSubtab('defaults')">
-              <span class="badge-tab-indicator" id="dotDefaults"></span>
-              <span>💾 Defaults</span>
-            </button>
+          <!-- Overlay Layer Dropdown Selector -->
+          <div class="badge-layer-select-box">
+            <div class="form-label-row" style="margin-bottom: 6px;">
+              <div class="form-label-left">
+                <span style="font-weight: 700; color: #38bdf8; font-size: 13px;">Icon Overlay Layer (4 Badges)</span>
+                <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'iconSettings', event)" onmouseenter="showFieldHelp(this, 'iconSettings', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Overlay Layer" title="Help for Overlay Layer">?</button>
+              </div>
+              <span class="form-val-badge" id="activeOverlayLayerBadge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3);">Overlay 1/4</span>
+            </div>
+            <select id="badgeLayerSelect" class="badge-layer-dropdown" onchange="switchBadgeSubtab(this.value)">
+              <option value="creator" selected>⭐ Overlay 1: Creator Logo / Brand Watermark</option>
+              <option value="series">🎨 Overlay 2: Series / Pack Badge</option>
+              <option value="extra1">🏷️ Overlay 3: Extra 1 Watermark Badge</option>
+              <option value="extra2">✨ Overlay 4: Extra 2 Custom Overlay</option>
+              <option value="defaults">💾 Saved Defaults &amp; Profile Presets</option>
+            </select>
           </div>
 
-          <!-- Style Sync Toolbar across Badges -->
-          <div class="style-sync-top-bar" id="badgeStyleSyncTopBar" style="flex-wrap: wrap; gap: 4px;">
-            <button type="button" class="btn-sync-top-action" onclick="copyBadgeStyle('creator', 'all')" title="Copy Creator colors, gradient & font settings to all overlays">
-              <span>📋 Apply Creator Style to All Badges</span>
-            </button>
-            <button type="button" class="btn-sync-top-action" onclick="copyBadgeStyle('creator', 'series')" title="Copy Creator colors, gradient & font settings to Series">
-              <span>📋 Creator ➔ Series</span>
-            </button>
-            <button type="button" class="btn-sync-top-action action-to-creator" onclick="copyBadgeStyle('series', 'creator')" title="Copy Series colors, gradient & font settings to Creator">
-              <span>📋 Series ➔ Creator</span>
-            </button>
+          <!-- Style Sync Dropdown across Badges -->
+          <div class="form-group" style="margin-bottom: 12px;">
+            <div class="form-label-row" style="margin-bottom: 4px;">
+              <span style="font-size: 11px; color: var(--text-dim);">Quick Style Sync Action:</span>
+            </div>
+            <select id="badgeStyleSyncSelect" class="badge-action-select" onchange="if(this.value){ runBadgeStyleCopyAction(this.value); this.value=''; }">
+              <option value="">-- Copy &amp; Sync Overlay Styles Between Badges... --</option>
+              <option value="creator:all">📋 Apply Creator Style to All Badges</option>
+              <option value="creator:series">📋 Creator ➔ Series</option>
+              <option value="series:creator">📋 Series ➔ Creator</option>
+              <option value="creator:extra1">📋 Creator ➔ Extra 1</option>
+              <option value="creator:extra2">📋 Creator ➔ Extra 2</option>
+            </select>
           </div>
 
           <!-- SUBPANEL 1: CREATOR BADGE (OVERLAY 1) -->
@@ -78,40 +74,31 @@
               <span style="font-weight: 600; color: var(--text-main);">Enable Creator Logo / Brand Watermark</span>
             </label>
 
-            <!-- Mode selector: Presets, Custom Text Tag, or Custom Image Upload -->
+            <!-- Mode selector dropdown -->
             <div class="form-group">
               <div class="form-label-row">
                 <span style="font-size: 11px; color: var(--text-dim);">Creator Badge Mode:</span>
               </div>
-              <div class="series-type-selector">
-                <button type="button" class="series-type-btn active" id="btnCreatorModePreset" onclick="setCreatorBadgeMode('preset')">
-                  🎨 Presets
-                </button>
-                <button type="button" class="series-type-btn" id="btnCreatorModeText" onclick="setCreatorBadgeMode('text')">
-                  🏷️ Custom Text
-                </button>
-                <button type="button" class="series-type-btn" id="btnCreatorModeImage" onclick="setCreatorBadgeMode('image')">
-                  📁 Custom Logo
-                </button>
-              </div>
+              <select id="creatorModeSelect" onchange="setCreatorBadgeMode(this.value)">
+                <option value="preset" selected>🎨 Presets (Seals &amp; Logos)</option>
+                <option value="text">🏷️ Custom Text Monogram</option>
+                <option value="image">📁 Custom Logo Image Upload</option>
+              </select>
             </div>
 
-            <!-- Creator Quick Presets View -->
+            <!-- Creator Quick Presets Dropdown View -->
             <div id="creatorPresetSection" class="form-group" style="margin-top: 8px;">
               <div class="form-label-row">
                 <span style="font-size: 11px; color: var(--text-dim);">Pick Creator Seal Preset:</span>
               </div>
-              <div class="preset-pill-grid">
-                <button type="button" class="preset-btn active" id="btnCreatorPresetStar" onclick="applyPresetLogo('star')">⭐ Star</button>
-                <button type="button" class="preset-btn" id="btnCreatorPresetVerified" onclick="applyPresetLogo('verified')">✓ Verified</button>
-                <button type="button" class="preset-btn" id="btnCreatorPresetMod" onclick="applyPresetLogo('mod')">⚡ CS2 Mod</button>
-                <button type="button" class="preset-btn" id="btnCreatorPresetCrown" onclick="applyPresetLogo('crown')">👑 Studio</button>
-                <button type="button" class="preset-btn" id="btnCreatorPresetShield" onclick="applyPresetLogo('shield')">🛡️ Crest</button>
-                <button type="button" class="preset-btn" style="color:#f87171;" onclick="clearDesignerLogo()">✕ None</button>
-                <button type="button" class="preset-btn" id="btnPresetCreatorCustom" onclick="setCreatorBadgeMode('text')" style="grid-column: span 3; border-color: rgba(56, 189, 248, 0.45); color: #38bdf8; background: rgba(56, 189, 248, 0.08); font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 10px;">
-                  <span>✍️ Custom Text Option (Type Author / Studio Name) →</span>
-                </button>
-              </div>
+              <select id="creatorPresetSelect" onchange="applyPresetLogo(this.value)">
+                <option value="star" selected>⭐ Star Seal</option>
+                <option value="verified">✓ Verified Badge</option>
+                <option value="mod">⚡ CS2 Mod Icon</option>
+                <option value="crown">👑 Studio Crown</option>
+                <option value="shield">🛡️ Crest Shield</option>
+                <option value="none">✕ None (Disable Seal)</option>
+              </select>
             </div>
 
             <!-- Creator Custom Text View -->
@@ -129,15 +116,18 @@
                 <span>Quick Author Suggestions:</span>
                 <button type="button" style="background: transparent; border: none; color: #38bdf8; cursor: pointer; padding: 0; font-size: 10px;" onclick="clearCreatorText()">✕ Clear</button>
               </div>
-              <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;">
-                <button type="button" class="preset-btn" onclick="setBadge1TextPreset('CREATOR')">Creator</button>
-                <button type="button" class="preset-btn" onclick="setBadge1TextPreset('STUDIO')">Studio</button>
-                <button type="button" class="preset-btn" onclick="setBadge1TextPreset('MODS')">Mods</button>
-                <button type="button" class="preset-btn" onclick="setBadge1TextPreset('DEV')">Dev</button>
-                <button type="button" class="preset-btn" onclick="setBadge1TextPreset('AUTHOR')">Author</button>
-                <button type="button" class="preset-btn" onclick="setBadge1TextPreset('DESIGN')">Design</button>
-                <button type="button" class="preset-btn" onclick="setBadge1TextPreset('TEAM')">Team</button>
-                <button type="button" class="preset-btn" onclick="setBadge1TextPreset('OFFICIAL')">Official</button>
+              <div style="margin-top: 6px;">
+                <select id="creatorTextSuggestionSelect" onchange="if(this.value){ setBadge1TextPreset(this.value); this.value=''; }">
+                  <option value="">-- Choose Quick Author Suggestion --</option>
+                  <option value="CREATOR">Creator</option>
+                  <option value="STUDIO">Studio</option>
+                  <option value="MODS">Mods</option>
+                  <option value="DEV">Dev</option>
+                  <option value="AUTHOR">Author</option>
+                  <option value="DESIGN">Design</option>
+                  <option value="TEAM">Team</option>
+                  <option value="OFFICIAL">Official</option>
+                </select>
               </div>
 
               <!-- Sync Style with Series Bar -->
@@ -163,88 +153,57 @@
                   <span class="form-val-badge" id="creatorColorModeBadge">Themes</span>
                 </div>
 
-                <!-- Color Mode Switcher -->
-                <div class="color-mode-nav">
-                  <button type="button" class="color-mode-btn active" id="btnCreatorColorTheme" onclick="setCreatorColorMode('theme')">🎨 Themes</button>
-                  <button type="button" class="color-mode-btn" id="btnCreatorColorGradient" onclick="setCreatorColorMode('gradient')">🌈 Gradient</button>
-                  <button type="button" class="color-mode-btn" id="btnCreatorColorSolid" onclick="setCreatorColorMode('solid')">🎯 Solid</button>
+                <!-- Color Mode Dropdown -->
+                <div style="margin-bottom: 8px;">
+                  <select id="creatorColorModeSelect" onchange="setCreatorColorMode(this.value)">
+                    <option value="theme" selected>🎨 Predefined Theme Palettes</option>
+                    <option value="gradient">🌈 Custom Dual-Stop Gradient</option>
+                    <option value="solid">🎯 Flat Solid Color</option>
+                  </select>
                 </div>
 
                 <!-- Themes Panel -->
                 <div id="creatorColorThemePanel">
-                  <div class="color-theme-grid" id="creatorColorThemes">
-                    <button type="button" class="theme-chip active" id="themeBtn1_cyan" onclick="setCreatorColorTheme('cyan')" title="Electric Cyan">
-                      <span class="theme-dot" style="background: #38bdf8;"></span>
-                      <span>Cyan</span>
-                    </button>
-                    <button type="button" class="theme-chip" id="themeBtn1_purple" onclick="setCreatorColorTheme('purple')" title="Neon Violet">
-                      <span class="theme-dot" style="background: #c084fc;"></span>
-                      <span>Violet</span>
-                    </button>
-                    <button type="button" class="theme-chip" id="themeBtn1_emerald" onclick="setCreatorColorTheme('emerald')" title="Emerald Transit">
-                      <span class="theme-dot" style="background: #34d399;"></span>
-                      <span>Emerald</span>
-                    </button>
-                    <button type="button" class="theme-chip" id="themeBtn1_amber" onclick="setCreatorColorTheme('amber')" title="Amber Caution">
-                      <span class="theme-dot" style="background: #fbbf24;"></span>
-                      <span>Amber</span>
-                    </button>
-                    <button type="button" class="theme-chip" id="themeBtn1_crimson" onclick="setCreatorColorTheme('crimson')" title="Crimson Red">
-                      <span class="theme-dot" style="background: #f43f5e;"></span>
-                      <span>Crimson</span>
-                    </button>
-                    <button type="button" class="theme-chip" id="themeBtn1_slate" onclick="setCreatorColorTheme('slate')" title="CS2 Slate">
-                      <span class="theme-dot" style="background: #94a3b8;"></span>
-                      <span>Slate</span>
-                    </button>
-                    <button type="button" class="theme-chip" id="themeBtn1_orange" onclick="setCreatorColorTheme('orange')" title="Sunset Orange">
-                      <span class="theme-dot" style="background: #fb923c;"></span>
-                      <span>Orange</span>
-                    </button>
-                    <button type="button" class="theme-chip" id="themeBtn1_gold" onclick="setCreatorColorTheme('gold')" title="VIP Gold">
-                      <span class="theme-dot" style="background: #fde047;"></span>
-                      <span>Gold</span>
-                    </button>
+                  <div class="form-label-row" style="margin-bottom: 3px;">
+                    <span style="font-size: 10.5px; color: var(--text-dim);">Pick Palette Theme:</span>
                   </div>
+                  <select id="creatorThemeSelect" onchange="setCreatorColorTheme(this.value)">
+                    <option value="cyan" selected>Electric Cyan</option>
+                    <option value="purple">Neon Violet</option>
+                    <option value="emerald">Emerald Transit</option>
+                    <option value="amber">Amber Caution</option>
+                    <option value="crimson">Crimson Red</option>
+                    <option value="slate">CS2 Slate</option>
+                    <option value="orange">Sunset Orange</option>
+                    <option value="gold">VIP Gold</option>
+                  </select>
                 </div>
 
                 <!-- Custom Gradient Panel -->
                 <div id="creatorCustomGradPanel" style="display: none;">
                   <div class="gradient-preview-bar" id="creatorGradPreview" style="background: linear-gradient(135deg, #091524, #0e243d);"></div>
                   
-                  <div style="font-size: 10px; color: var(--text-dim); margin-top: 2px;">Quick Gradient Presets:</div>
-                  <div class="preset-grad-grid">
-                    <button type="button" class="preset-grad-btn" onclick="applyCreatorGradPreset('#071a2e', '#0d324d', '#38bdf8', '#ffffff')">
-                      <span class="preset-grad-swatch" style="background: linear-gradient(135deg, #071a2e, #0d324d);"></span>Neon
-                    </button>
-                    <button type="button" class="preset-grad-btn" onclick="applyCreatorGradPreset('#151326', '#251336', '#c084fc', '#ffffff')">
-                      <span class="preset-grad-swatch" style="background: linear-gradient(135deg, #151326, #251336);"></span>Violet
-                    </button>
-                    <button type="button" class="preset-grad-btn" onclick="applyCreatorGradPreset('#06241a', '#0d3d2c', '#34d399', '#ffffff')">
-                      <span class="preset-grad-swatch" style="background: linear-gradient(135deg, #06241a, #0d3d2c);"></span>Forest
-                    </button>
-                    <button type="button" class="preset-grad-btn" onclick="applyCreatorGradPreset('#241806', '#3d2a0d', '#fbbf24', '#ffffff')">
-                      <span class="preset-grad-swatch" style="background: linear-gradient(135deg, #241806, #3d2a0d);"></span>Sunset
-                    </button>
-                    <button type="button" class="preset-grad-btn" onclick="applyCreatorGradPreset('#290913', '#451020', '#f43f5e', '#ffffff')">
-                      <span class="preset-grad-swatch" style="background: linear-gradient(135deg, #290913, #451020);"></span>Ruby
-                    </button>
-                    <button type="button" class="preset-grad-btn" onclick="applyCreatorGradPreset('#0a0f18', '#1e293b', '#94a3b8', '#ffffff')">
-                      <span class="preset-grad-swatch" style="background: linear-gradient(135deg, #0a0f18, #1e293b);"></span>Stealth
-                    </button>
-                    <button type="button" class="preset-grad-btn" onclick="applyCreatorGradPreset('#2b0638', '#09253d', '#ec4899', '#fdf2f8')">
-                      <span class="preset-grad-swatch" style="background: linear-gradient(135deg, #2b0638, #09253d);"></span>Cyber
-                    </button>
-                    <button type="button" class="preset-grad-btn" onclick="applyCreatorGradPreset('#2a2007', '#47360c', '#fde047', '#ffffff')">
-                      <span class="preset-grad-swatch" style="background: linear-gradient(135deg, #2a2007, #47360c);"></span>Gold
-                    </button>
+                  <div class="form-group" style="margin-top: 6px; margin-bottom: 6px;">
+                    <span style="font-size: 10px; color: var(--text-dim);">Quick Gradient Preset:</span>
+                    <select id="creatorGradPresetSelect" onchange="applyCreatorGradPresetByName(this.value)">
+                      <option value="neon" selected>Neon (Cyan / Dark Blue)</option>
+                      <option value="violet">Violet (Purple / Dark Plum)</option>
+                      <option value="forest">Forest (Emerald / Dark Green)</option>
+                      <option value="sunset">Sunset (Amber / Bronze)</option>
+                      <option value="ruby">Ruby (Crimson / Deep Maroon)</option>
+                      <option value="stealth">Stealth (Slate / Charcoal)</option>
+                      <option value="cyber">Cyber (Pink / Navy)</option>
+                      <option value="gold">Gold (Warm Gold / Deep Bronze)</option>
+                    </select>
                   </div>
 
-                  <div class="grad-dir-selector">
-                    <span style="font-size: 10px; color: var(--text-dim); margin-right: 2px;">Angle:</span>
-                    <button type="button" class="grad-dir-btn active" id="btnCreatorGradDir_diag" onclick="setCreatorGradDirection('diagonal')">⤡ Diagonal</button>
-                    <button type="button" class="grad-dir-btn" id="btnCreatorGradDir_horiz" onclick="setCreatorGradDirection('horizontal')">⇄ Horizontal</button>
-                    <button type="button" class="grad-dir-btn" id="btnCreatorGradDir_vert" onclick="setCreatorGradDirection('vertical')">⇅ Vertical</button>
+                  <div class="form-group" style="margin-bottom: 8px;">
+                    <span style="font-size: 10px; color: var(--text-dim);">Gradient Angle:</span>
+                    <select id="creatorGradDirSelect" onchange="setCreatorGradDirection(this.value)">
+                      <option value="diagonal" selected>⤡ Diagonal (135°)</option>
+                      <option value="horizontal">⇄ Horizontal (90°)</option>
+                      <option value="vertical">⇅ Vertical (180°)</option>
+                    </select>
                   </div>
 
                   <div class="color-picker-grid">
@@ -376,16 +335,21 @@
                         </div>
                       </div>
                     </div>
-                    <div style="display: flex; gap: 4px; align-items: center; justify-content: space-between; margin-top: 6px;">
-                      <div style="display: flex; gap: 4px; align-items: center;">
-                        <span style="font-size: 9.5px; color: var(--text-dim);">Angle:</span>
-                        <button type="button" class="grad-dir-btn active" id="btnBadge1TextDir_vert" style="padding: 2px 7px; font-size: 9.5px;" onclick="setBadge1TextGradDir('vertical')">⇅ Vert</button>
-                        <button type="button" class="grad-dir-btn" id="btnBadge1TextDir_horiz" style="padding: 2px 7px; font-size: 9.5px;" onclick="setBadge1TextGradDir('horizontal')">⇄ Horiz</button>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px;">
+                      <div>
+                        <span style="font-size: 9.5px; color: var(--text-dim); display: block; margin-bottom: 2px;">Gradient Angle:</span>
+                        <select id="creatorTextGradDirSelect" style="font-size: 11px; padding: 4px 6px;" onchange="setBadge1TextGradDir(this.value)">
+                          <option value="vertical" selected>⇅ Vertical</option>
+                          <option value="horizontal">⇄ Horizontal</option>
+                        </select>
                       </div>
-                      <div style="display: flex; gap: 3px;">
-                        <button type="button" class="preset-btn" style="font-size: 9px; padding: 1px 5px;" onclick="applyBadge1TextGradPreset('#ffffff', '#38bdf8')">Cyan</button>
-                        <button type="button" class="preset-btn" style="font-size: 9px; padding: 1px 5px;" onclick="applyBadge1TextGradPreset('#fff3bf', '#f59e0b')">Gold</button>
-                        <button type="button" class="preset-btn" style="font-size: 9px; padding: 1px 5px;" onclick="applyBadge1TextGradPreset('#ffffff', '#94a3b8')">Silver</button>
+                      <div>
+                        <span style="font-size: 9.5px; color: var(--text-dim); display: block; margin-bottom: 2px;">Text Preset:</span>
+                        <select id="creatorTextGradPresetSelect" style="font-size: 11px; padding: 4px 6px;" onchange="if(this.value){ applyBadge1TextGradPresetByName(this.value); }">
+                          <option value="cyan" selected>Cyan (White ➔ Cyan)</option>
+                          <option value="gold">Gold (Warm ➔ Amber)</option>
+                          <option value="silver">Silver (White ➔ Slate)</option>
+                        </select>
                       </div>
                     </div>
                   </div>
@@ -464,16 +428,19 @@
                   </div>
                 </div>
 
-                <div style="display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px;">
-                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapCreatorCoord(50, 50)">Center (50, 50)</button>
-                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapCreatorCoord(15, 15)">Top-Left</button>
-                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapCreatorCoord(85, 15)">Top-Right</button>
-                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapCreatorCoord(15, 85)">Bottom-Left</button>
-                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapCreatorCoord(85, 85)">Bottom-Right (Default)</button>
-                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapCreatorCoord(50, 15)">Top Mid</button>
-                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapCreatorCoord(50, 85)">Bottom Mid</button>
-                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapCreatorCoord(15, 50)">Left Mid</button>
-                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapCreatorCoord(85, 50)">Right Mid</button>
+                <div style="margin-top: 8px;">
+                  <span style="font-size: 10px; color: var(--text-dim); display: block; margin-bottom: 2px;">Quick Snap Position:</span>
+                  <select id="creatorSnapCoordSelect" style="font-size: 11.5px;" onchange="if(this.value){ const [x,y]=this.value.split(',').map(Number); snapCreatorCoord(x,y); }">
+                    <option value="85,85" selected>Bottom-Right Corner (85%, 85% - Default)</option>
+                    <option value="15,85">Bottom-Left Corner (15%, 85%)</option>
+                    <option value="85,15">Top-Right Corner (85%, 15%)</option>
+                    <option value="15,15">Top-Left Corner (15%, 15%)</option>
+                    <option value="50,50">Dead Center (50%, 50%)</option>
+                    <option value="50,15">Top-Center Edge (50%, 15%)</option>
+                    <option value="50,85">Bottom-Center Edge (50%, 85%)</option>
+                    <option value="15,50">Left-Center Edge (15%, 50%)</option>
+                    <option value="85,50">Right-Center Edge (85%, 50%)</option>
+                  </select>
                 </div>
               </div>
             </div>
@@ -550,22 +517,16 @@
               <span style="font-weight: 600; color: var(--text-main);">Enable Series / Pack Badge (e.g. Graffiti, Posters)</span>
             </label>
 
-            <!-- Mode selector: Presets, Custom Text, or Custom Image Upload -->
+            <!-- Mode selector dropdown -->
             <div class="form-group">
               <div class="form-label-row">
                 <span style="font-size: 11px; color: var(--text-dim);">Series Badge Mode:</span>
               </div>
-              <div class="series-type-selector">
-                <button type="button" class="series-type-btn active" id="btnSeriesModePreset" onclick="setSeriesBadgeMode('preset')">
-                  🎨 Presets
-                </button>
-                <button type="button" class="series-type-btn" id="btnSeriesModeText" onclick="setSeriesBadgeMode('text')">
-                  ✍️ Custom Text
-                </button>
-                <button type="button" class="series-type-btn" id="btnSeriesModeImage" onclick="setSeriesBadgeMode('image')">
-                  📁 Custom Logo
-                </button>
-              </div>
+              <select id="seriesModeSelect" onchange="setSeriesBadgeMode(this.value)">
+                <option value="preset" selected>🎨 Presets (Pack &amp; Category Badges)</option>
+                <option value="text">✍️ Custom Text Tag</option>
+                <option value="image">📁 Custom Logo Image Upload</option>
+              </select>
             </div>
 
             <!-- Series Quick Presets View -->
@@ -573,17 +534,14 @@
               <div class="form-label-row">
                 <span style="font-size: 11px; color: var(--text-dim);">Pick Asset Series Preset:</span>
               </div>
-              <div class="preset-pill-grid">
-                <button type="button" class="preset-btn" id="btnPresetGraffiti" onclick="applySeriesPreset('graffiti')">🎨 Graffiti</button>
-                <button type="button" class="preset-btn" id="btnPresetPoster" onclick="applySeriesPreset('poster')">🖼️ Posters</button>
-                <button type="button" class="preset-btn" id="btnPresetTransit" onclick="applySeriesPreset('transit')">🛣️ Transit</button>
-                <button type="button" class="preset-btn" id="btnPresetProps" onclick="applySeriesPreset('props')">🏙️ Props</button>
-                <button type="button" class="preset-btn" id="btnPresetHazard" onclick="applySeriesPreset('hazard')">⚠️ Hazard</button>
-                <button type="button" class="preset-btn" id="btnPresetNature" onclick="applySeriesPreset('nature')">🌿 Nature</button>
-                <button type="button" class="preset-btn" id="btnPresetSeriesCustom" onclick="setSeriesBadgeMode('text')" style="grid-column: span 3; border-color: rgba(192, 132, 252, 0.45); color: #d8b4fe; background: rgba(192, 132, 252, 0.08); font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 10px;">
-                  <span>✍️ Custom Text Option (Type Any Pack / Series Name) →</span>
-                </button>
-              </div>
+              <select id="seriesPresetSelect" onchange="applySeriesPreset(this.value)">
+                <option value="graffiti" selected>🎨 Graffiti</option>
+                <option value="poster">🖼️ Posters</option>
+                <option value="transit">🛣️ Transit</option>
+                <option value="props">🏙️ Props</option>
+                <option value="hazard">⚠️ Hazard</option>
+                <option value="nature">🌿 Nature</option>
+              </select>
             </div>
 
             <!-- Custom Text Tag View -->
@@ -601,15 +559,18 @@
                 <span>Quick Pack Suggestions:</span>
                 <button type="button" style="background: transparent; border: none; color: #a78bfa; cursor: pointer; padding: 0; font-size: 10px;" onclick="clearSeriesText()">✕ Clear</button>
               </div>
-              <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;">
-                <button type="button" class="preset-btn" onclick="setSeriesTextPreset('POSTERS')">Posters</button>
-                <button type="button" class="preset-btn" onclick="setSeriesTextPreset('GRAFFITI')">Graffiti</button>
-                <button type="button" class="preset-btn" onclick="setSeriesTextPreset('ROADS')">Roads</button>
-                <button type="button" class="preset-btn" onclick="setSeriesTextPreset('MARKINGS')">Markings</button>
-                <button type="button" class="preset-btn" onclick="setSeriesTextPreset('SERIES 01')">Series 01</button>
-                <button type="button" class="preset-btn" onclick="setSeriesTextPreset('SIGNS')">Signs</button>
-                <button type="button" class="preset-btn" onclick="setSeriesTextPreset('TRANSIT')">Transit</button>
-                <button type="button" class="preset-btn" onclick="setSeriesTextPreset('PACK 01')">Pack 01</button>
+              <div style="margin-top: 6px;">
+                <select id="seriesTextSuggestionSelect" onchange="if(this.value){ setSeriesTextPreset(this.value); this.value=''; }">
+                  <option value="">-- Choose Quick Pack Suggestion --</option>
+                  <option value="POSTERS">Posters</option>
+                  <option value="GRAFFITI">Graffiti</option>
+                  <option value="ROADS">Roads</option>
+                  <option value="MARKINGS">Markings</option>
+                  <option value="SERIES 01">Series 01</option>
+                  <option value="SIGNS">Signs</option>
+                  <option value="TRANSIT">Transit</option>
+                  <option value="PACK 01">Pack 01</option>
+                </select>
               </div>
 
               <!-- Sync Style with Creator Bar -->
@@ -635,88 +596,57 @@
                   <span class="form-val-badge" id="seriesColorModeBadge">Themes</span>
                 </div>
 
-                <!-- Color Mode Switcher -->
-                <div class="color-mode-nav">
-                  <button type="button" class="color-mode-btn active" id="btnSeriesColorTheme" onclick="setSeriesColorMode('theme')">🎨 Themes</button>
-                  <button type="button" class="color-mode-btn" id="btnSeriesColorGradient" onclick="setSeriesColorMode('gradient')">🌈 Gradient</button>
-                  <button type="button" class="color-mode-btn" id="btnSeriesColorSolid" onclick="setSeriesColorMode('solid')">🎯 Solid</button>
+                <!-- Color Mode Dropdown -->
+                <div style="margin-bottom: 8px;">
+                  <select id="seriesColorModeSelect" onchange="setSeriesColorMode(this.value)">
+                    <option value="theme" selected>🎨 Predefined Theme Palettes</option>
+                    <option value="gradient">🌈 Custom Dual-Stop Gradient</option>
+                    <option value="solid">🎯 Flat Solid Color</option>
+                  </select>
                 </div>
 
                 <!-- Themes Panel -->
                 <div id="seriesColorThemePanel">
-                  <div class="color-theme-grid" id="seriesColorThemes">
-                    <button type="button" class="theme-chip active" id="themeBtn_purple" onclick="setSeriesColorTheme('purple')" title="Neon Violet">
-                      <span class="theme-dot" style="background: #c084fc;"></span>
-                      <span>Violet</span>
-                    </button>
-                    <button type="button" class="theme-chip" id="themeBtn_cyan" onclick="setSeriesColorTheme('cyan')" title="Electric Cyan">
-                      <span class="theme-dot" style="background: #38bdf8;"></span>
-                      <span>Cyan</span>
-                    </button>
-                    <button type="button" class="theme-chip" id="themeBtn_emerald" onclick="setSeriesColorTheme('emerald')" title="Emerald Transit">
-                      <span class="theme-dot" style="background: #34d399;"></span>
-                      <span>Emerald</span>
-                    </button>
-                    <button type="button" class="theme-chip" id="themeBtn_amber" onclick="setSeriesColorTheme('amber')" title="Amber Caution">
-                      <span class="theme-dot" style="background: #fbbf24;"></span>
-                      <span>Amber</span>
-                    </button>
-                    <button type="button" class="theme-chip" id="themeBtn_crimson" onclick="setSeriesColorTheme('crimson')" title="Crimson Red">
-                      <span class="theme-dot" style="background: #f43f5e;"></span>
-                      <span>Crimson</span>
-                    </button>
-                    <button type="button" class="theme-chip" id="themeBtn_slate" onclick="setSeriesColorTheme('slate')" title="CS2 Slate">
-                      <span class="theme-dot" style="background: #94a3b8;"></span>
-                      <span>Slate</span>
-                    </button>
-                    <button type="button" class="theme-chip" id="themeBtn_orange" onclick="setSeriesColorTheme('orange')" title="Sunset Orange">
-                      <span class="theme-dot" style="background: #fb923c;"></span>
-                      <span>Orange</span>
-                    </button>
-                    <button type="button" class="theme-chip" id="themeBtn_gold" onclick="setSeriesColorTheme('gold')" title="VIP Gold">
-                      <span class="theme-dot" style="background: #fde047;"></span>
-                      <span>Gold</span>
-                    </button>
+                  <div class="form-label-row" style="margin-bottom: 3px;">
+                    <span style="font-size: 10.5px; color: var(--text-dim);">Pick Palette Theme:</span>
                   </div>
+                  <select id="seriesThemeSelect" onchange="setSeriesColorTheme(this.value)">
+                    <option value="purple" selected>Neon Violet</option>
+                    <option value="cyan">Electric Cyan</option>
+                    <option value="emerald">Emerald Transit</option>
+                    <option value="amber">Amber Caution</option>
+                    <option value="crimson">Crimson Red</option>
+                    <option value="slate">CS2 Slate</option>
+                    <option value="orange">Sunset Orange</option>
+                    <option value="gold">VIP Gold</option>
+                  </select>
                 </div>
 
                 <!-- Custom Gradient Panel -->
                 <div id="seriesCustomGradPanel" style="display: none;">
                   <div class="gradient-preview-bar" id="seriesGradPreview" style="background: linear-gradient(135deg, #151326, #251336);"></div>
                   
-                  <div style="font-size: 10px; color: var(--text-dim); margin-top: 2px;">Quick Gradient Presets:</div>
-                  <div class="preset-grad-grid">
-                    <button type="button" class="preset-grad-btn" onclick="applySeriesGradPreset('#151326', '#251336', '#c084fc', '#ffffff')">
-                      <span class="preset-grad-swatch" style="background: linear-gradient(135deg, #151326, #251336);"></span>Violet
-                    </button>
-                    <button type="button" class="preset-grad-btn" onclick="applySeriesGradPreset('#071a2e', '#0d324d', '#38bdf8', '#ffffff')">
-                      <span class="preset-grad-swatch" style="background: linear-gradient(135deg, #071a2e, #0d324d);"></span>Neon
-                    </button>
-                    <button type="button" class="preset-grad-btn" onclick="applySeriesGradPreset('#06241a', '#0d3d2c', '#34d399', '#ffffff')">
-                      <span class="preset-grad-swatch" style="background: linear-gradient(135deg, #06241a, #0d3d2c);"></span>Forest
-                    </button>
-                    <button type="button" class="preset-grad-btn" onclick="applySeriesGradPreset('#241806', '#3d2a0d', '#fbbf24', '#ffffff')">
-                      <span class="preset-grad-swatch" style="background: linear-gradient(135deg, #241806, #3d2a0d);"></span>Sunset
-                    </button>
-                    <button type="button" class="preset-grad-btn" onclick="applySeriesGradPreset('#290913', '#451020', '#f43f5e', '#ffffff')">
-                      <span class="preset-grad-swatch" style="background: linear-gradient(135deg, #290913, #451020);"></span>Ruby
-                    </button>
-                    <button type="button" class="preset-grad-btn" onclick="applySeriesGradPreset('#0a0f18', '#1e293b', '#94a3b8', '#ffffff')">
-                      <span class="preset-grad-swatch" style="background: linear-gradient(135deg, #0a0f18, #1e293b);"></span>Stealth
-                    </button>
-                    <button type="button" class="preset-grad-btn" onclick="applySeriesGradPreset('#2b0638', '#09253d', '#ec4899', '#fdf2f8')">
-                      <span class="preset-grad-swatch" style="background: linear-gradient(135deg, #2b0638, #09253d);"></span>Cyber
-                    </button>
-                    <button type="button" class="preset-grad-btn" onclick="applySeriesGradPreset('#2a2007', '#47360c', '#fde047', '#ffffff')">
-                      <span class="preset-grad-swatch" style="background: linear-gradient(135deg, #2a2007, #47360c);"></span>Gold
-                    </button>
+                  <div class="form-group" style="margin-top: 6px; margin-bottom: 6px;">
+                    <span style="font-size: 10px; color: var(--text-dim);">Quick Gradient Preset:</span>
+                    <select id="seriesGradPresetSelect" onchange="applySeriesGradPresetByName(this.value)">
+                      <option value="violet" selected>Violet (Purple / Dark Plum)</option>
+                      <option value="neon">Neon (Cyan / Dark Blue)</option>
+                      <option value="forest">Forest (Emerald / Dark Green)</option>
+                      <option value="sunset">Sunset (Amber / Bronze)</option>
+                      <option value="ruby">Ruby (Crimson / Deep Maroon)</option>
+                      <option value="stealth">Stealth (Slate / Charcoal)</option>
+                      <option value="cyber">Cyber (Pink / Navy)</option>
+                      <option value="gold">Gold (Warm Gold / Deep Bronze)</option>
+                    </select>
                   </div>
 
-                  <div class="grad-dir-selector">
-                    <span style="font-size: 10px; color: var(--text-dim); margin-right: 2px;">Angle:</span>
-                    <button type="button" class="grad-dir-btn active" id="btnSeriesGradDir_diag" onclick="setSeriesGradDirection('diagonal')">⤡ Diagonal</button>
-                    <button type="button" class="grad-dir-btn" id="btnSeriesGradDir_horiz" onclick="setSeriesGradDirection('horizontal')">⇄ Horizontal</button>
-                    <button type="button" class="grad-dir-btn" id="btnSeriesGradDir_vert" onclick="setSeriesGradDirection('vertical')">⇅ Vertical</button>
+                  <div class="form-group" style="margin-bottom: 8px;">
+                    <span style="font-size: 10px; color: var(--text-dim);">Gradient Angle:</span>
+                    <select id="seriesGradDirSelect" onchange="setSeriesGradDirection(this.value)">
+                      <option value="diagonal" selected>⤡ Diagonal (135°)</option>
+                      <option value="horizontal">⇄ Horizontal (90°)</option>
+                      <option value="vertical">⇅ Vertical (180°)</option>
+                    </select>
                   </div>
 
                   <div class="color-picker-grid">
@@ -848,16 +778,21 @@
                         </div>
                       </div>
                     </div>
-                    <div style="display: flex; gap: 4px; align-items: center; justify-content: space-between; margin-top: 6px;">
-                      <div style="display: flex; gap: 4px; align-items: center;">
-                        <span style="font-size: 9.5px; color: var(--text-dim);">Angle:</span>
-                        <button type="button" class="grad-dir-btn active" id="btnBadge2TextDir_vert" style="padding: 2px 7px; font-size: 9.5px;" onclick="setBadge2TextGradDir('vertical')">⇅ Vert</button>
-                        <button type="button" class="grad-dir-btn" id="btnBadge2TextDir_horiz" style="padding: 2px 7px; font-size: 9.5px;" onclick="setBadge2TextGradDir('horizontal')">⇄ Horiz</button>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px;">
+                      <div>
+                        <span style="font-size: 9.5px; color: var(--text-dim); display: block; margin-bottom: 2px;">Gradient Angle:</span>
+                        <select id="seriesTextGradDirSelect" style="font-size: 11px; padding: 4px 6px;" onchange="setBadge2TextGradDir(this.value)">
+                          <option value="vertical" selected>⇅ Vertical</option>
+                          <option value="horizontal">⇄ Horizontal</option>
+                        </select>
                       </div>
-                      <div style="display: flex; gap: 3px;">
-                        <button type="button" class="preset-btn" style="font-size: 9px; padding: 1px 5px;" onclick="applyBadge2TextGradPreset('#ffffff', '#c084fc')">Violet</button>
-                        <button type="button" class="preset-btn" style="font-size: 9px; padding: 1px 5px;" onclick="applyBadge2TextGradPreset('#fff3bf', '#f59e0b')">Gold</button>
-                        <button type="button" class="preset-btn" style="font-size: 9px; padding: 1px 5px;" onclick="applyBadge2TextGradPreset('#ffffff', '#94a3b8')">Silver</button>
+                      <div>
+                        <span style="font-size: 9.5px; color: var(--text-dim); display: block; margin-bottom: 2px;">Text Preset:</span>
+                        <select id="seriesTextGradPresetSelect" style="font-size: 11px; padding: 4px 6px;" onchange="if(this.value){ applyBadge2TextGradPresetByName(this.value); }">
+                          <option value="violet" selected>Violet (White ➔ Purple)</option>
+                          <option value="gold">Gold (Warm ➔ Amber)</option>
+                          <option value="cyan">Cyan (White ➔ Cyan)</option>
+                        </select>
                       </div>
                     </div>
                   </div>
@@ -931,16 +866,19 @@
                   </div>
                 </div>
 
-                <div style="display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px;">
-                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapSeriesCoord(50, 50)">Center (50, 50)</button>
-                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapSeriesCoord(15, 15)">Top-Left (Default)</button>
-                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapSeriesCoord(85, 15)">Top-Right</button>
-                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapSeriesCoord(15, 85)">Bottom-Left</button>
-                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapSeriesCoord(85, 85)">Bottom-Right</button>
-                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapSeriesCoord(50, 15)">Top Mid</button>
-                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapSeriesCoord(50, 85)">Bottom Mid</button>
-                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapSeriesCoord(15, 50)">Left Mid</button>
-                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapSeriesCoord(85, 50)">Right Mid</button>
+                <div style="margin-top: 8px;">
+                  <span style="font-size: 10px; color: var(--text-dim); display: block; margin-bottom: 2px;">Quick Snap Position:</span>
+                  <select id="seriesSnapCoordSelect" style="font-size: 11.5px;" onchange="if(this.value){ const [x,y]=this.value.split(',').map(Number); snapSeriesCoord(x,y); }">
+                    <option value="15,15" selected>Top-Left Corner (15%, 15% - Default)</option>
+                    <option value="85,15">Top-Right Corner (85%, 15%)</option>
+                    <option value="15,85">Bottom-Left Corner (15%, 85%)</option>
+                    <option value="85,85">Bottom-Right Corner (85%, 85%)</option>
+                    <option value="50,50">Dead Center (50%, 50%)</option>
+                    <option value="50,15">Top-Center Edge (50%, 15%)</option>
+                    <option value="50,85">Bottom-Center Edge (50%, 85%)</option>
+                    <option value="15,50">Left-Center Edge (15%, 50%)</option>
+                    <option value="85,50">Right-Center Edge (85%, 50%)</option>
+                  </select>
                 </div>
               </div>
             </div>
@@ -1018,22 +956,16 @@
               <span style="font-weight: 600; color: var(--text-main);">Enable Extra 1 Watermark Badge</span>
             </label>
 
-            <!-- Mode selector -->
+            <!-- Mode selector dropdown -->
             <div class="form-group">
               <div class="form-label-row">
                 <span style="font-size: 11px; color: var(--text-dim);">Extra 1 Badge Mode:</span>
               </div>
-              <div class="series-type-selector">
-                <button type="button" class="series-type-btn active" id="btnExtra1ModeText" onclick="setExtra1BadgeMode('text')">
-                  ✍️ Custom Text
-                </button>
-                <button type="button" class="series-type-btn" id="btnExtra1ModePreset" onclick="setExtra1BadgeMode('preset')">
-                  🎨 Presets
-                </button>
-                <button type="button" class="series-type-btn" id="btnExtra1ModeImage" onclick="setExtra1BadgeMode('image')">
-                  📁 Custom Logo
-                </button>
-              </div>
+              <select id="extra1ModeSelect" onchange="setExtra1BadgeMode(this.value)">
+                <option value="text" selected>✍️ Custom Text Tag</option>
+                <option value="preset">🎨 Presets (Watermark Seals)</option>
+                <option value="image">📁 Custom Logo Image Upload</option>
+              </select>
             </div>
 
             <!-- Custom Text View (Default for Extra 1) -->
@@ -1050,15 +982,18 @@
                 <span>Quick Suggestions:</span>
                 <button type="button" style="background: transparent; border: none; color: #34d399; cursor: pointer; padding: 0; font-size: 10px;" onclick="clearExtra1Text()">✕ Clear</button>
               </div>
-              <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;">
-                <button type="button" class="preset-btn" onclick="setExtra1TextPreset('V1.0')">V1.0</button>
-                <button type="button" class="preset-btn" onclick="setExtra1TextPreset('4K RES')">4K Res</button>
-                <button type="button" class="preset-btn" onclick="setExtra1TextPreset('PROPS')">Props</button>
-                <button type="button" class="preset-btn" onclick="setExtra1TextPreset('CUSTOM')">Custom</button>
-                <button type="button" class="preset-btn" onclick="setExtra1TextPreset('HIGH-RES')">High-Res</button>
-                <button type="button" class="preset-btn" onclick="setExtra1TextPreset('LOD')">LOD</button>
-                <button type="button" class="preset-btn" onclick="setExtra1TextPreset('VARIANT')">Variant</button>
-                <button type="button" class="preset-btn" onclick="setExtra1TextPreset('HQ')">HQ</button>
+              <div style="margin-top: 6px;">
+                <select id="extra1TextSuggestionSelect" onchange="if(this.value){ setExtra1TextPreset(this.value); this.value=''; }">
+                  <option value="">-- Choose Quick Suggestion --</option>
+                  <option value="V1.0">V1.0</option>
+                  <option value="4K RES">4K Res</option>
+                  <option value="PROPS">Props</option>
+                  <option value="CUSTOM">Custom</option>
+                  <option value="HIGH-RES">High-Res</option>
+                  <option value="LOD">LOD</option>
+                  <option value="VARIANT">Variant</option>
+                  <option value="HQ">HQ</option>
+                </select>
               </div>
 
               <!-- Sync Style with Creator / Series -->
@@ -1084,53 +1019,50 @@
                   <span class="form-val-badge" id="extra1ColorModeBadge">Themes</span>
                 </div>
 
-                <div class="color-mode-nav">
-                  <button type="button" class="color-mode-btn active" id="btnExtra1ColorTheme" onclick="setExtra1ColorMode('theme')">🎨 Themes</button>
-                  <button type="button" class="color-mode-btn" id="btnExtra1ColorGradient" onclick="setExtra1ColorMode('gradient')">🌈 Gradient</button>
-                  <button type="button" class="color-mode-btn" id="btnExtra1ColorSolid" onclick="setExtra1ColorMode('solid')">🎯 Solid</button>
+                <!-- Color Mode Dropdown -->
+                <div style="margin-bottom: 8px;">
+                  <select id="extra1ColorModeSelect" onchange="setExtra1ColorMode(this.value)">
+                    <option value="theme" selected>🎨 Predefined Theme Palettes</option>
+                    <option value="gradient">🌈 Custom Dual-Stop Gradient</option>
+                    <option value="solid">🎯 Flat Solid Color</option>
+                  </select>
                 </div>
 
                 <!-- Themes Panel -->
                 <div id="extra1ColorThemePanel">
-                  <div class="color-theme-grid" id="extra1ColorThemes">
-                    <button type="button" class="theme-chip active" id="themeBtnExtra1_emerald" onclick="setExtra1ColorTheme('emerald')" title="Emerald Transit">
-                      <span class="theme-dot" style="background: #34d399;"></span>
-                      <span>Emerald</span>
-                    </button>
-                    <button type="button" class="theme-chip" id="themeBtnExtra1_cyan" onclick="setExtra1ColorTheme('cyan')" title="Electric Cyan">
-                      <span class="theme-dot" style="background: #38bdf8;"></span>
-                      <span>Cyan</span>
-                    </button>
-                    <button type="button" class="theme-chip" id="themeBtnExtra1_purple" onclick="setExtra1ColorTheme('purple')" title="Neon Violet">
-                      <span class="theme-dot" style="background: #c084fc;"></span>
-                      <span>Violet</span>
-                    </button>
-                    <button type="button" class="theme-chip" id="themeBtnExtra1_amber" onclick="setExtra1ColorTheme('amber')" title="Amber Caution">
-                      <span class="theme-dot" style="background: #fbbf24;"></span>
-                      <span>Amber</span>
-                    </button>
-                    <button type="button" class="theme-chip" id="themeBtnExtra1_crimson" onclick="setExtra1ColorTheme('crimson')" title="Crimson Red">
-                      <span class="theme-dot" style="background: #f43f5e;"></span>
-                      <span>Crimson</span>
-                    </button>
-                    <button type="button" class="theme-chip" id="themeBtnExtra1_slate" onclick="setExtra1ColorTheme('slate')" title="CS2 Slate">
-                      <span class="theme-dot" style="background: #94a3b8;"></span>
-                      <span>Slate</span>
-                    </button>
-                    <button type="button" class="theme-chip" id="themeBtnExtra1_orange" onclick="setExtra1ColorTheme('orange')" title="Sunset Orange">
-                      <span class="theme-dot" style="background: #fb923c;"></span>
-                      <span>Orange</span>
-                    </button>
-                    <button type="button" class="theme-chip" id="themeBtnExtra1_gold" onclick="setExtra1ColorTheme('gold')" title="VIP Gold">
-                      <span class="theme-dot" style="background: #fde047;"></span>
-                      <span>Gold</span>
-                    </button>
+                  <div class="form-label-row" style="margin-bottom: 3px;">
+                    <span style="font-size: 10.5px; color: var(--text-dim);">Pick Palette Theme:</span>
                   </div>
+                  <select id="extra1ThemeSelect" onchange="setExtra1ColorTheme(this.value)">
+                    <option value="emerald" selected>Emerald Transit</option>
+                    <option value="cyan">Electric Cyan</option>
+                    <option value="purple">Neon Violet</option>
+                    <option value="amber">Amber Caution</option>
+                    <option value="crimson">Crimson Red</option>
+                    <option value="slate">CS2 Slate</option>
+                    <option value="orange">Sunset Orange</option>
+                    <option value="gold">VIP Gold</option>
+                  </select>
                 </div>
 
                 <!-- Custom Gradient Panel -->
                 <div id="extra1CustomGradPanel" style="display: none;">
                   <div class="gradient-preview-bar" id="extra1GradPreview" style="background: linear-gradient(135deg, #06241a, #0d3d2c);"></div>
+                  
+                  <div class="form-group" style="margin-top: 6px; margin-bottom: 6px;">
+                    <span style="font-size: 10px; color: var(--text-dim);">Quick Gradient Preset:</span>
+                    <select id="extra1GradPresetSelect" onchange="applyExtra1GradPresetByName(this.value)">
+                      <option value="forest" selected>Forest (Emerald / Dark Green)</option>
+                      <option value="neon">Neon (Cyan / Dark Blue)</option>
+                      <option value="violet">Violet (Purple / Dark Plum)</option>
+                      <option value="sunset">Sunset (Amber / Bronze)</option>
+                      <option value="ruby">Ruby (Crimson / Deep Maroon)</option>
+                      <option value="stealth">Stealth (Slate / Charcoal)</option>
+                      <option value="cyber">Cyber (Pink / Navy)</option>
+                      <option value="gold">Gold (Warm Gold / Deep Bronze)</option>
+                    </select>
+                  </div>
+
                   <div class="color-picker-grid" style="margin-top: 6px;">
                     <div class="color-picker-row">
                       <span class="color-picker-label">Color 1 (Start):</span>
@@ -1259,16 +1191,21 @@
                         </div>
                       </div>
                     </div>
-                    <div style="display: flex; gap: 4px; align-items: center; justify-content: space-between; margin-top: 6px;">
-                      <div style="display: flex; gap: 4px; align-items: center;">
-                        <span style="font-size: 9.5px; color: var(--text-dim);">Angle:</span>
-                        <button type="button" class="grad-dir-btn active" id="btnBadge3TextDir_vert" style="padding: 2px 7px; font-size: 9.5px;" onclick="setBadge3TextGradDir('vertical')">⇅ Vert</button>
-                        <button type="button" class="grad-dir-btn" id="btnBadge3TextDir_horiz" style="padding: 2px 7px; font-size: 9.5px;" onclick="setBadge3TextGradDir('horizontal')">⇄ Horiz</button>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px;">
+                      <div>
+                        <span style="font-size: 9.5px; color: var(--text-dim); display: block; margin-bottom: 2px;">Gradient Angle:</span>
+                        <select id="extra1TextGradDirSelect" style="font-size: 11px; padding: 4px 6px;" onchange="setBadge3TextGradDir(this.value)">
+                          <option value="vertical" selected>⇅ Vertical</option>
+                          <option value="horizontal">⇄ Horizontal</option>
+                        </select>
                       </div>
-                      <div style="display: flex; gap: 3px;">
-                        <button type="button" class="preset-btn" style="font-size: 9px; padding: 1px 5px;" onclick="applyBadge3TextGradPreset('#ffffff', '#34d399')">Emerald</button>
-                        <button type="button" class="preset-btn" style="font-size: 9px; padding: 1px 5px;" onclick="applyBadge3TextGradPreset('#fff3bf', '#f59e0b')">Gold</button>
-                        <button type="button" class="preset-btn" style="font-size: 9px; padding: 1px 5px;" onclick="applyBadge3TextGradPreset('#ffffff', '#94a3b8')">Silver</button>
+                      <div>
+                        <span style="font-size: 9.5px; color: var(--text-dim); display: block; margin-bottom: 2px;">Text Preset:</span>
+                        <select id="extra1TextGradPresetSelect" style="font-size: 11px; padding: 4px 6px;" onchange="if(this.value){ applyBadge3TextGradPresetByName(this.value); }">
+                          <option value="emerald" selected>Emerald (White ➔ Emerald)</option>
+                          <option value="gold">Gold (Warm ➔ Amber)</option>
+                          <option value="silver">Silver (White ➔ Silver)</option>
+                        </select>
                       </div>
                     </div>
                   </div>
@@ -1281,14 +1218,14 @@
               <div class="form-label-row">
                 <span style="font-size: 11px; color: var(--text-dim);">Pick Extra 1 Preset:</span>
               </div>
-              <div class="preset-pill-grid">
-                <button type="button" class="preset-btn" onclick="applyExtra1Preset('props')">🏙️ Props</button>
-                <button type="button" class="preset-btn" onclick="applyExtra1Preset('transit')">🛣️ Transit</button>
-                <button type="button" class="preset-btn" onclick="applyExtra1Preset('hazard')">⚠️ Hazard</button>
-                <button type="button" class="preset-btn" onclick="applyExtra1Preset('nature')">🌿 Nature</button>
-                <button type="button" class="preset-btn" onclick="applyExtra1Preset('graffiti')">🎨 Graffiti</button>
-                <button type="button" class="preset-btn" onclick="applyExtra1Preset('poster')">🖼️ Posters</button>
-              </div>
+              <select id="extra1PresetSelect" onchange="applyExtra1Preset(this.value)">
+                <option value="props" selected>🏙️ Props</option>
+                <option value="transit">🛣️ Transit</option>
+                <option value="hazard">⚠️ Hazard</option>
+                <option value="nature">🌿 Nature</option>
+                <option value="graffiti">🎨 Graffiti</option>
+                <option value="poster">🖼️ Posters</option>
+              </select>
             </div>
 
             <!-- Custom Logo Image View -->
@@ -1350,16 +1287,19 @@
                   </div>
                 </div>
 
-                <div style="display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px;">
-                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapExtra1Coord(50, 50)">Center (50, 50)</button>
-                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapExtra1Coord(15, 15)">Top-Left</button>
-                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapExtra1Coord(85, 15)">Top-Right</button>
-                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapExtra1Coord(15, 85)">Bottom-Left (Default)</button>
-                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapExtra1Coord(85, 85)">Bottom-Right</button>
-                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapExtra1Coord(50, 15)">Top Mid</button>
-                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapExtra1Coord(50, 85)">Bottom Mid</button>
-                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapExtra1Coord(15, 50)">Left Mid</button>
-                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapExtra1Coord(85, 50)">Right Mid</button>
+                <div style="margin-top: 8px;">
+                  <span style="font-size: 10px; color: var(--text-dim); display: block; margin-bottom: 2px;">Quick Snap Position:</span>
+                  <select id="extra1SnapCoordSelect" style="font-size: 11.5px;" onchange="if(this.value){ const [x,y]=this.value.split(',').map(Number); snapExtra1Coord(x,y); }">
+                    <option value="15,85" selected>Bottom-Left Corner (15%, 85% - Default)</option>
+                    <option value="85,85">Bottom-Right Corner (85%, 85%)</option>
+                    <option value="15,15">Top-Left Corner (15%, 15% - Default)</option>
+                    <option value="85,15">Top-Right Corner (85%, 15%)</option>
+                    <option value="50,50">Dead Center (50%, 50%)</option>
+                    <option value="50,15">Top-Center Edge (50%, 15%)</option>
+                    <option value="50,85">Bottom-Center Edge (50%, 85%)</option>
+                    <option value="15,50">Left-Center Edge (15%, 50%)</option>
+                    <option value="85,50">Right-Center Edge (85%, 50%)</option>
+                  </select>
                 </div>
               </div>
             </div>
@@ -1424,22 +1364,16 @@
               <span style="font-weight: 600; color: var(--text-main);">Enable Extra 2 Watermark Badge</span>
             </label>
 
-            <!-- Mode selector -->
+            <!-- Mode selector dropdown -->
             <div class="form-group">
               <div class="form-label-row">
                 <span style="font-size: 11px; color: var(--text-dim);">Extra 2 Badge Mode:</span>
               </div>
-              <div class="series-type-selector">
-                <button type="button" class="series-type-btn active" id="btnExtra2ModeText" onclick="setExtra2BadgeMode('text')">
-                  ✍️ Custom Text
-                </button>
-                <button type="button" class="series-type-btn" id="btnExtra2ModePreset" onclick="setExtra2BadgeMode('preset')">
-                  🎨 Presets
-                </button>
-                <button type="button" class="series-type-btn" id="btnExtra2ModeImage" onclick="setExtra2BadgeMode('image')">
-                  📁 Custom Logo
-                </button>
-              </div>
+              <select id="extra2ModeSelect" onchange="setExtra2BadgeMode(this.value)">
+                <option value="text" selected>✍️ Custom Text Tag</option>
+                <option value="preset">🎨 Presets (Watermark Seals)</option>
+                <option value="image">📁 Custom Logo Image Upload</option>
+              </select>
             </div>
 
             <!-- Custom Text View (Default for Extra 2) -->
@@ -1456,15 +1390,18 @@
                 <span>Quick Suggestions:</span>
                 <button type="button" style="background: transparent; border: none; color: #fbbf24; cursor: pointer; padding: 0; font-size: 10px;" onclick="clearExtra2Text()">✕ Clear</button>
               </div>
-              <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;">
-                <button type="button" class="preset-btn" onclick="setExtra2TextPreset('DECAL')">Decal</button>
-                <button type="button" class="preset-btn" onclick="setExtra2TextPreset('NIGHT')">Night</button>
-                <button type="button" class="preset-btn" onclick="setExtra2TextPreset('CAUTION')">Caution</button>
-                <button type="button" class="preset-btn" onclick="setExtra2TextPreset('CS2')">CS2</button>
-                <button type="button" class="preset-btn" onclick="setExtra2TextPreset('SPECIAL')">Special</button>
-                <button type="button" class="preset-btn" onclick="setExtra2TextPreset('BETA')">Beta</button>
-                <button type="button" class="preset-btn" onclick="setExtra2TextPreset('ROAD')">Road</button>
-                <button type="button" class="preset-btn" onclick="setExtra2TextPreset('SIGN')">Sign</button>
+              <div style="margin-top: 6px;">
+                <select id="extra2TextSuggestionSelect" onchange="if(this.value){ setExtra2TextPreset(this.value); this.value=''; }">
+                  <option value="">-- Choose Quick Suggestion --</option>
+                  <option value="DECAL">Decal</option>
+                  <option value="NIGHT">Night</option>
+                  <option value="CAUTION">Caution</option>
+                  <option value="CS2">CS2</option>
+                  <option value="SPECIAL">Special</option>
+                  <option value="BETA">Beta</option>
+                  <option value="ROAD">Road</option>
+                  <option value="SIGN">Sign</option>
+                </select>
               </div>
 
               <!-- Sync Style with Creator / Series -->
@@ -1490,53 +1427,50 @@
                   <span class="form-val-badge" id="extra2ColorModeBadge">Themes</span>
                 </div>
 
-                <div class="color-mode-nav">
-                  <button type="button" class="color-mode-btn active" id="btnExtra2ColorTheme" onclick="setExtra2ColorMode('theme')">🎨 Themes</button>
-                  <button type="button" class="color-mode-btn" id="btnExtra2ColorGradient" onclick="setExtra2ColorMode('gradient')">🌈 Gradient</button>
-                  <button type="button" class="color-mode-btn" id="btnExtra2ColorSolid" onclick="setExtra2ColorMode('solid')">🎯 Solid</button>
+                <!-- Color Mode Dropdown -->
+                <div style="margin-bottom: 8px;">
+                  <select id="extra2ColorModeSelect" onchange="setExtra2ColorMode(this.value)">
+                    <option value="theme" selected>🎨 Predefined Theme Palettes</option>
+                    <option value="gradient">🌈 Custom Dual-Stop Gradient</option>
+                    <option value="solid">🎯 Flat Solid Color</option>
+                  </select>
                 </div>
 
                 <!-- Themes Panel -->
                 <div id="extra2ColorThemePanel">
-                  <div class="color-theme-grid" id="extra2ColorThemes">
-                    <button type="button" class="theme-chip active" id="themeBtnExtra2_amber" onclick="setExtra2ColorTheme('amber')" title="Amber Caution">
-                      <span class="theme-dot" style="background: #fbbf24;"></span>
-                      <span>Amber</span>
-                    </button>
-                    <button type="button" class="theme-chip" id="themeBtnExtra2_emerald" onclick="setExtra2ColorTheme('emerald')" title="Emerald Transit">
-                      <span class="theme-dot" style="background: #34d399;"></span>
-                      <span>Emerald</span>
-                    </button>
-                    <button type="button" class="theme-chip" id="themeBtnExtra2_cyan" onclick="setExtra2ColorTheme('cyan')" title="Electric Cyan">
-                      <span class="theme-dot" style="background: #38bdf8;"></span>
-                      <span>Cyan</span>
-                    </button>
-                    <button type="button" class="theme-chip" id="themeBtnExtra2_purple" onclick="setExtra2ColorTheme('purple')" title="Neon Violet">
-                      <span class="theme-dot" style="background: #c084fc;"></span>
-                      <span>Violet</span>
-                    </button>
-                    <button type="button" class="theme-chip" id="themeBtnExtra2_crimson" onclick="setExtra2ColorTheme('crimson')" title="Crimson Red">
-                      <span class="theme-dot" style="background: #f43f5e;"></span>
-                      <span>Crimson</span>
-                    </button>
-                    <button type="button" class="theme-chip" id="themeBtnExtra2_slate" onclick="setExtra2ColorTheme('slate')" title="CS2 Slate">
-                      <span class="theme-dot" style="background: #94a3b8;"></span>
-                      <span>Slate</span>
-                    </button>
-                    <button type="button" class="theme-chip" id="themeBtnExtra2_orange" onclick="setExtra2ColorTheme('orange')" title="Sunset Orange">
-                      <span class="theme-dot" style="background: #fb923c;"></span>
-                      <span>Orange</span>
-                    </button>
-                    <button type="button" class="theme-chip" id="themeBtnExtra2_gold" onclick="setExtra2ColorTheme('gold')" title="VIP Gold">
-                      <span class="theme-dot" style="background: #fde047;"></span>
-                      <span>Gold</span>
-                    </button>
+                  <div class="form-label-row" style="margin-bottom: 3px;">
+                    <span style="font-size: 10.5px; color: var(--text-dim);">Pick Palette Theme:</span>
                   </div>
+                  <select id="extra2ThemeSelect" onchange="setExtra2ColorTheme(this.value)">
+                    <option value="amber" selected>Amber Caution</option>
+                    <option value="emerald">Emerald Transit</option>
+                    <option value="cyan">Electric Cyan</option>
+                    <option value="purple">Neon Violet</option>
+                    <option value="crimson">Crimson Red</option>
+                    <option value="slate">CS2 Slate</option>
+                    <option value="orange">Sunset Orange</option>
+                    <option value="gold">VIP Gold</option>
+                  </select>
                 </div>
 
                 <!-- Custom Gradient Panel -->
                 <div id="extra2CustomGradPanel" style="display: none;">
                   <div class="gradient-preview-bar" id="extra2GradPreview" style="background: linear-gradient(135deg, #241806, #3d2a0d);"></div>
+                  
+                  <div class="form-group" style="margin-top: 6px; margin-bottom: 6px;">
+                    <span style="font-size: 10px; color: var(--text-dim);">Quick Gradient Preset:</span>
+                    <select id="extra2GradPresetSelect" onchange="applyExtra2GradPresetByName(this.value)">
+                      <option value="sunset" selected>Sunset (Amber / Bronze)</option>
+                      <option value="gold">Gold (Warm Gold / Deep Bronze)</option>
+                      <option value="forest">Forest (Emerald / Dark Green)</option>
+                      <option value="neon">Neon (Cyan / Dark Blue)</option>
+                      <option value="violet">Violet (Purple / Dark Plum)</option>
+                      <option value="ruby">Ruby (Crimson / Deep Maroon)</option>
+                      <option value="stealth">Stealth (Slate / Charcoal)</option>
+                      <option value="cyber">Cyber (Pink / Navy)</option>
+                    </select>
+                  </div>
+
                   <div class="color-picker-grid" style="margin-top: 6px;">
                     <div class="color-picker-row">
                       <span class="color-picker-label">Color 1 (Start):</span>
@@ -1665,16 +1599,21 @@
                         </div>
                       </div>
                     </div>
-                    <div style="display: flex; gap: 4px; align-items: center; justify-content: space-between; margin-top: 6px;">
-                      <div style="display: flex; gap: 4px; align-items: center;">
-                        <span style="font-size: 9.5px; color: var(--text-dim);">Angle:</span>
-                        <button type="button" class="grad-dir-btn active" id="btnBadge4TextDir_vert" style="padding: 2px 7px; font-size: 9.5px;" onclick="setBadge4TextGradDir('vertical')">⇅ Vert</button>
-                        <button type="button" class="grad-dir-btn" id="btnBadge4TextDir_horiz" style="padding: 2px 7px; font-size: 9.5px;" onclick="setBadge4TextGradDir('horizontal')">⇄ Horiz</button>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px;">
+                      <div>
+                        <span style="font-size: 9.5px; color: var(--text-dim); display: block; margin-bottom: 2px;">Gradient Angle:</span>
+                        <select id="extra2TextGradDirSelect" style="font-size: 11px; padding: 4px 6px;" onchange="setBadge4TextGradDir(this.value)">
+                          <option value="vertical" selected>⇅ Vertical</option>
+                          <option value="horizontal">⇄ Horizontal</option>
+                        </select>
                       </div>
-                      <div style="display: flex; gap: 3px;">
-                        <button type="button" class="preset-btn" style="font-size: 9px; padding: 1px 5px;" onclick="applyBadge4TextGradPreset('#ffffff', '#fbbf24')">Amber</button>
-                        <button type="button" class="preset-btn" style="font-size: 9px; padding: 1px 5px;" onclick="applyBadge4TextGradPreset('#fff3bf', '#f59e0b')">Gold</button>
-                        <button type="button" class="preset-btn" style="font-size: 9px; padding: 1px 5px;" onclick="applyBadge4TextGradPreset('#ffffff', '#94a3b8')">Silver</button>
+                      <div>
+                        <span style="font-size: 9.5px; color: var(--text-dim); display: block; margin-bottom: 2px;">Text Preset:</span>
+                        <select id="extra2TextGradPresetSelect" style="font-size: 11px; padding: 4px 6px;" onchange="if(this.value){ applyBadge4TextGradPresetByName(this.value); }">
+                          <option value="amber" selected>Amber (White ➔ Amber)</option>
+                          <option value="gold">Gold (Warm ➔ Gold)</option>
+                          <option value="silver">Silver (White ➔ Silver)</option>
+                        </select>
                       </div>
                     </div>
                   </div>
@@ -1687,14 +1626,14 @@
               <div class="form-label-row">
                 <span style="font-size: 11px; color: var(--text-dim);">Pick Extra 2 Preset:</span>
               </div>
-              <div class="preset-pill-grid">
-                <button type="button" class="preset-btn" onclick="applyExtra2Preset('hazard')">⚠️ Hazard</button>
-                <button type="button" class="preset-btn" onclick="applyExtra2Preset('props')">🏙️ Props</button>
-                <button type="button" class="preset-btn" onclick="applyExtra2Preset('transit')">🛣️ Transit</button>
-                <button type="button" class="preset-btn" onclick="applyExtra2Preset('nature')">🌿 Nature</button>
-                <button type="button" class="preset-btn" onclick="applyExtra2Preset('graffiti')">🎨 Graffiti</button>
-                <button type="button" class="preset-btn" onclick="applyExtra2Preset('poster')">🖼️ Posters</button>
-              </div>
+              <select id="extra2PresetSelect" onchange="applyExtra2Preset(this.value)">
+                <option value="hazard" selected>⚠️ Hazard</option>
+                <option value="props">🏙️ Props</option>
+                <option value="transit">🛣️ Transit</option>
+                <option value="nature">🌿 Nature</option>
+                <option value="graffiti">🎨 Graffiti</option>
+                <option value="poster">🖼️ Posters</option>
+              </select>
             </div>
 
             <!-- Custom Logo Image View -->
@@ -1756,16 +1695,19 @@
                   </div>
                 </div>
 
-                <div style="display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px;">
-                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapExtra2Coord(50, 50)">Center (50, 50)</button>
-                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapExtra2Coord(15, 15)">Top-Left</button>
-                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapExtra2Coord(85, 15)">Top-Right (Default)</button>
-                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapExtra2Coord(15, 85)">Bottom-Left</button>
-                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapExtra2Coord(85, 85)">Bottom-Right</button>
-                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapExtra2Coord(50, 15)">Top Mid</button>
-                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapExtra2Coord(50, 85)">Bottom Mid</button>
-                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapExtra2Coord(15, 50)">Left Mid</button>
-                  <button type="button" class="preset-btn" style="font-size: 9.5px; padding: 2px 6px;" onclick="snapExtra2Coord(85, 50)">Right Mid</button>
+                <div style="margin-top: 8px;">
+                  <span style="font-size: 10px; color: var(--text-dim); display: block; margin-bottom: 2px;">Quick Snap Position:</span>
+                  <select id="extra2SnapCoordSelect" style="font-size: 11.5px;" onchange="if(this.value){ const [x,y]=this.value.split(',').map(Number); snapExtra2Coord(x,y); }">
+                    <option value="85,15" selected>Top-Right Corner (85%, 15% - Default)</option>
+                    <option value="15,15">Top-Left Corner (15%, 15%)</option>
+                    <option value="15,85">Bottom-Left Corner (15%, 85%)</option>
+                    <option value="85,85">Bottom-Right Corner (85%, 85%)</option>
+                    <option value="50,50">Dead Center (50%, 50%)</option>
+                    <option value="50,15">Top-Center Edge (50%, 15%)</option>
+                    <option value="50,85">Bottom-Center Edge (50%, 85%)</option>
+                    <option value="15,50">Left-Center Edge (15%, 50%)</option>
+                    <option value="85,50">Right-Center Edge (85%, 50%)</option>
+                  </select>
                 </div>
               </div>
             </div>

@@ -180,12 +180,44 @@ export const FIELD_HELP = {
     details: 'Multiplies the Mask Map Alpha by the Base Color cutout opacity. Prevents empty transparent pixels outside your road marking from showing metallic gloss or specular reflections on the pavement.',
     wikiTopic: 'pbr'
   },
+  iconSettings: {
+    title: 'In-Game Icon & 4-Layer Watermarks',
+    badge: '_Icon.png (256×256)',
+    badgeClass: 'pill-purple',
+    desc: 'Generates the official 256×256 in-game UI thumbnail with up to 4 simultaneous watermark overlays.',
+    details: '• <strong>Background Styles:</strong> CS2 Slate Vignette, 3D Hex Pedestal, Asphalt, Blueprint Grid, or Transparent.<br>• <strong>Overlay Switcher:</strong> Switch cleanly between <strong>Creator</strong>, <strong>Series</strong>, <strong>Extra 1</strong>, and <strong>Extra 2</strong> layers via dropdown.<br>• <strong>Style Sync:</strong> Quickly copy font, colors, and gradients across any badge layer with 1 click.',
+    wikiTopic: 'install'
+  },
+  badgeEdgePadding: {
+    title: 'Badge Padding (Edge Inset)',
+    badge: 'Frame Offset',
+    badgeClass: 'pill-blue',
+    desc: 'Distance in pixels from the outer edge of the 256×256 icon frame.',
+    details: 'Adjusts how far the badge is inset from icon boundaries (0 to 36 px) to prevent clipping against CS2 UI borders.',
+    wikiTopic: 'install'
+  },
+  badgeInnerPadding: {
+    title: 'Inner Ribbon Padding',
+    badge: 'Ribbon Inset',
+    badgeClass: 'pill-blue',
+    desc: 'Internal padding between badge borders and text/graphic content.',
+    details: 'Controls breathing room inside pill tags, squircles, and seals (2 to 24 px).',
+    wikiTopic: 'install'
+  },
+  seriesCustomText: {
+    title: 'Custom Badge Text Tag',
+    badge: 'Typography',
+    badgeClass: 'pill-purple',
+    desc: 'Custom text monograms and tags with live Google Fonts and gradient styling.',
+    details: '• Type custom pack names, versions, or monograms (e.g. <code>POSTERS</code>, <code>V1.0</code>, <code>4K</code>).<br>• Use quick suggestions dropdown for 1-click text tags.<br>• Supports dual-stop gradient fills, vertical/horizontal gradient text, and real-time Google Font loading.',
+    wikiTopic: 'install'
+  },
   creatorBadge: {
     title: 'Custom Creator Branding & Watermarks',
-    badge: 'Dual Badge System',
+    badge: '4-Layer Overlay System',
     badgeClass: 'pill-purple',
-    desc: 'Supercharges the generated _Icon.png thumbnail with personalized watermarks.',
-    details: '• <strong>Overlay 1 (Creator Seal):</strong> Brand your mods with your avatar, personal creator logo, or geometric seal.<br>• <strong>Overlay 2 (Series Tag):</strong> Categorize assets by pack name or release tags.<br>• <strong>Typography Studio:</strong> Customize Google Fonts, bold, italic, point sizing, and letter spacing.<br>• <strong>Collision Avoidance:</strong> If placed in the same corner, badges automatically stack neatly.<br>• <strong>Save as Default:</strong> Click <em>Save as Default</em> under the Defaults tab to permanently store your logos, positions, custom gradients, and styling in browser memory so you never have to reload them for future assets!',
+    desc: 'Supercharges the generated _Icon.png thumbnail with up to 4 personalized watermark overlays.',
+    details: '• <strong>Overlay 1 (Creator):</strong> Brand mods with personal seals, monograms, or uploaded PNG logos.<br>• <strong>Overlay 2 (Series):</strong> Tag assets by collection or category (e.g. Graffiti, Transit, Posters).<br>• <strong>Overlays 3 &amp; 4 (Extra 1 &amp; 2):</strong> Add versioning (V1.0), resolution (4K), warnings, or custom seals.<br>• <strong>Style Sync &amp; Defaults:</strong> Copy styles between overlays with 1 click, or save as defaults to load automatically every session!',
     wikiTopic: 'install'
   }
 };

@@ -245,8 +245,115 @@ export function switchBadgeSubtab(tab) {
       panel.style.display = (t === tab) ? 'block' : 'none';
     }
   });
+
+  const sel = document.getElementById('badgeLayerSelect');
+  if (sel && sel.value !== tab) sel.value = tab;
+
+  const badge = document.getElementById('activeOverlayLayerBadge');
+  if (badge) {
+    if (tab === 'creator') badge.textContent = 'Overlay 1/4';
+    else if (tab === 'series') badge.textContent = 'Overlay 2/4';
+    else if (tab === 'extra1') badge.textContent = 'Overlay 3/4';
+    else if (tab === 'extra2') badge.textContent = 'Overlay 4/4';
+    else if (tab === 'defaults') badge.textContent = 'Defaults';
+  }
 }
 export const switchBadgeTab = switchBadgeSubtab;
+
+export function runBadgeStyleCopyAction(actionStr) {
+  if (!actionStr) return;
+  const parts = actionStr.split(':');
+  if (parts.length === 2) {
+    copyBadgeStyle(parts[0], parts[1]);
+  }
+}
+
+export const BADGE_GRADIENT_PRESETS = {
+  neon: { c1: '#071a2e', c2: '#0d324d', stroke: '#38bdf8', text: '#ffffff' },
+  violet: { c1: '#151326', c2: '#251336', stroke: '#c084fc', text: '#ffffff' },
+  forest: { c1: '#06241a', c2: '#0d3d2c', stroke: '#34d399', text: '#ffffff' },
+  sunset: { c1: '#241806', c2: '#3d2a0d', stroke: '#fbbf24', text: '#ffffff' },
+  ruby: { c1: '#290913', c2: '#451020', stroke: '#f43f5e', text: '#ffffff' },
+  stealth: { c1: '#0a0f18', c2: '#1e293b', stroke: '#94a3b8', text: '#ffffff' },
+  cyber: { c1: '#2b0638', c2: '#09253d', stroke: '#ec4899', text: '#fdf2f8' },
+  gold: { c1: '#2a2007', c2: '#47360c', stroke: '#fde047', text: '#ffffff' }
+};
+
+export function applyCreatorGradPresetByName(name) {
+  const p = BADGE_GRADIENT_PRESETS[name];
+  if (p) applyCreatorGradPreset(p.c1, p.c2, p.stroke, p.text);
+}
+
+export function applySeriesGradPresetByName(name) {
+  const p = BADGE_GRADIENT_PRESETS[name];
+  if (p) applySeriesGradPreset(p.c1, p.c2, p.stroke, p.text);
+}
+
+export function applyExtra1GradPresetByName(name) {
+  const p = BADGE_GRADIENT_PRESETS[name];
+  if (p) {
+    state.badge3CustomBg1 = p.c1;
+    state.badge3CustomBg2 = p.c2;
+    state.badge3CustomStroke = p.stroke;
+    state.badge3CustomText = p.text;
+    const inp1 = document.getElementById('extra1Color1'); if (inp1) inp1.value = p.c1;
+    const inp2 = document.getElementById('extra1Color2'); if (inp2) inp2.value = p.c2;
+    const inps = document.getElementById('extra1StrokeColor'); if (inps) inps.value = p.stroke;
+    const inpt = document.getElementById('extra1TextColor'); if (inpt) inpt.value = p.text;
+    const c1Hex = document.getElementById('extra1Color1Hex'); if (c1Hex) c1Hex.textContent = p.c1;
+    const c2Hex = document.getElementById('extra1Color2Hex'); if (c2Hex) c2Hex.textContent = p.c2;
+    const sHex = document.getElementById('extra1StrokeHex'); if (sHex) sHex.textContent = p.stroke;
+    const tHex = document.getElementById('extra1TextColorHex'); if (tHex) tHex.textContent = p.text;
+    const prev = document.getElementById('extra1GradPreview');
+    if (prev) prev.style.background = `linear-gradient(135deg, ${p.c1}, ${p.c2})`;
+    renderIconMap();
+  }
+}
+
+export function applyExtra2GradPresetByName(name) {
+  const p = BADGE_GRADIENT_PRESETS[name];
+  if (p) {
+    state.badge4CustomBg1 = p.c1;
+    state.badge4CustomBg2 = p.c2;
+    state.badge4CustomStroke = p.stroke;
+    state.badge4CustomText = p.text;
+    const inp1 = document.getElementById('extra2Color1'); if (inp1) inp1.value = p.c1;
+    const inp2 = document.getElementById('extra2Color2'); if (inp2) inp2.value = p.c2;
+    const inps = document.getElementById('extra2StrokeColor'); if (inps) inps.value = p.stroke;
+    const inpt = document.getElementById('extra2TextColor'); if (inpt) inpt.value = p.text;
+    const c1Hex = document.getElementById('extra2Color1Hex'); if (c1Hex) c1Hex.textContent = p.c1;
+    const c2Hex = document.getElementById('extra2Color2Hex'); if (c2Hex) c2Hex.textContent = p.c2;
+    const sHex = document.getElementById('extra2StrokeHex'); if (sHex) sHex.textContent = p.stroke;
+    const tHex = document.getElementById('extra2TextColorHex'); if (tHex) tHex.textContent = p.text;
+    const prev = document.getElementById('extra2GradPreview');
+    if (prev) prev.style.background = `linear-gradient(135deg, ${p.c1}, ${p.c2})`;
+    renderIconMap();
+  }
+}
+
+export function applyBadge1TextGradPresetByName(name) {
+  if (name === 'cyan') applyBadge1TextGradPreset('#ffffff', '#38bdf8');
+  else if (name === 'gold') applyBadge1TextGradPreset('#fff3bf', '#f59e0b');
+  else if (name === 'silver') applyBadge1TextGradPreset('#ffffff', '#94a3b8');
+}
+
+export function applyBadge2TextGradPresetByName(name) {
+  if (name === 'violet') applyBadge2TextGradPreset('#ffffff', '#c084fc');
+  else if (name === 'gold') applyBadge2TextGradPreset('#fff3bf', '#f59e0b');
+  else if (name === 'cyan') applyBadge2TextGradPreset('#ffffff', '#38bdf8');
+}
+
+export function applyBadge3TextGradPresetByName(name) {
+  if (name === 'emerald') applyBadge3TextGradPreset('#ffffff', '#34d399');
+  else if (name === 'gold') applyBadge3TextGradPreset('#fff3bf', '#f59e0b');
+  else if (name === 'silver') applyBadge3TextGradPreset('#ffffff', '#94a3b8');
+}
+
+export function applyBadge4TextGradPresetByName(name) {
+  if (name === 'amber') applyBadge4TextGradPreset('#ffffff', '#fbbf24');
+  else if (name === 'gold') applyBadge4TextGradPreset('#fff3bf', '#f59e0b');
+  else if (name === 'silver') applyBadge4TextGradPreset('#ffffff', '#94a3b8');
+}
 
 export function toggleBadge1Enable(checked) {
   state.badge1Enabled = checked;
@@ -282,6 +389,8 @@ export function setCreatorBadgeMode(mode) {
   document.getElementById('btnCreatorModePreset')?.classList.toggle('active', mode === 'preset');
   document.getElementById('btnCreatorModeText')?.classList.toggle('active', mode === 'text');
   document.getElementById('btnCreatorModeImage')?.classList.toggle('active', mode === 'image');
+  const modeSel = document.getElementById('creatorModeSelect');
+  if (modeSel && modeSel.value !== mode) modeSel.value = mode;
 
   const secPreset = document.getElementById('creatorPresetSection');
   const secText = document.getElementById('creatorTextSection');
@@ -386,6 +495,8 @@ export function setCreatorColorMode(mode) {
   document.getElementById('btnCreatorColorTheme')?.classList.toggle('active', mode === 'theme');
   document.getElementById('btnCreatorColorGradient')?.classList.toggle('active', mode === 'gradient');
   document.getElementById('btnCreatorColorSolid')?.classList.toggle('active', mode === 'solid');
+  const sel = document.getElementById('creatorColorModeSelect');
+  if (sel && sel.value !== mode) sel.value = mode;
 
   const pTheme = document.getElementById('creatorColorThemePanel');
   const pGrad = document.getElementById('creatorCustomGradPanel');
@@ -410,6 +521,8 @@ export function setCreatorColorTheme(themeName) {
   document.querySelectorAll('#creatorColorThemes .theme-chip').forEach(btn => {
     btn.classList.toggle('active', btn.id === `themeBtn1_${themeName}`);
   });
+  const sel = document.getElementById('creatorThemeSelect');
+  if (sel && sel.value !== themeName) sel.value = themeName;
   renderIconMap();
 }
 
@@ -418,6 +531,8 @@ export function setCreatorGradDirection(dir) {
   document.getElementById('btnCreatorGradDir_diag')?.classList.toggle('active', dir === 'diagonal');
   document.getElementById('btnCreatorGradDir_horiz')?.classList.toggle('active', dir === 'horizontal');
   document.getElementById('btnCreatorGradDir_vert')?.classList.toggle('active', dir === 'vertical');
+  const sel = document.getElementById('creatorGradDirSelect');
+  if (sel && sel.value !== dir) sel.value = dir;
   updateCreatorGradPreview();
   renderIconMap();
 }
@@ -525,11 +640,17 @@ export function clearDesignerLogo() {
 }
 
 export function applyPresetLogo(type) {
+  if (type === 'none') {
+    clearDesignerLogo();
+    return;
+  }
   state.presetLogoType = type;
   state.designerLogoImg = null;
   state.badge1FileName = '';
   state.badge1Type = 'preset';
   setCreatorBadgeMode('preset');
+  const sel = document.getElementById('creatorPresetSelect');
+  if (sel && sel.value !== type) sel.value = type;
   const btn = document.getElementById('logoUploadBtnText');
   if (btn) btn.textContent = 'Upload Creator Logo...';
   const btnClear = document.getElementById('btnClearLogo');
@@ -630,6 +751,8 @@ export function setSeriesBadgeMode(mode) {
   document.getElementById('btnSeriesModePreset')?.classList.toggle('active', mode === 'preset');
   document.getElementById('btnSeriesModeText')?.classList.toggle('active', mode === 'text');
   document.getElementById('btnSeriesModeImage')?.classList.toggle('active', mode === 'image');
+  const sel = document.getElementById('seriesModeSelect');
+  if (sel && sel.value !== mode) sel.value = mode;
 
   const secPreset = document.getElementById('seriesPresetSection');
   const secText = document.getElementById('seriesTextSection');
@@ -659,6 +782,8 @@ export function applySeriesPreset(presetName) {
   state.badge2Preset = presetName;
   state.badge2Type = 'preset';
   setSeriesBadgeMode('preset');
+  const sel = document.getElementById('seriesPresetSelect');
+  if (sel && sel.value !== presetName) sel.value = presetName;
 
   document.querySelectorAll('#seriesPresetSection .preset-btn').forEach(btn => {
     btn.classList.toggle('active', btn.getAttribute('onclick')?.includes(`'${presetName}'`));
@@ -707,6 +832,8 @@ export function setSeriesColorTheme(themeName) {
   document.querySelectorAll('#seriesColorThemes .theme-chip').forEach(btn => {
     btn.classList.toggle('active', btn.id === `themeBtn_${themeName}`);
   });
+  const sel = document.getElementById('seriesThemeSelect');
+  if (sel && sel.value !== themeName) sel.value = themeName;
   const valBadge = document.getElementById('seriesColorThemeVal');
   if (valBadge) {
     valBadge.textContent = themeName.charAt(0).toUpperCase() + themeName.slice(1);
@@ -726,6 +853,8 @@ export function setSeriesColorMode(mode) {
   document.getElementById('btnSeriesColorTheme')?.classList.toggle('active', mode === 'theme');
   document.getElementById('btnSeriesColorGradient')?.classList.toggle('active', mode === 'gradient');
   document.getElementById('btnSeriesColorSolid')?.classList.toggle('active', mode === 'solid');
+  const sel = document.getElementById('seriesColorModeSelect');
+  if (sel && sel.value !== mode) sel.value = mode;
 
   const pTheme = document.getElementById('seriesColorThemePanel');
   const pGrad = document.getElementById('seriesCustomGradPanel');
@@ -749,6 +878,8 @@ export function setSeriesGradDirection(dir) {
   document.getElementById('btnSeriesGradDir_diag')?.classList.toggle('active', dir === 'diagonal');
   document.getElementById('btnSeriesGradDir_horiz')?.classList.toggle('active', dir === 'horizontal');
   document.getElementById('btnSeriesGradDir_vert')?.classList.toggle('active', dir === 'vertical');
+  const sel = document.getElementById('seriesGradDirSelect');
+  if (sel && sel.value !== dir) sel.value = dir;
   updateSeriesGradPreview();
   renderIconMap();
 }
@@ -985,6 +1116,8 @@ export function setExtra1BadgeMode(mode) {
   document.getElementById('btnExtra1ModeText')?.classList.toggle('active', mode === 'text');
   document.getElementById('btnExtra1ModePreset')?.classList.toggle('active', mode === 'preset');
   document.getElementById('btnExtra1ModeImage')?.classList.toggle('active', mode === 'image');
+  const sel = document.getElementById('extra1ModeSelect');
+  if (sel && sel.value !== mode) sel.value = mode;
 
   const secText = document.getElementById('extra1TextSection');
   const secPreset = document.getElementById('extra1PresetSection');
@@ -1070,6 +1203,8 @@ export function setExtra1ColorMode(mode) {
   document.getElementById('btnExtra1ColorTheme')?.classList.toggle('active', mode === 'theme');
   document.getElementById('btnExtra1ColorGradient')?.classList.toggle('active', mode === 'gradient');
   document.getElementById('btnExtra1ColorSolid')?.classList.toggle('active', mode === 'solid');
+  const sel = document.getElementById('extra1ColorModeSelect');
+  if (sel && sel.value !== mode) sel.value = mode;
 
   const pTheme = document.getElementById('extra1ColorThemePanel');
   const pGrad = document.getElementById('extra1CustomGradPanel');
@@ -1091,6 +1226,8 @@ export function setExtra1ColorTheme(themeName) {
   document.querySelectorAll('#extra1ColorThemes .theme-chip').forEach(btn => {
     btn.classList.toggle('active', btn.id === `themeBtnExtra1_${themeName}`);
   });
+  const sel = document.getElementById('extra1ThemeSelect');
+  if (sel && sel.value !== themeName) sel.value = themeName;
   renderIconMap();
 }
 
@@ -1135,6 +1272,8 @@ export function applyExtra1Preset(presetName) {
   state.badge3Preset = presetName;
   state.badge3Type = 'preset';
   setExtra1BadgeMode('preset');
+  const sel = document.getElementById('extra1PresetSelect');
+  if (sel && sel.value !== presetName) sel.value = presetName;
   renderIconMap();
   showToast(`Selected "${presetName.toUpperCase()}" for Extra 1`);
 }
@@ -1239,6 +1378,8 @@ export function setBadge3TextGradDir(dir) {
   state.badge3TextGradDir = dir;
   document.getElementById('btnBadge3TextDir_vert')?.classList.toggle('active', dir === 'vertical');
   document.getElementById('btnBadge3TextDir_horiz')?.classList.toggle('active', dir === 'horizontal');
+  const sel = document.getElementById('extra1TextGradDirSelect');
+  if (sel && sel.value !== dir) sel.value = dir;
   renderIconMap();
 }
 
@@ -1263,6 +1404,8 @@ export function setExtra2BadgeMode(mode) {
   document.getElementById('btnExtra2ModeText')?.classList.toggle('active', mode === 'text');
   document.getElementById('btnExtra2ModePreset')?.classList.toggle('active', mode === 'preset');
   document.getElementById('btnExtra2ModeImage')?.classList.toggle('active', mode === 'image');
+  const sel = document.getElementById('extra2ModeSelect');
+  if (sel && sel.value !== mode) sel.value = mode;
 
   const secText = document.getElementById('extra2TextSection');
   const secPreset = document.getElementById('extra2PresetSection');
@@ -1348,6 +1491,8 @@ export function setExtra2ColorMode(mode) {
   document.getElementById('btnExtra2ColorTheme')?.classList.toggle('active', mode === 'theme');
   document.getElementById('btnExtra2ColorGradient')?.classList.toggle('active', mode === 'gradient');
   document.getElementById('btnExtra2ColorSolid')?.classList.toggle('active', mode === 'solid');
+  const sel = document.getElementById('extra2ColorModeSelect');
+  if (sel && sel.value !== mode) sel.value = mode;
 
   const pTheme = document.getElementById('extra2ColorThemePanel');
   const pGrad = document.getElementById('extra2CustomGradPanel');
@@ -1369,6 +1514,8 @@ export function setExtra2ColorTheme(themeName) {
   document.querySelectorAll('#extra2ColorThemes .theme-chip').forEach(btn => {
     btn.classList.toggle('active', btn.id === `themeBtnExtra2_${themeName}`);
   });
+  const sel = document.getElementById('extra2ThemeSelect');
+  if (sel && sel.value !== themeName) sel.value = themeName;
   renderIconMap();
 }
 
@@ -1413,6 +1560,8 @@ export function applyExtra2Preset(presetName) {
   state.badge4Preset = presetName;
   state.badge4Type = 'preset';
   setExtra2BadgeMode('preset');
+  const sel = document.getElementById('extra2PresetSelect');
+  if (sel && sel.value !== presetName) sel.value = presetName;
   renderIconMap();
   showToast(`Selected "${presetName.toUpperCase()}" for Extra 2`);
 }
@@ -1517,6 +1666,8 @@ export function setBadge4TextGradDir(dir) {
   state.badge4TextGradDir = dir;
   document.getElementById('btnBadge4TextDir_vert')?.classList.toggle('active', dir === 'vertical');
   document.getElementById('btnBadge4TextDir_horiz')?.classList.toggle('active', dir === 'horizontal');
+  const sel = document.getElementById('extra2TextGradDirSelect');
+  if (sel && sel.value !== dir) sel.value = dir;
   renderIconMap();
 }
 
@@ -3383,6 +3534,15 @@ if (typeof window !== 'undefined') {
     onExtra2ScaleChange,
     onExtra2PaddingChange,
     onExtra2OpacityChange,
-    copyBadgeStyle
+    copyBadgeStyle,
+    runBadgeStyleCopyAction,
+    applyCreatorGradPresetByName,
+    applySeriesGradPresetByName,
+    applyExtra1GradPresetByName,
+    applyExtra2GradPresetByName,
+    applyBadge1TextGradPresetByName,
+    applyBadge2TextGradPresetByName,
+    applyBadge3TextGradPresetByName,
+    applyBadge4TextGradPresetByName
   });
 }
