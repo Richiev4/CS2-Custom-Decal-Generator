@@ -389,11 +389,11 @@ export function updateConfigJson() {
   const catBadge = document.getElementById('categorySubfolderBadge');
   if (catBadge) catBadge.textContent = category;
 
-  document.getElementById('nameCardBase').textContent = `${name}_BaseColorMap.png`;
-  document.getElementById('nameCardNormal').textContent = `${name}_NormalMap.png`;
-  document.getElementById('nameCardMask').textContent = `${name}_MaskMap.png`;
+  document.getElementById('nameCardBase').textContent = '_BaseColorMap.png';
+  document.getElementById('nameCardNormal').textContent = '_NormalMap.png';
+  document.getElementById('nameCardMask').textContent = '_MaskMap.png';
   const nameCardIcon = document.getElementById('nameCardIcon');
-  if (nameCardIcon) nameCardIcon.textContent = `${name}_Icon.png`;
+  if (nameCardIcon) nameCardIcon.textContent = 'icon.png';
 
   let maskSum = 0;
   const tBox = document.getElementById('layerTerrain');
@@ -611,32 +611,29 @@ export function downloadConfigJson() {
 export function downloadSingleMap(type) {
   const { canvasBase, canvasNormal, canvasMask, canvasIcon } = getCanvases();
   let canvas = canvasBase;
-  let suffix = '_BaseColorMap.png';
+  let filename = '_BaseColorMap.png';
 
   if (type === 'normal') {
     canvas = canvasNormal;
-    suffix = '_NormalMap.png';
+    filename = '_NormalMap.png';
   } else if (type === 'mask') {
     canvas = canvasMask;
-    suffix = '_MaskMap.png';
+    filename = '_MaskMap.png';
   } else if (type === 'icon') {
     canvas = canvasIcon;
-    suffix = '_Icon.png';
+    filename = 'icon.png';
   }
-
-  const defaultName = state.appMode === 'decal' ? 'CustomDecal' : (state.appMode === 'surface' ? 'CustomSurface' : 'CustomNetLane');
-  const assetName = document.getElementById('assetName').value.trim() || defaultName;
 
   canvas.toBlob(blob => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${assetName}${suffix}`;
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    showToast(`Downloaded ${assetName}${suffix}`);
+    showToast(`Downloaded ${filename}`);
   }, 'image/png');
 }
 
@@ -671,7 +668,6 @@ export async function exportZipPackage() {
 
   if (state.appMode === 'decal') {
     folder.file('decal.json', jsonString);
-    folder.file(`${assetName}.json`, jsonString);
 
     const normalOpacity = parseFloat(document.getElementById('normalOpacitySlider')?.value || '1.0');
     const baseOpacity = parseFloat(document.getElementById('baseOpacitySlider')?.value || '1.0');
@@ -689,10 +685,8 @@ export async function exportZipPackage() {
     folder.file('settings.json', JSON.stringify(officialSettings, null, 2));
   } else if (state.appMode === 'surface') {
     folder.file('surface.json', jsonString);
-    folder.file(`${assetName}.json`, jsonString);
   } else {
     folder.file('netlane.json', jsonString);
-    folder.file(`${assetName}.json`, jsonString);
   }
 
   const getCanvasBlob = (canvas) => new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
@@ -713,16 +707,13 @@ export async function exportZipPackage() {
     const maskBlob = blobs[2];
     const iconBlob = isIconEnabled ? blobs[3] : null;
 
-    folder.file(`${assetName}_BaseColorMap.png`, baseBlob);
-    folder.file(`${assetName}_NormalMap.png`, normalBlob);
-    folder.file(`${assetName}_MaskMap.png`, maskBlob);
-
-    folder.file(`${assetName}_BaseColor.png`, baseBlob);
-    folder.file(`${assetName}_Normal.png`, normalBlob);
+    // Exact CS2 / ExtraAssetsImporter base folder file names (matching user screenshot)
+    folder.file('_BaseColorMap.png', baseBlob);
+    folder.file('_NormalMap.png', normalBlob);
+    folder.file('_MaskMap.png', maskBlob);
 
     if (iconBlob) {
-      folder.file(`${assetName}_Icon.png`, iconBlob);
-      folder.file('Icon.png', iconBlob);
+      folder.file('icon.png', iconBlob);
     }
 
     const destPath = state.appMode === 'decal' 
@@ -735,17 +726,16 @@ export async function exportZipPackage() {
     const configFilename = state.appMode === 'decal' ? 'decal.json' : (state.appMode === 'netlane' ? 'netlane.json' : 'surface.json');
 
     const readme = `Cities: Skylines 2 Custom ${assetTypeTitle} Asset: ${assetName}
-Generated in accordance with the Paradox Wikis Cities: Skylines II Asset Creation Guide
-Compatible with ExtraAssetsImporter and Native CS2 Asset Pipelines
+Generated for ExtraAssetsImporter & Native CS2 Asset Pipelines
 
 DESTINATION DIRECTORY:
 ${destPath}
 
 INCLUDED FILES:
-- ${assetName}_BaseColorMap.png & ${assetName}_BaseColor.png (RGB: Albedo, Alpha: Opacity cutout)
-- ${assetName}_NormalMap.png & ${assetName}_Normal.png (OpenGL Tangent +X, +Y normal bump)
-- ${assetName}_MaskMap.png (R: Metallic, G: 0, B: 0, Alpha: Smoothness/Glossiness)
-${iconBlob ? `- ${assetName}_Icon.png / Icon.png (CS2 UI Thumbnail)` : ''}
+- _BaseColorMap.png (RGB: Albedo, Alpha: Opacity cutout)
+- _NormalMap.png (OpenGL Tangent +X, +Y normal bump)
+- _MaskMap.png (R: Metallic, G: 0, B: 0, Alpha: Smoothness/Glossiness)
+${iconBlob ? `- icon.png (CS2 UI Menu Thumbnail)` : ''}
 - ${configFilename} (Asset configuration metadata)
 ${state.appMode === 'decal' ? '- settings.json (Official Colossal Order SurfacePostProcessor with DefaultDecal template)' : ''}
 

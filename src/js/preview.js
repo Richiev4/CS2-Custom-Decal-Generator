@@ -88,13 +88,11 @@ export function updateSingleView() {
 
   const singleNameEl = document.getElementById('singleName');
   if (singleNameEl) {
-    const assetNameInput = document.getElementById('assetName');
-    const assetName = (assetNameInput && assetNameInput.value.trim()) || 'CustomAsset';
-    let fileSuffix = '_BaseColorMap.png';
-    if (state.activeSingleMap === 'normal') fileSuffix = '_NormalMap.png';
-    else if (state.activeSingleMap === 'mask') fileSuffix = '_MaskMap.png';
-    else if (state.activeSingleMap === 'icon') fileSuffix = '_Icon.png';
-    singleNameEl.textContent = `${assetName}${fileSuffix}`;
+    let fileName = '_BaseColorMap.png';
+    if (state.activeSingleMap === 'normal') fileName = '_NormalMap.png';
+    else if (state.activeSingleMap === 'mask') fileName = '_MaskMap.png';
+    else if (state.activeSingleMap === 'icon') fileName = 'icon.png';
+    singleNameEl.textContent = fileName;
   }
 
   if (srcCanvas && srcCanvas.width > 0) {

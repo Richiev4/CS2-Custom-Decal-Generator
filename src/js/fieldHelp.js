@@ -9,7 +9,7 @@ export const FIELD_HELP = {
     badge: 'File Naming',
     badgeClass: 'pill-blue',
     desc: 'The unique name identifier for your asset files and ExtraAssetsImporter folder.',
-    details: 'Used to name all generated outputs (e.g. <code>CustomRoadMarking_01_BaseColorMap.png</code>) and creates the dedicated subfolder inside <code>...\\ModsData\\ExtraAssetsImporter\\...</code>.<br><br>💡 <strong>Variant Protection:</strong> If you rotate or flip your texture, an indicator badge and reminder card will appear here with <strong>⚡ Auto-Rename</strong> to prevent accidentally overwriting previous exports in CS2.',
+    details: 'The folder is named with your Asset Name (e.g. <code>CustomRoadMarking_01</code>). Inside this folder, ExtraAssetsImporter expects textures to be named cleanly without the asset name prefix: <code>_BaseColorMap.png</code>, <code>_NormalMap.png</code>, <code>_MaskMap.png</code>, and <code>icon.png</code>.<br><br>💡 <strong>Variant Protection:</strong> If you rotate or flip your texture, an indicator badge and reminder card will appear here with <strong>⚡ Auto-Rename</strong> to prevent accidentally overwriting previous exports in CS2.',
     wikiTopic: 'install'
   },
   assetSeries: {
@@ -129,7 +129,7 @@ export const FIELD_HELP = {
     badge: 'OpenGL (+X, +Y)',
     badgeClass: 'pill-cyan',
     desc: 'Auto-generate from color luminance or insert a custom tangent normal map.',
-    details: 'Our procedural generator calculates Sobel spatial gradients from grayscale luminosity. If you already have a sculpted tangent normal map from Blender or Substance, click <em>Insert Custom _NormalMap...</em> to modulate relief depth directly.',
+    details: 'Our procedural generator calculates Sobel spatial gradients from grayscale luminosity to output an OpenGL tangent normal map (<code>_NormalMap.png</code>). If you already have a sculpted tangent normal map from Blender or Substance, click <em>Insert Custom _NormalMap...</em> to modulate relief depth directly.',
     wikiTopic: 'pbr'
   },
   bumpIntensity: {
