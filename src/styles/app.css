@@ -3058,3 +3058,195 @@
       padding-left: 0;
       transition: border-color 0.2s ease, padding 0.2s ease;
     }
+
+    /* Quick Guide Splash Screen Modal */
+    .splash-modal-card {
+      max-width: 820px;
+      width: 95vw;
+      max-height: 88vh;
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 30px rgba(0, 168, 255, 0.15);
+      animation: splashFadeIn 0.2s ease-out;
+    }
+
+    @keyframes splashFadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.96) translateY(-8px);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    .splash-title-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, rgba(0, 168, 255, 0.25) 0%, rgba(16, 185, 129, 0.25) 100%);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent-cyan);
+      flex-shrink: 0;
+    }
+
+    .splash-modal-body {
+      padding: 16px 20px;
+      gap: 14px;
+      overflow-y: auto;
+      background: #0f1622;
+    }
+
+    .splash-hero-banner {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      border-left: 3px solid var(--primary);
+      padding: 10px 14px;
+      border-radius: 6px;
+    }
+
+    .splash-steps-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    @media (max-width: 700px) {
+      .splash-steps-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .splash-step-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .splash-step-card:hover {
+      border-color: rgba(56, 189, 248, 0.45);
+      background: #1c2738;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+    }
+
+    .splash-step-card.highlight-step {
+      border-color: rgba(0, 168, 255, 0.4);
+      background: linear-gradient(180deg, rgba(0, 168, 255, 0.08) 0%, rgba(24, 34, 48, 0.8) 100%);
+    }
+
+    .splash-step-card.highlight-export {
+      border-color: rgba(16, 185, 129, 0.4);
+      background: linear-gradient(180deg, rgba(16, 185, 129, 0.08) 0%, rgba(24, 34, 48, 0.8) 100%);
+    }
+
+    .splash-step-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .splash-step-num {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #0b1118;
+      font-weight: 900;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .splash-step-card.highlight-export .splash-step-num {
+      background: var(--accent-emerald);
+      color: #042416;
+    }
+
+    .splash-step-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .splash-step-desc {
+      font-size: 11.5px;
+      line-height: 1.5;
+      color: #cbd5e1;
+    }
+
+    .splash-step-desc strong {
+      color: #ffffff;
+    }
+
+    .splash-inline-pill {
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      color: var(--accent-cyan);
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 10.5px;
+      cursor: pointer;
+      display: inline-block;
+      transition: all 0.15s;
+    }
+
+    .splash-inline-pill:hover {
+      background: var(--primary);
+      color: #000;
+    }
+
+    .splash-tip-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      padding: 9px 14px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      color: #a7f3d0;
+      line-height: 1.4;
+    }
+
+    .splash-modal-footer {
+      padding: 12px 18px;
+      background: var(--bg-card);
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .splash-checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .splash-checkbox-label input[type="checkbox"] {
+      width: 15px;
+      height: 15px;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+
+    .splash-checkbox-label:hover {
+      color: #ffffff;
+    }

@@ -515,12 +515,29 @@ export function restoreSidebarSectionsState() {
 }
 
 // Unsaved Modal
-export function openUnsavedModal() {
+export function hasActiveWork() {
+  return Boolean(
+    state.currentImage ||
+    state.isCustomImageLoaded ||
+    state.hasUnsavedChanges ||
+    state.customNormalImg ||
+    state.customMaskImg
+  );
+}
+
+export function openUnsavedModal(customMessage) {
   const assetName = document.getElementById('assetName') ? document.getElementById('assetName').value.trim() : 'Custom Asset';
   const nameEl = document.getElementById('unsavedAssetName');
   if (nameEl) nameEl.textContent = assetName || 'Custom Asset';
   const modal = document.getElementById('unsavedGuardModal');
-  if (modal) modal.style.display = 'flex';
+  if (modal) {
+    const pEl = modal.querySelector('.modal-body p');
+    if (pEl) {
+      const msg = customMessage || 'Loading a different graphic or preset will clear what you are currently doing.';
+      pEl.innerHTML = `${msg} You currently have active work (<strong id="unsavedAssetName" style="color: var(--primary);">${assetName || 'Custom Asset'}</strong>). <strong>Do you want to continue?</strong>`;
+    }
+    modal.style.display = 'flex';
+  }
 }
 
 export function closeUnsavedModal() {
@@ -560,5 +577,11 @@ export function cancelGuardAction() {
   if (fileInput) fileInput.value = '';
   const projectInput = document.getElementById('projectFileInput');
   if (projectInput) projectInput.value = '';
+  const zipInput = document.getElementById('zipInput');
+  if (zipInput) zipInput.value = '';
+  const folderInput = document.getElementById('folderInput');
+  if (folderInput) folderInput.value = '';
+  const filesInput = document.getElementById('filesInput');
+  if (filesInput) filesInput.value = '';
   showToast('Action cancelled — current asset kept');
 }

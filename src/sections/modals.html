@@ -104,6 +104,7 @@
 
         <!-- Category Filters -->
         <div class="help-filter-pills" id="helpFilterPills">
+          <button type="button" class="help-filter-btn" style="background: rgba(56, 189, 248, 0.15); border-color: rgba(56, 189, 248, 0.4); color: var(--accent-cyan); font-weight: 700;" onclick="closeHelpModal(); openWelcomeSplash();">⭐ Quick Start Guide</button>
           <button type="button" class="help-filter-btn active" onclick="setHelpCategory('all')">All Questions</button>
           <button type="button" class="help-filter-btn" onclick="setHelpCategory('wiki')">Paradox Wiki Reference</button>
           <button type="button" class="help-filter-btn" onclick="setHelpCategory('resolution')">Resolution & Export</button>
@@ -410,6 +411,138 @@
         Open in Guide &amp; FAQ ↗
       </button>
       <span class="popover-pin-hint" id="popoverPinHint">Click ? to pin open</span>
+    </div>
+  </div>
+
+  <!-- Quick Guide Splash Screen Modal -->
+  <div class="modal-overlay" id="welcomeSplashModal" onclick="closeWelcomeSplashOnBackdrop(event)">
+    <div class="modal-card splash-modal-card">
+      <div class="modal-header" style="background: linear-gradient(135deg, #131c28 0%, #172437 100%); border-bottom: 1px solid rgba(56, 189, 248, 0.25);">
+        <div class="modal-title" style="display: flex; align-items: center; gap: 10px;">
+          <div class="splash-title-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+          </div>
+          <div>
+            <div style="font-size: 15px; font-weight: 800; color: #ffffff; letter-spacing: 0.3px;">
+              Quick Start Guide: Cities: Skylines 2 Custom Asset Generator
+            </div>
+            <div style="font-size: 11px; color: var(--accent-cyan); font-weight: 500;">
+              ExtraAssetsImporter PBR Pipeline • Decals, Terrain Surfaces &amp; Road Net Lanes
+            </div>
+          </div>
+        </div>
+        <button class="preset-btn" style="padding: 4px 8px; font-size: 14px;" onclick="closeWelcomeSplash()" title="Close Guide">✕</button>
+      </div>
+
+      <div class="modal-body splash-modal-body">
+        <div class="splash-hero-banner">
+          <p style="margin: 0; font-size: 12.5px; line-height: 1.5; color: #e2e8f0;">
+            Follow this quick <strong>6-step pipeline</strong> to convert any 2D graphic or seamless texture into in-game ready decals, ground surfaces, or lane network markings.
+          </p>
+        </div>
+
+        <div class="splash-steps-grid">
+          <!-- Step 1 -->
+          <div class="splash-step-card">
+            <div class="splash-step-header">
+              <span class="splash-step-num">1</span>
+              <span class="splash-step-title">Prepare Your Images</span>
+            </div>
+            <div class="splash-step-desc">
+              • <strong>Decals:</strong> Use <strong>PNG files with transparent backgrounds</strong> (e.g. road arrows, manholes, stains, graffiti, logos).<br>
+              • <strong>Surfaces &amp; Net Lanes:</strong> Use <strong>seamless tileable images</strong> (cobblestone, grass, asphalt, lines) without transparent borders.<br>
+              • <strong>Resolution:</strong> Power-of-two square formats (<strong>1024×1024</strong> or <strong>2048×2048</strong> recommended) for optimal GPU mipmapping.
+            </div>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="splash-step-card highlight-step">
+            <div class="splash-step-header">
+              <span class="splash-step-num">2</span>
+              <span class="splash-step-title">Load into 'Source Image Input'</span>
+            </div>
+            <div class="splash-step-desc">
+              • In the left sidebar, navigate to <strong>Section 2: Source Image Input</strong>.<br>
+              • Drag &amp; drop your image directly onto the drop zone, or click <em>"Browse File"</em>.<br>
+              • <em>Quick Test:</em> You can also click the quick presets (<span class="splash-inline-pill" onclick="loadSample('manhole'); closeWelcomeSplash();">Manhole</span>, <span class="splash-inline-pill" onclick="loadSample('arrow'); closeWelcomeSplash();">Turn Arrow</span>, <span class="splash-inline-pill" onclick="loadSample('crack'); closeWelcomeSplash();">Crack</span>) in the top header.
+            </div>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="splash-step-card">
+            <div class="splash-step-header">
+              <span class="splash-step-num">3</span>
+              <span class="splash-step-title">Tune Normal Map (3D Relief Bump)</span>
+            </div>
+            <div class="splash-step-desc">
+              • Tangent-space <strong>OpenGL (+X, +Y)</strong> normal maps are automatically generated from your image height gradients.<br>
+              • Adjust the <strong>Bump Height</strong> and <strong>Smoothing Blur</strong> sliders to achieve the desired physical depth, or import your own baked <code>_NormalMap.png</code>.
+            </div>
+          </div>
+
+          <!-- Step 4 -->
+          <div class="splash-step-card">
+            <div class="splash-step-header">
+              <span class="splash-step-num">4</span>
+              <span class="splash-step-title">Configure Mask Map (PBR Physical Materials)</span>
+            </div>
+            <div class="splash-step-desc">
+              • CS2 channel packing: <strong>Red = Metallic</strong> (iron rims, steel), <strong>Alpha = Smoothness</strong> (wet glossy pavement vs matte concrete).<br>
+              • Keep <strong>"Modulate Mask with Decal Alpha"</strong> checked to eliminate shiny square border halos on the road!
+            </div>
+          </div>
+
+          <!-- Step 5 -->
+          <div class="splash-step-card">
+            <div class="splash-step-header">
+              <span class="splash-step-num">5</span>
+              <span class="splash-step-title">Brand In-Game Icon Badges (Optional)</span>
+            </div>
+            <div class="splash-step-desc">
+              • Customize your <code>icon.png</code> thumbnail using <strong>Section 5: Icon Badges &amp; Creator Watermark</strong>.<br>
+              • Add creator seals, collection/series badges, and resolution tags (HQ, 4K) so your asset is easily recognizable in the in-game catalog.
+            </div>
+          </div>
+
+          <!-- Step 6 -->
+          <div class="splash-step-card highlight-export">
+            <div class="splash-step-header">
+              <span class="splash-step-num">6</span>
+              <span class="splash-step-title">Export Package &amp; Install in CS2</span>
+            </div>
+            <div class="splash-step-desc">
+              • Set your real-world dimensions (meters) in <strong>Section 1</strong>.<br>
+              • Head to <strong>Section 6: Export Package</strong> and click <strong>"Export Asset Package (.zip)"</strong>.<br>
+              • Extract the zip into your ExtraAssetsImporter mod directory: <code>%AppData%\..\LocalLow\Colossal Order\Cities Skylines II\Mods\ExtraAssetsImporter\CustomDecals\&lt;Asset_Name&gt;\</code>.
+            </div>
+          </div>
+        </div>
+
+        <!-- Real-Time Inspection Tip -->
+        <div class="splash-tip-bar">
+          <span style="font-size: 16px;">💡</span>
+          <div>
+            <strong>Interactive Preview Tip:</strong> Use the right-hand preview panel tabs (<em>Composite Decal</em>, <em>3D Lit Surface</em>, <em>Tiled Pattern</em>, <em>Map Channels</em>) to inspect sun angles and seamless tiling before exporting!
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer splash-modal-footer">
+        <label class="splash-checkbox-label">
+          <input type="checkbox" id="splashNeverShowCheckbox" onchange="toggleNeverShowSplashAgain(this.checked)">
+          <span>Don't show this guide automatically on launch</span>
+        </label>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <button type="button" class="btn-secondary" style="width: auto; padding: 7px 12px; font-size: 12px;" onclick="loadSample('manhole'); closeWelcomeSplash();">
+            Load Sample Decal
+          </button>
+          <button type="button" class="btn-primary" style="width: auto; padding: 8px 18px; font-size: 13px; font-weight: 700;" onclick="closeWelcomeSplash()">
+            Get Started
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 

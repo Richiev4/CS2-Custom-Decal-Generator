@@ -212,12 +212,76 @@ export const FIELD_HELP = {
     details: '• Type custom pack names, versions, or monograms (e.g. <code>POSTERS</code>, <code>V1.0</code>, <code>4K</code>).<br>• Use quick suggestions dropdown for 1-click text tags.<br>• Supports dual-stop gradient fills, vertical/horizontal gradient text, and real-time Google Font loading.',
     wikiTopic: 'install'
   },
+  creatorCustomText: {
+    title: 'Creator Monogram / Author Text',
+    badge: 'Creator Overlay',
+    badgeClass: 'pill-purple',
+    desc: 'Custom author tag, brand text, or monogram embedded into the icon.',
+    details: 'Type custom creator identifiers (e.g. <code>CREATOR</code>, <code>STUDIO 99</code>, <code>MODS</code>) with customizable font, styling, dual-color gradients, and placement.',
+    wikiTopic: 'install'
+  },
   creatorBadge: {
     title: 'Custom Creator Branding & Watermarks',
     badge: '4-Layer Overlay System',
     badgeClass: 'pill-purple',
     desc: 'Supercharges the generated _Icon.png thumbnail with up to 4 personalized watermark overlays.',
     details: '• <strong>Overlay 1 (Creator):</strong> Brand mods with personal seals, monograms, or uploaded PNG logos.<br>• <strong>Overlay 2 (Series):</strong> Tag assets by collection or category (e.g. Graffiti, Transit, Posters).<br>• <strong>Overlays 3 &amp; 4 (Extra 1 &amp; 2):</strong> Add versioning (V1.0), resolution (4K), warnings, or custom seals.<br>• <strong>Style Sync &amp; Defaults:</strong> Copy styles between overlays with 1 click, or save as defaults to load automatically every session!',
+    wikiTopic: 'install'
+  },
+  maskModulation: {
+    title: 'Alpha Cutout Modulation',
+    badge: 'Decal Clipping',
+    badgeClass: 'pill-yellow',
+    desc: 'Restricts Metallic and Smoothness properties exclusively to visible decal pixels.',
+    details: 'Multiplies the Mask Map Alpha by the Base Color cutout opacity. Prevents empty transparent pixels outside your road marking from showing metallic gloss or specular reflections on the pavement.',
+    wikiTopic: 'pbr'
+  },
+  maskVariation: {
+    title: 'Surface Detail / Roughness Variation',
+    badge: 'Micro-Roughness',
+    badgeClass: 'pill-yellow',
+    desc: 'Derives organic procedural variation from luminance crevices in your texture.',
+    details: '• <strong>0% (Flat):</strong> Uses a uniform smoothness value across all pixels.<br>• <strong>&gt; 0%:</strong> Samples image luminance to perturb smoothness, making dark crevices and gravel pits rougher and highlights glossier for realistic weathering.',
+    wikiTopic: 'pbr'
+  },
+  baseOpacity: {
+    title: 'Base Color Opacity (_BaseOpacity)',
+    badge: 'Albedo Cutout',
+    badgeClass: 'pill-blue',
+    desc: 'Controls transparency blending strength of the albedo base texture.',
+    details: 'Float property (0.0 to 1.0) saved in <code>settings.json</code> and configuration files:<br>• <strong>1.0:</strong> Crisp, solid opaque color paint.<br>• <strong>&lt; 1.0:</strong> Fades color transparency to create worn, faded, or semi-translucent weathering on roads and surfaces.',
+    wikiTopic: 'wiki'
+  },
+  metallicOpacity: {
+    title: 'Metallic Opacity (_MetallicOpacity)',
+    badge: 'Metal Shader',
+    badgeClass: 'pill-cyan',
+    desc: 'Global metallic reflection multiplier stored in the shader properties.',
+    details: 'Modulates metallic sheen intensity (0.0 to 1.0). For standard road paint, asphalt, and markings, the default is <code>0.0</code>. Raise toward <code>1.0</code> for metallic plates, brass studs, or reflective foil.',
+    wikiTopic: 'pbr'
+  },
+  uiPriority: {
+    title: 'UI Menu Priority (UiPriority)',
+    badge: 'Menu Sorting',
+    badgeClass: 'pill-purple',
+    desc: 'Determines the asset sorting order inside ExtraAssetsImporter in-game tool menus.',
+    details: 'Integer sorting index (0 to 100, default <code>41</code>). Higher or lower values adjust the position of this asset relative to other installed mod assets within the CS2 toolbar.',
+    wikiTopic: 'install'
+  },
+  jsonSchemaFormat: {
+    title: 'JSON Configuration Format',
+    badge: 'Mod Config',
+    badgeClass: 'pill-blue',
+    desc: 'Selects the schema format for generated geometry and shader configuration JSON.',
+    details: '• <strong>Extended (Float/Vector):</strong> Complete CS2 configuration containing <code>_colossal_DecalLayerMask</code>, <code>_NormalOpacity</code>, <code>_BaseOpacity</code>, <code>_MetallicOpacity</code>, <code>UiPriority</code>, and oriented 3D bounding coordinates.<br>• <strong>Simple (Flat):</strong> Compact schema specifying fundamental width, height, and depth dimensions.',
+    wikiTopic: 'wiki'
+  },
+  exportPackage: {
+    title: 'Export Asset Package (.zip)',
+    badge: 'Packaging',
+    badgeClass: 'pill-green',
+    desc: 'Packages textures, metadata, and JSON configs into an ExtraAssetsImporter bundle.',
+    details: 'Generates a ready-to-extract ZIP folder containing:<br>• <code>_BaseColorMap.png</code> (RGBA albedo)<br>• <code>_NormalMap.png</code> (OpenGL tangent vectors)<br>• <code>_MaskMap.png</code> (R:Metal, A:Smooth)<br>• <code>icon.png</code> (256×256 UI thumbnail with watermarks)<br>• <code>decal.json</code> / <code>surface.json</code> / <code>netlane.json</code> &amp; official <code>settings.json</code>.',
     wikiTopic: 'install'
   }
 };

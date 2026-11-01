@@ -91,9 +91,29 @@
                 <canvas id="canvasIcon" width="256" height="256"></canvas>
               </div>
             </div>
-            <div class="texture-footer">
-              <span>CS2 UI Menu Thumbnail</span>
-              <span class="resolution-badge">256×256</span>
+            <div class="texture-footer" style="flex-direction: column; gap: 6px; align-items: stretch;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span>CS2 UI Menu Thumbnail</span>
+                <span class="resolution-badge">256×256</span>
+              </div>
+              <div id="gridIconOverlayToggles" style="display: flex; justify-content: space-between; align-items: center; gap: 6px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.08); font-size: 10px;">
+                <label style="display: flex; align-items: center; gap: 3px; cursor: pointer;" title="Toggle Creator Overlay">
+                  <input type="checkbox" id="toggleGridOverlay1" onchange="window.toggleBadge1Enable(this.checked)">
+                  <span>Creator</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 3px; cursor: pointer;" title="Toggle Series Overlay">
+                  <input type="checkbox" id="toggleGridOverlay2" onchange="window.toggleBadge2Enable(this.checked)">
+                  <span>Series</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 3px; cursor: pointer;" title="Toggle Extra 1 Overlay">
+                  <input type="checkbox" id="toggleGridOverlay3" onchange="window.toggleBadge3Enable(this.checked)">
+                  <span>Ex 1</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 3px; cursor: pointer;" title="Toggle Extra 2 Overlay">
+                  <input type="checkbox" id="toggleGridOverlay4" onchange="window.toggleBadge4Enable(this.checked)">
+                  <span>Ex 2</span>
+                </label>
+              </div>
             </div>
           </div>
 
@@ -195,6 +215,34 @@
 
         <!-- Single Focus View -->
         <div id="viewSingle" class="preview-viewport" style="display: none;">
+          <!-- Main Icon Overlays Toggle Bar (Active in icon.png tab view) -->
+          <div id="iconOverlayToggleBar" style="display: none; width: 100%; max-width: 540px; margin-bottom: 12px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px 14px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35); align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 11px; font-weight: 700; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 4px;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                Overlays:
+              </span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+              <label class="checkbox-row" style="margin: 0; font-size: 11px; cursor: pointer; color: var(--text-main); font-weight: 600; gap: 5px;">
+                <input type="checkbox" id="toggleMainOverlay1" onchange="window.toggleBadge1Enable(this.checked)">
+                <span>⭐ Creator</span>
+              </label>
+              <label class="checkbox-row" style="margin: 0; font-size: 11px; cursor: pointer; color: var(--text-main); font-weight: 600; gap: 5px;">
+                <input type="checkbox" id="toggleMainOverlay2" onchange="window.toggleBadge2Enable(this.checked)">
+                <span>🎨 Series</span>
+              </label>
+              <label class="checkbox-row" style="margin: 0; font-size: 11px; cursor: pointer; color: var(--text-main); font-weight: 600; gap: 5px;">
+                <input type="checkbox" id="toggleMainOverlay3" onchange="window.toggleBadge3Enable(this.checked)">
+                <span>🏷️ Extra 1</span>
+              </label>
+              <label class="checkbox-row" style="margin: 0; font-size: 11px; cursor: pointer; color: var(--text-main); font-weight: 600; gap: 5px;">
+                <input type="checkbox" id="toggleMainOverlay4" onchange="window.toggleBadge4Enable(this.checked)">
+                <span>✨ Extra 2</span>
+              </label>
+            </div>
+          </div>
+
           <div class="canvas-wrapper checkerboard">
             <canvas id="canvasSingle"></canvas>
           </div>

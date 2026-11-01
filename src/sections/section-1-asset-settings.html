@@ -456,6 +456,7 @@
             <div class="form-label-row">
               <div class="form-label-left">
                 <span>Base Color Opacity (_BaseOpacity)</span>
+                <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'baseOpacity', event)" onmouseenter="showFieldHelp(this, 'baseOpacity', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Base Color Opacity" title="Help for Base Color Opacity">?</button>
               </div>
               <span class="form-val-badge" id="baseOpacityVal">1.00</span>
             </div>
@@ -471,6 +472,7 @@
             <div class="form-label-row">
               <div class="form-label-left">
                 <span>Metallic Opacity (_MetallicOpacity)</span>
+                <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'metallicOpacity', event)" onmouseenter="showFieldHelp(this, 'metallicOpacity', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Metallic Opacity" title="Help for Metallic Opacity">?</button>
               </div>
               <span class="form-val-badge" id="metallicOpacityVal">0.00</span>
             </div>
@@ -487,6 +489,7 @@
             <div class="form-label-row">
               <div class="form-label-left">
                 <span>UI Priority (Menu Order: UiPriority)</span>
+                <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'uiPriority', event)" onmouseenter="showFieldHelp(this, 'uiPriority', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for UI Priority" title="Help for UI Priority">?</button>
               </div>
               <span class="form-val-badge" id="uiPriorityVal">41</span>
             </div>
@@ -551,7 +554,10 @@
           <!-- JSON Output Preview (decal.json or surface.json) -->
           <div class="form-group" style="margin-top: 12px;">
             <div class="form-label-row" style="align-items: center; justify-content: space-between;">
-              <span id="jsonLabel">Generated decal.json</span>
+              <div class="form-label-left">
+                <span id="jsonLabel">Generated decal.json</span>
+                <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'jsonSchemaFormat', event)" onmouseenter="showFieldHelp(this, 'jsonSchemaFormat', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for JSON Schema Format" title="Help for JSON Schema Format">?</button>
+              </div>
               <div style="display: flex; align-items: center; gap: 6px;">
                 <label for="jsonSchemaFormat" style="font-size: 10px; color: var(--text-dim);">Schema:</label>
                 <select id="jsonSchemaFormat" onchange="updateConfigJson()" style="font-size: 10px; padding: 2px 6px; height: 22px; width: auto; background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px;">

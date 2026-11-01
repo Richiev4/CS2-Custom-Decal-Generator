@@ -1,7 +1,7 @@
 // ==========================================
 // Procedural Sample Presets for Decals, Surfaces & Net Lanes
 // ==========================================
-import { state, showToast } from './state.js';
+import { state, showToast, hasActiveWork, openUnsavedModal } from './state.js';
 import { clearCustomNormal } from './normalMap.js';
 import { setTextureRotation, toggleFlipHorizontal, toggleFlipVertical } from './state.js';
 import { setAssetCategory, setAssetSeriesName, getAssetSeriesName, updateConfigJson, onUvScaleChange, onNetlaneParamChange, renderSeriesRibbon } from './exporter.js';
@@ -9,13 +9,13 @@ import { onBumpChange } from './normalMap.js';
 import { onMetalChange, onSmoothChange } from './maskMap.js';
 
 export function loadSample(type, force = false) {
-  if (!force && state.isCustomImageLoaded && state.hasUnsavedChanges) {
+  if (!force && hasActiveWork()) {
     state.pendingGuardAction = () => {
       state.isCustomImageLoaded = false;
       state.hasUnsavedChanges = false;
       loadSample(type, true);
     };
-    if (window.openUnsavedModal) window.openUnsavedModal();
+    openUnsavedModal('Loading a preset will clear what you are currently doing.');
     return;
   }
 

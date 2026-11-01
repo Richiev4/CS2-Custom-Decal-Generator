@@ -356,10 +356,29 @@ export function applyBadge4TextGradPresetByName(name) {
   else if (name === 'silver') applyBadge4TextGradPreset('#ffffff', '#94a3b8');
 }
 
+export function syncBadgeCheckboxes(num, checked) {
+  const sidebarCb = document.getElementById(`enableBadge${num}`);
+  if (sidebarCb && sidebarCb.checked !== checked) sidebarCb.checked = checked;
+
+  const mainCb = document.getElementById(`toggleMainOverlay${num}`);
+  if (mainCb && mainCb.checked !== checked) mainCb.checked = checked;
+
+  const gridCb = document.getElementById(`toggleGridOverlay${num}`);
+  if (gridCb && gridCb.checked !== checked) gridCb.checked = checked;
+}
+
+export function syncAllBadgeCheckboxes() {
+  syncBadgeCheckboxes(1, !!state.badge1Enabled);
+  syncBadgeCheckboxes(2, !!state.badge2Enabled);
+  syncBadgeCheckboxes(3, !!state.badge3Enabled);
+  syncBadgeCheckboxes(4, !!state.badge4Enabled);
+}
+
 export function toggleBadge1Enable(checked) {
   state.badge1Enabled = checked;
   const dot = document.getElementById('dotBadge1');
   if (dot) dot.className = checked ? 'badge-tab-indicator active-dot' : 'badge-tab-indicator';
+  syncBadgeCheckboxes(1, checked);
   renderIconMap();
 }
 
@@ -367,6 +386,7 @@ export function toggleBadge2Enable(checked) {
   state.badge2Enabled = checked;
   const dot = document.getElementById('dotBadge2');
   if (dot) dot.className = checked ? 'badge-tab-indicator active-dot' : 'badge-tab-indicator';
+  syncBadgeCheckboxes(2, checked);
   renderIconMap();
 }
 
@@ -374,6 +394,7 @@ export function toggleBadge3Enable(checked) {
   state.badge3Enabled = checked;
   const dot = document.getElementById('dotBadge3');
   if (dot) dot.className = checked ? 'badge-tab-indicator active-dot' : 'badge-tab-indicator';
+  syncBadgeCheckboxes(3, checked);
   renderIconMap();
 }
 
@@ -381,6 +402,7 @@ export function toggleBadge4Enable(checked) {
   state.badge4Enabled = checked;
   const dot = document.getElementById('dotBadge4');
   if (dot) dot.className = checked ? 'badge-tab-indicator active-dot' : 'badge-tab-indicator';
+  syncBadgeCheckboxes(4, checked);
   renderIconMap();
 }
 
@@ -2603,20 +2625,8 @@ export function renderIconMap(cleanOnly = false) {
   const { canvasBase, canvasIcon, ctxIcon } = getCanvases();
   if (!canvasIcon || !ctxIcon) return;
 
-  const enableGen = document.getElementById('enableIconGen')?.checked ?? true;
   const cardBadge = document.getElementById('cardIconBadge');
   const cardFooter = document.getElementById('cardIconFooter');
-
-  if (!enableGen) {
-    if (cardBadge) {
-      cardBadge.textContent = 'Skipped';
-      cardBadge.style.background = 'rgba(148, 163, 184, 0.15)';
-      cardBadge.style.color = 'var(--text-muted)';
-    }
-    if (cardFooter) cardFooter.textContent = 'Icon Generation Disabled';
-    ctxIcon.clearRect(0, 0, canvasIcon.width, canvasIcon.height);
-    return;
-  }
 
   if (cardBadge) {
     cardBadge.textContent = 'Ready';
@@ -2756,15 +2766,27 @@ export function renderIconMap(cleanOnly = false) {
   function computeBadgeDim(scalePct, pos, frame, type, innerPad, edgePad, img) {
     let w = Math.round(size * scalePct);
     let h = w;
-    if (pos === 'top-center' || pos === 'bottom-center') {
-      if (type === 'image' && img && img.naturalWidth > 0) {
-        const aspect = (img.naturalWidth || img.width) / (img.naturalHeight || img.height);
-        w = Math.min(size - (edgePad * 2), Math.round(size * scalePct * (aspect > 1.3 ? 2.2 : 1.15)));
-        h = Math.round(w / aspect);
-      } else {
-        w = Math.min(size - (edgePad * 2), Math.max(100, Math.round(size * scalePct * 2.1) + (innerPad - 8) * 2));
-        h = Math.round(Math.max(18, w * 0.28 + (innerPad - 8)));
+
+    if (type === 'image' && img && (img.naturalWidth > 0 || img.width > 0)) {
+      const nw = img.naturalWidth || img.width;
+      const nh = img.naturalHeight || img.height;
+      const aspect = nw / nh;
+      if (frame === 'circle') {
+        return { w, h, aspect };
       }
+      if (aspect >= 1) {
+        w = Math.min(size - (edgePad * 2), Math.max(16, Math.round(size * scalePct)));
+        h = Math.max(16, Math.round(w / aspect));
+      } else {
+        h = Math.min(size - (edgePad * 2), Math.max(16, Math.round(size * scalePct)));
+        w = Math.max(16, Math.round(h * aspect));
+      }
+      return { w, h, aspect };
+    }
+
+    if (pos === 'top-center' || pos === 'bottom-center') {
+      w = Math.min(size - (edgePad * 2), Math.max(100, Math.round(size * scalePct * 2.1) + (innerPad - 8) * 2));
+      h = Math.round(Math.max(18, w * 0.28 + (innerPad - 8)));
     } else if (type === 'text' || frame === 'pill' || frame === 'rounded' || frame === 'raw') {
       w = Math.round(w * 1.55) + (innerPad - 8) * 2;
       h = Math.round(h * 0.72) + (innerPad - 8);
@@ -2939,7 +2961,7 @@ export function drawOverlaySelection(ctx, box) {
   ctx.fillStyle = '#ffffff';
   ctx.strokeStyle = '#0284c7';
   ctx.lineWidth = 1.5;
-  const handleSize = 6;
+  const handleSize = 8;
   const corners = [
     [rx, ry],
     [rx + rw, ry],
@@ -2998,6 +3020,77 @@ export function drawOverlaySelection(ctx, box) {
   ctx.stroke();
 
   ctx.restore();
+}
+
+export function drawImageAspectCorrect(ctx, img, bx, by, bw, bh) {
+  if (!img) return;
+  const nw = img.naturalWidth || img.width || 1;
+  const nh = img.naturalHeight || img.height || 1;
+  const scale = Math.min(bw / nw, bh / nh);
+  const dw = nw * scale;
+  const dh = nh * scale;
+  const dx = bx + (bw - dw) / 2;
+  const dy = by + (bh - dh) / 2;
+  ctx.drawImage(img, dx, dy, dw, dh);
+}
+
+export function getHandleAtPoint(x, y, activeBox) {
+  if (!activeBox) return null;
+  const pad = 4;
+  const rx = activeBox.x - pad;
+  const ry = activeBox.y - pad;
+  const rw = activeBox.w + pad * 2;
+  const rh = activeBox.h + pad * 2;
+  const hitRadius = 12;
+  const corners = [
+    { handle: 'nw', x: rx, y: ry, cursor: 'nwse-resize' },
+    { handle: 'ne', x: rx + rw, y: ry, cursor: 'nesw-resize' },
+    { handle: 'sw', x: rx, y: ry + rh, cursor: 'nesw-resize' },
+    { handle: 'se', x: rx + rw, y: ry + rh, cursor: 'nwse-resize' }
+  ];
+  for (const c of corners) {
+    if (Math.hypot(x - c.x, y - c.y) <= hitRadius) {
+      return c;
+    }
+  }
+  return null;
+}
+
+export function getBadgeCurrentScale(badgeId) {
+  if (badgeId === 'creator') return parseInt(document.getElementById('badgeScale')?.value || '26', 10);
+  if (badgeId === 'series') return parseInt(document.getElementById('seriesScale')?.value || '24', 10);
+  if (badgeId === 'extra1') return parseInt(document.getElementById('extra1Scale')?.value || '24', 10);
+  if (badgeId === 'extra2') return parseInt(document.getElementById('extra2Scale')?.value || '24', 10);
+  return 24;
+}
+
+export function setBadgeScalePct(badgeId, newScale) {
+  const clamped = Math.max(5, Math.min(100, Math.round(newScale)));
+  if (badgeId === 'creator') {
+    const inp = document.getElementById('badgeScale');
+    if (inp) {
+      inp.value = clamped;
+      onIconBadgeScaleChange();
+    }
+  } else if (badgeId === 'series') {
+    const inp = document.getElementById('seriesScale');
+    if (inp) {
+      inp.value = clamped;
+      onSeriesBadgeScaleChange();
+    }
+  } else if (badgeId === 'extra1') {
+    const inp = document.getElementById('extra1Scale');
+    if (inp) {
+      inp.value = clamped;
+      onExtra1ScaleChange();
+    }
+  } else if (badgeId === 'extra2') {
+    const inp = document.getElementById('extra2Scale');
+    if (inp) {
+      inp.value = clamped;
+      onExtra2ScaleChange();
+    }
+  }
 }
 
 export function getBadgeAtPoint(x, y) {
@@ -3139,6 +3232,38 @@ export function initBadgeCanvasInteractions() {
     canvas.addEventListener('pointerdown', (e) => {
       if (isSingle && state.activeSingleMap !== 'icon') return;
       const { x, y } = getCoords(e);
+
+      // Check if clicking a corner resize handle of the active overlay selection
+      const activeBox = lastBadgeHitBoxes.find(b => b.id === state.activeBadgeTab);
+      const handleHit = getHandleAtPoint(x, y, activeBox);
+      if (handleHit && activeBox) {
+        try {
+          canvas.setPointerCapture(e.pointerId);
+        } catch (_) {}
+
+        const currentScale = getBadgeCurrentScale(activeBox.id);
+        const centerX = activeBox.x + activeBox.w / 2;
+        const centerY = activeBox.y + activeBox.h / 2;
+        badgeDragState = {
+          mode: 'resize',
+          pointerId: e.pointerId,
+          canvas: canvas,
+          badgeId: activeBox.id,
+          badgeName: activeBox.name,
+          centerX: centerX,
+          centerY: centerY,
+          startX: x,
+          startY: y,
+          startDist: Math.hypot(x - centerX, y - centerY),
+          initialScale: currentScale,
+          cursor: handleHit.cursor,
+          hasMoved: false
+        };
+        canvas.style.cursor = handleHit.cursor;
+        e.preventDefault();
+        return;
+      }
+
       const hit = getBadgeAtPoint(x, y);
       if (!hit) return;
 
@@ -3151,6 +3276,7 @@ export function initBadgeCanvasInteractions() {
       } catch (_) {}
 
       badgeDragState = {
+        mode: 'move',
         pointerId: e.pointerId,
         canvas: canvas,
         badgeId: hit.id,
@@ -3176,6 +3302,18 @@ export function initBadgeCanvasInteractions() {
 
       if (badgeDragState && badgeDragState.canvas === canvas) {
         badgeDragState.hasMoved = true;
+        if (badgeDragState.mode === 'resize') {
+          canvas.style.cursor = badgeDragState.cursor;
+          const currentDist = Math.hypot(x - badgeDragState.centerX, y - badgeDragState.centerY);
+          if (badgeDragState.startDist > 4) {
+            const ratio = currentDist / badgeDragState.startDist;
+            const newScale = Math.round(badgeDragState.initialScale * ratio);
+            setBadgeScalePct(badgeDragState.badgeId, newScale);
+          }
+          e.preventDefault();
+          return;
+        }
+
         canvas.style.cursor = 'grabbing';
 
         const targetX = x - badgeDragState.offsetX;
@@ -3192,6 +3330,15 @@ export function initBadgeCanvasInteractions() {
 
         updateBadgeLivePosition(badgeDragState.badgeId, pctX, pctY);
         e.preventDefault();
+        return;
+      }
+
+      // Hover cursor checks: corner resize handle vs overlay move
+      const activeBox = lastBadgeHitBoxes.find(b => b.id === state.activeBadgeTab);
+      const handleHit = getHandleAtPoint(x, y, activeBox);
+      if (handleHit) {
+        canvas.style.cursor = handleHit.cursor;
+        canvas.title = `Drag corner to resize ${activeBox.shortName || 'overlay'} (live)`;
         return;
       }
 
@@ -3212,7 +3359,11 @@ export function initBadgeCanvasInteractions() {
         } catch (_) {}
 
         if (badgeDragState.hasMoved) {
-          showToast(`${badgeDragState.badgeName} repositioned`);
+          if (badgeDragState.mode === 'resize') {
+            showToast(`${badgeDragState.badgeName} resized (${getBadgeCurrentScale(badgeDragState.badgeId)}%)`);
+          } else {
+            showToast(`${badgeDragState.badgeName} repositioned`);
+          }
         }
         badgeDragState = null;
         canvas.style.cursor = 'grab';
@@ -3313,7 +3464,7 @@ export function renderCreatorWatermark(ctx, bx, by, bw, bh, opacity, frameStyle)
       ctx.roundRect(bx + 2, by + 2, bw - 4, bh - 4, frameStyle === 'pill' ? bh / 2 - 2 : bw * 0.2);
       ctx.clip();
     }
-    ctx.drawImage(state.designerLogoImg, bx, by, bw, bh);
+    drawImageAspectCorrect(ctx, state.designerLogoImg, bx, by, bw, bh);
     ctx.restore();
   } else {
     const pt = state.presetLogoType || 'star';
@@ -3348,7 +3499,7 @@ export function renderSeriesWatermark(ctx, bx, by, bw, bh, opacity, frameStyle) 
       ctx.roundRect(bx, by, bw, bh, frameStyle === 'pill' ? bh / 2 : 6);
       ctx.clip();
     }
-    ctx.drawImage(state.badge2Img, bx, by, bw, bh);
+    drawImageAspectCorrect(ctx, state.badge2Img, bx, by, bw, bh);
     ctx.restore();
     ctx.restore();
     return;
@@ -3398,7 +3549,7 @@ export function renderExtraWatermark(ctx, bx, by, bw, bh, opacity, frameStyle, b
       ctx.roundRect(bx, by, bw, bh, frameStyle === 'pill' ? bh / 2 : 6);
       ctx.clip();
     }
-    ctx.drawImage(img, bx, by, bw, bh);
+    drawImageAspectCorrect(ctx, img, bx, by, bw, bh);
     ctx.restore();
     ctx.restore();
     return;
@@ -3836,6 +3987,11 @@ if (typeof window !== 'undefined') {
   Object.assign(window, {
     switchBadgeSubtab,
     switchBadgeTab,
+    syncBadgeCheckboxes,
+    syncAllBadgeCheckboxes,
+    drawImageAspectCorrect,
+    setBadgeScalePct,
+    getBadgeCurrentScale,
     toggleBadge1Enable,
     toggleBadge2Enable,
     toggleBadge3Enable,

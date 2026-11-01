@@ -885,13 +885,8 @@ export function downloadAllMaps() {
   downloadSingleMap('base');
   setTimeout(() => downloadSingleMap('normal'), 250);
   setTimeout(() => downloadSingleMap('mask'), 500);
-  const enableIcon = document.getElementById('enableIconGen')?.checked ?? true;
-  if (enableIcon) {
-    setTimeout(() => downloadSingleMap('icon'), 750);
-    setTimeout(() => downloadConfigJson(), 1000);
-  } else {
-    setTimeout(() => downloadConfigJson(), 750);
-  }
+  setTimeout(() => downloadSingleMap('icon'), 750);
+  setTimeout(() => downloadConfigJson(), 1000);
 }
 
 export async function exportZipPackage() {
@@ -905,7 +900,7 @@ export async function exportZipPackage() {
   const assetName = document.getElementById('assetName').value.trim() || defaultName;
   const category = getAssetCategory();
   const jsonString = document.getElementById('jsonCodeText').textContent;
-  const isIconEnabled = document.getElementById('enableIconGen')?.checked ?? true;
+  const isIconEnabled = true;
 
   const zip = new JSZip();
   const folder = zip.folder(assetName);
@@ -1112,7 +1107,7 @@ export function serializeCurrentProject() {
       maskWithDecalAlpha: document.getElementById('maskWithDecalAlpha').checked
     },
     icon: {
-      enableIconGen: document.getElementById('enableIconGen')?.checked ?? true,
+      enableIconGen: true,
       iconBgStyle: document.getElementById('iconBgStyle')?.value || 'cs2-dark',
       badge1: {
         enabled: state.badge1Enabled,

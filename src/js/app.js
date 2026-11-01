@@ -5,6 +5,7 @@
 
 import {
   state,
+  hasActiveWork,
   getCanvases,
   showToast,
   drawImageSquare,
@@ -109,6 +110,8 @@ import {
   applySeriesGradPreset,
   handleSeriesLogoSelect,
   clearSeriesLogo,
+  clearExtra1Logo,
+  clearExtra2Logo,
   onBadge2PaddingChange,
   onBadge2InnerPaddingChange,
   onIconBadgeScaleChange,
@@ -207,7 +210,14 @@ import { loadSample } from './samples.js';
 // ==========================================
 // Mode Switching: Decal Mode vs Surface Mode vs NetLane Mode
 // ==========================================
-export function setMode(mode) {
+export function setMode(mode, force = false) {
+  if (!force && state.appMode !== mode && hasActiveWork()) {
+    state.pendingGuardAction = () => {
+      setMode(mode, true);
+    };
+    openUnsavedModal(`Switching to ${mode.toUpperCase()} mode will reset workspace settings.`);
+    return;
+  }
   state.appMode = mode;
   const btnDecal = document.getElementById('btnModeDecal');
   const btnSurface = document.getElementById('btnModeSurface');
@@ -531,11 +541,11 @@ export function processUploadedFile(file, force = false) {
     return;
   }
 
-  if (!force && state.isCustomImageLoaded && state.hasUnsavedChanges) {
+  if (!force && hasActiveWork()) {
     state.pendingGuardAction = () => {
       processUploadedFile(file, true);
     };
-    openUnsavedModal();
+    openUnsavedModal('Loading a different graphic will clear what you are currently doing.');
     return;
   }
 
@@ -578,16 +588,190 @@ export function onAssetNameInput() {
   renderSeriesRibbon();
 }
 
+export function clearAllWorkspace(force = false) {
+  if (!force && hasActiveWork()) {
+    state.pendingGuardAction = () => {
+      clearAllWorkspace(true);
+    };
+    openUnsavedModal('Clearing the workspace will completely wipe all loaded images, maps, overlays, and settings to start with a blank slate.');
+    return;
+  }
+
+  // 1. Reset global state variables
+  state.currentImage = null;
+  state.isCustomImageLoaded = false;
+  state.hasUnsavedChanges = false;
+  state.pendingGuardAction = null;
+  state.customNormalImg = null;
+  state.customNormalFileName = '';
+  state.customMaskImg = null;
+  state.customMaskFileName = '';
+  state.designerLogoImg = null;
+  state.badge1FileName = '';
+  state.badge2Img = null;
+  state.badge2FileName = '';
+  state.badge3Img = null;
+  state.badge3FileName = '';
+  state.badge4Img = null;
+  state.badge4FileName = '';
+  state.currentLoadedAssetName = '';
+  state.currentLoadedAssetSeries = '';
+
+  // 2. Clear all file inputs
+  ['fileInput', 'customNormalInput', 'customMaskInput', 'designerLogoInput', 'seriesLogoInput', 'extra1LogoInput', 'extra2LogoInput', 'projectFileInput', 'communityZipInput', 'communityFolderInput', 'communityFilesInput'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+
+  // 3. Clear custom map inputs & badges
+  clearCustomNormal(false);
+  clearCustomMask(false);
+  if (typeof clearDesignerLogo === 'function') clearDesignerLogo();
+  if (typeof clearSeriesLogo === 'function') clearSeriesLogo();
+  if (typeof clearExtra1Logo === 'function') clearExtra1Logo();
+  if (typeof clearExtra2Logo === 'function') clearExtra2Logo();
+
+  // 4. Reset transforms & reminders
+  setTextureRotation(0);
+  if (state.flipH) toggleFlipHorizontal();
+  if (state.flipV) toggleFlipVertical();
+  state.originalNameBeforeTransform = '';
+  state.isReminderDismissed = false;
+  dismissRotationReminder();
+  const rotFlag = document.getElementById('rotationNameFlag');
+  if (rotFlag) rotFlag.style.display = 'none';
+
+  // 5. Reset text inputs & badges
+  const assetNameInput = document.getElementById('assetName');
+  if (assetNameInput) assetNameInput.value = '';
+
+  const seriesInput = document.getElementById('assetSeries');
+  if (seriesInput) seriesInput.value = '';
+
+  const activeSeriesBadge = document.getElementById('activeSeriesBadge');
+  if (activeSeriesBadge) activeSeriesBadge.textContent = 'None';
+
+  const dropTitle = document.getElementById('dropTitleText');
+  if (dropTitle) dropTitle.textContent = 'Drop PNG or JPG decal texture';
+
+  const dropHint = document.getElementById('dropHintText');
+  if (dropHint) dropHint.textContent = 'Square 1:1 ratio • Transparent or solid';
+
+  const sourceBadge = document.getElementById('sourceImageStatusBadge');
+  if (sourceBadge) sourceBadge.textContent = 'No Image Loaded';
+
+  // 6. Reset overlay text inputs & disable all overlays
+  ['badge1TextInput', 'seriesTextInput', 'extra1TextInput', 'extra2TextInput'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  state.badge1Enabled = false;
+  state.badge2Enabled = false;
+  state.badge3Enabled = false;
+  state.badge4Enabled = false;
+  if (typeof window.syncAllBadgeCheckboxes === 'function') {
+    window.syncAllBadgeCheckboxes();
+  }
+
+  // 7. Reset sliders & parameters
+  const bumpSlider = document.getElementById('bumpIntensity');
+  if (bumpSlider) { bumpSlider.value = '1.0'; const val = document.getElementById('bumpVal'); if (val) val.textContent = '1.0×'; }
+
+  const blurSlider = document.getElementById('blurRadius');
+  if (blurSlider) { blurSlider.value = '0'; const val = document.getElementById('blurVal'); if (val) val.textContent = '0 px'; }
+
+  const metalSlider = document.getElementById('metallic');
+  if (metalSlider) { metalSlider.value = '0'; const val = document.getElementById('metalVal'); if (val) val.textContent = '0'; }
+
+  const smoothSlider = document.getElementById('smoothness');
+  if (smoothSlider) { smoothSlider.value = '0'; const val = document.getElementById('smoothVal'); if (val) val.textContent = '0'; }
+
+  const dimW = document.getElementById('dimWidth'); if (dimW) dimW.value = '1.0';
+  const dimH = document.getElementById('dimHeight'); if (dimH) dimH.value = '1.0';
+  const dimD = document.getElementById('dimDepth'); if (dimD) dimD.value = '0.5';
+
+  // 8. Wipe every single canvas to a clean slate
+  const { canvasBase, ctxBase, canvasNormal, ctxNormal, canvasMask, ctxMask, canvasIcon, ctxIcon, canvasSingle, ctxSingle } = getCanvases();
+  const size = state.currentResolution || 1024;
+
+  if (canvasBase && ctxBase) {
+    canvasBase.width = size;
+    canvasBase.height = size;
+    ctxBase.clearRect(0, 0, size, size);
+  }
+  if (canvasNormal && ctxNormal) {
+    canvasNormal.width = size;
+    canvasNormal.height = size;
+    ctxNormal.clearRect(0, 0, size, size);
+  }
+  if (canvasMask && ctxMask) {
+    canvasMask.width = size;
+    canvasMask.height = size;
+    ctxMask.clearRect(0, 0, size, size);
+  }
+  if (canvasIcon && ctxIcon) {
+    canvasIcon.width = 512;
+    canvasIcon.height = 512;
+    ctxIcon.clearRect(0, 0, 512, 512);
+  }
+
+  const canvasSim = document.getElementById('canvasSim');
+  if (canvasSim) {
+    const ctxSim = canvasSim.getContext('2d');
+    if (ctxSim) ctxSim.clearRect(0, 0, canvasSim.width, canvasSim.height);
+  }
+
+  const canvasSimGrid = document.getElementById('canvasSimGrid');
+  if (canvasSimGrid) {
+    const ctxSimGrid = canvasSimGrid.getContext('2d');
+    if (ctxSimGrid) ctxSimGrid.clearRect(0, 0, canvasSimGrid.width, canvasSimGrid.height);
+  }
+
+  const canvasTiled = document.getElementById('canvasTiled');
+  if (canvasTiled) {
+    const ctxTiled = canvasTiled.getContext('2d');
+    if (ctxTiled) ctxTiled.clearRect(0, 0, canvasTiled.width, canvasTiled.height);
+  }
+
+  if (canvasSingle && ctxSingle) {
+    ctxSingle.clearRect(0, 0, canvasSingle.width, canvasSingle.height);
+  }
+
+  // 9. Update Card Footer / Badges to reflect clean state
+  const cardNormalBadge = document.getElementById('cardNormalBadge');
+  if (cardNormalBadge) {
+    cardNormalBadge.textContent = 'None';
+    cardNormalBadge.style.background = 'rgba(148, 163, 184, 0.15)';
+    cardNormalBadge.style.color = 'var(--text-muted)';
+  }
+  const cardNormalFooter = document.getElementById('cardNormalFooter');
+  if (cardNormalFooter) cardNormalFooter.textContent = 'No normal map generated';
+
+  const cardIconBadge = document.getElementById('cardIconBadge');
+  if (cardIconBadge) {
+    cardIconBadge.textContent = 'None';
+    cardIconBadge.style.background = 'rgba(148, 163, 184, 0.15)';
+    cardIconBadge.style.color = 'var(--text-muted)';
+  }
+  const cardIconFooter = document.getElementById('cardIconFooter');
+  if (cardIconFooter) cardIconFooter.textContent = 'No icon generated';
+
+  updateConfigJson();
+  showToast('Workspace wiped to a completely clear slate');
+}
+
 // ==========================================
 // Mount Functions to window for inline HTML onclick attributes
 // ==========================================
 Object.assign(window, {
   state,
+  hasActiveWork,
   setMode,
   renderAllMaps,
   loadSample,
   handleFileSelect,
   processUploadedFile,
+  clearAllWorkspace,
   onResolutionChange,
   onAssetNameInput,
   onNormalOpacityChange,
@@ -743,8 +927,47 @@ Object.assign(window, {
   resetDecalAspectRatio,
   updateDecalAspectUI,
   updateGridSimulationCanvas,
-  initGridSimulationInteraction
+  initGridSimulationInteraction,
+  openWelcomeSplash,
+  closeWelcomeSplash,
+  closeWelcomeSplashOnBackdrop,
+  toggleNeverShowSplashAgain
 });
+
+// ==========================================
+// Quick Guide Splash Screen Logic
+// ==========================================
+export function openWelcomeSplash() {
+  const modal = document.getElementById('welcomeSplashModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    const chk = document.getElementById('splashNeverShowCheckbox');
+    if (chk) {
+      chk.checked = localStorage.getItem('cs2_hide_welcome_splash') === 'true';
+    }
+  }
+}
+
+export function closeWelcomeSplash() {
+  const modal = document.getElementById('welcomeSplashModal');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+}
+
+export function closeWelcomeSplashOnBackdrop(e) {
+  if (e.target && e.target.id === 'welcomeSplashModal') {
+    closeWelcomeSplash();
+  }
+}
+
+export function toggleNeverShowSplashAgain(checked) {
+  if (checked) {
+    localStorage.setItem('cs2_hide_welcome_splash', 'true');
+  } else {
+    localStorage.removeItem('cs2_hide_welcome_splash');
+  }
+}
 
 // ==========================================
 // Initialization on Launch
@@ -762,6 +985,11 @@ window.addEventListener('DOMContentLoaded', async () => {
   renderSeriesRibbon();
   initSimulationInteraction();
   initGridSimulationInteraction();
+
+  const hideSplash = localStorage.getItem('cs2_hide_welcome_splash') === 'true';
+  if (!hideSplash) {
+    openWelcomeSplash();
+  }
 
   const dropZone = document.getElementById('dropZone');
   if (dropZone) {
@@ -816,6 +1044,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (e.key === 'Escape') {
       toggleImportDropdown(false);
       hideFieldHelp(true);
+      closeWelcomeSplash();
       closeHelpModal();
       closeLibraryModal();
       cancelGuardAction();

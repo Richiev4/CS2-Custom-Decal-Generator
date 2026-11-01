@@ -102,6 +102,18 @@ export function updateSingleView() {
     ctxSingle.drawImage(srcCanvas, 0, 0);
   }
 
+  const overlayBar = document.getElementById('iconOverlayToggleBar');
+  if (overlayBar) {
+    if (state.activeSingleMap === 'icon') {
+      overlayBar.style.display = 'flex';
+      if (typeof window.syncAllBadgeCheckboxes === 'function') {
+        window.syncAllBadgeCheckboxes();
+      }
+    } else {
+      overlayBar.style.display = 'none';
+    }
+  }
+
   if (state.activeSingleMap === 'icon') {
     if (window.initBadgeCanvasInteractions) {
       window.initBadgeCanvasInteractions();

@@ -2,7 +2,10 @@
         <div class="section-title collapsible-header" onclick="toggleSection('secToolsExport')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleSection('secToolsExport');}" tabindex="0" role="button" aria-expanded="true">
           <div class="section-header-left">
             <svg class="section-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-            <span>6. Export Asset Package</span>
+            <div class="form-label-left">
+              <span>6. Export Asset Package</span>
+              <button type="button" class="help-q-btn" onclick="event.stopPropagation(); toggleFieldHelp(this, 'exportPackage', event)" onmouseenter="showFieldHelp(this, 'exportPackage', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Export Asset Package" title="Help for Export Asset Package">?</button>
+            </div>
           </div>
           <div class="section-header-right">
             <span style="font-size: 10px; color: var(--accent-emerald); font-weight: bold;">.ZIP / MAPS</span>

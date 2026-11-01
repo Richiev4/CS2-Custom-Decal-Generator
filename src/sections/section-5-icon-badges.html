@@ -13,11 +13,6 @@
         </div>
         <div class="collapsible-content">
           <div class="panel-box">
-          <label class="checkbox-row" style="margin-top: 0; margin-bottom: 10px;">
-            <input type="checkbox" id="enableIconGen" checked onchange="renderAllMaps()">
-            <span style="font-weight: 600; color: var(--text-main);">Generate CS2 UI Icon (256×256)</span>
-          </label>
-
           <div class="form-group">
             <div class="form-label-row">
               <div class="form-label-left">
@@ -467,7 +462,7 @@
                 <span class="form-val-badge" id="badgeScaleVal">26%</span>
               </div>
               <div class="slider-container">
-                <input type="range" id="badgeScale" min="15" max="50" step="1" value="26" oninput="onIconBadgeScaleChange()">
+                <input type="range" id="badgeScale" min="5" max="100" step="1" value="26" oninput="onIconBadgeScaleChange()">
               </div>
             </div>
 
@@ -906,7 +901,7 @@
                 <span class="form-val-badge" id="seriesScaleVal">24%</span>
               </div>
               <div class="slider-container">
-                <input type="range" id="seriesScale" min="15" max="50" step="1" value="24" oninput="onSeriesBadgeScaleChange()">
+                <input type="range" id="seriesScale" min="5" max="100" step="1" value="24" oninput="onSeriesBadgeScaleChange()">
               </div>
             </div>
 
@@ -973,6 +968,7 @@
               <div class="form-label-row">
                 <div class="form-label-left">
                   <span style="font-size: 11px; font-weight: 600; color: var(--text-main);">Extra 1 Custom Text:</span>
+                  <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'seriesCustomText', event)" onmouseenter="showFieldHelp(this, 'seriesCustomText', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Extra 1 Custom Text" title="Help for Extra 1 Custom Text">?</button>
                 </div>
                 <span class="form-val-badge" id="extra1TextLengthBadge">7 / 20</span>
               </div>
@@ -1328,7 +1324,7 @@
                 <span class="form-val-badge" id="extra1ScaleVal">24%</span>
               </div>
               <div class="slider-container">
-                <input type="range" id="extra1Scale" min="15" max="50" step="1" value="24" oninput="onExtra1ScaleChange()">
+                <input type="range" id="extra1Scale" min="5" max="100" step="1" value="24" oninput="onExtra1ScaleChange()">
               </div>
             </div>
 
@@ -1381,6 +1377,7 @@
               <div class="form-label-row">
                 <div class="form-label-left">
                   <span style="font-size: 11px; font-weight: 600; color: var(--text-main);">Extra 2 Custom Text:</span>
+                  <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'seriesCustomText', event)" onmouseenter="showFieldHelp(this, 'seriesCustomText', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Extra 2 Custom Text" title="Help for Extra 2 Custom Text">?</button>
                 </div>
                 <span class="form-val-badge" id="extra2TextLengthBadge">7 / 20</span>
               </div>
@@ -1736,7 +1733,7 @@
                 <span class="form-val-badge" id="extra2ScaleVal">24%</span>
               </div>
               <div class="slider-container">
-                <input type="range" id="extra2Scale" min="15" max="50" step="1" value="24" oninput="onExtra2ScaleChange()">
+                <input type="range" id="extra2Scale" min="5" max="100" step="1" value="24" oninput="onExtra2ScaleChange()">
               </div>
             </div>
 
