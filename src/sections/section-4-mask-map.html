@@ -13,7 +13,29 @@
         </div>
         <div class="collapsible-content">
           <div class="panel-box">
+          <!-- Custom Mask Map Upload / Switch -->
           <div class="form-group">
+            <div class="form-label-row">
+              <div class="form-label-left">
+                <span>Mask Map Source</span>
+                <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'metallicChannel', event)" onmouseenter="showFieldHelp(this, 'metallicChannel', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Mask Map Source" title="Help for Mask Map Source">?</button>
+              </div>
+              <span class="form-val-badge" id="maskSourceBadge" style="background: rgba(56, 189, 248, 0.15); color: var(--primary);">Auto (Procedural)</span>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px;">
+              <input type="file" id="customMaskInput" accept="image/png, image/jpeg, image/webp" style="display:none;" onchange="handleCustomMaskSelect(event)">
+              <button type="button" class="btn-secondary" style="flex: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: flex; align-items: center; gap: 6px;" onclick="document.getElementById('customMaskInput').click()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <span id="customMaskBtnText">Insert Custom _MaskMap...</span>
+              </button>
+              <button type="button" class="btn-secondary" id="btnClearCustomMask" style="padding: 7px 10px; display: none; color: #ef4444; border-color: rgba(239, 68, 68, 0.3);" title="Revert to procedural mask" onclick="clearCustomMask()">✕</button>
+            </div>
+            <div id="customMaskHint" style="font-size: 10px; color: var(--text-dim); margin-top: 4px;">
+              Auto-packing channels with sliders. Or insert an external custom _MaskMap.png.
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top: 12px;">
             <div class="form-label-row">
               <div class="form-label-left">
                 <span>Metallic / Metalness (Red Channel)</span>
@@ -42,6 +64,23 @@
             </div>
             <div style="font-size: 10px; color: var(--text-dim); margin-top: 2px;">
               Lower = rough matte terrain; Higher = polished wet / specular shine
+            </div>
+          </div>
+
+          <!-- Surface Texture / Wear Variation -->
+          <div class="form-group" id="groupMaskVariation" style="margin-top: 12px;">
+            <div class="form-label-row">
+              <div class="form-label-left">
+                <span>Surface Detail / Roughness Variation</span>
+                <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'smoothnessChannel', event)" onmouseenter="showFieldHelp(this, 'smoothnessChannel', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Surface Detail Variation" title="Help for Surface Detail Variation">?</button>
+              </div>
+              <span class="form-val-badge" id="maskVariationVal">0% (Flat)</span>
+            </div>
+            <div class="slider-container">
+              <input type="range" id="maskVariation" min="0" max="100" step="1" value="0" oninput="onMaskVariationChange()">
+            </div>
+            <div style="font-size: 10px; color: var(--text-dim); margin-top: 2px;" id="maskVariationHint">
+              0% = uniform flat smoothness; >0% = derives organic micro-roughness from dirt/grain crevices.
             </div>
           </div>
 

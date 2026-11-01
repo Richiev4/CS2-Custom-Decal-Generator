@@ -23,8 +23,17 @@ export const state = {
   customNormalImg: null,
   customNormalFileName: '',
 
+  // Custom Mask & Surface Texture Variation
+  customMaskImg: null,
+  customMaskFileName: '',
+  maskVariation: 0,
+
   // Surface Tiling
   surfaceTiling: 4,
+
+  // Decal Dimensions & Aspect Ratio Lock
+  decalAspectLocked: false,
+  decalLockedRatio: 1.0,
 
   // Unsaved changes guard
   isCustomImageLoaded: false,
@@ -402,6 +411,7 @@ export function setTextureRotation(deg) {
     }
   });
   if (window.renderAllMaps) window.renderAllMaps();
+  if (window.updateDecalAspectUI) window.updateDecalAspectUI();
   checkRotationNameReminder();
   showToast(`Texture rotation: ${deg}°`);
 }

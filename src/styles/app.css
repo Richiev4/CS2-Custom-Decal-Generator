@@ -1135,6 +1135,17 @@
       flex-direction: column;
     }
 
+    #cardSimGrid {
+      border-color: rgba(245, 158, 11, 0.35);
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    #cardSimGrid:hover {
+      border-color: rgba(245, 158, 11, 0.65);
+      box-shadow: 0 6px 24px rgba(245, 158, 11, 0.18);
+    }
+
     .texture-card-header {
       padding: 10px 14px;
       background: var(--bg-card);
@@ -2913,4 +2924,137 @@
     .badge-action-select:focus {
       border-color: var(--accent-purple);
       color: var(--text-main);
+    }
+
+    /* Decal Dimensions: Aspect Ratio Lock & Reset Toolbar */
+    .decal-aspect-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      padding: 5px 8px;
+      background: rgba(13, 21, 32, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 6px;
+      margin: 2px 0;
+      transition: all 0.2s ease;
+    }
+
+    .decal-aspect-row.locked {
+      background: rgba(0, 168, 255, 0.08);
+      border-color: rgba(0, 168, 255, 0.4);
+      box-shadow: 0 0 10px rgba(0, 168, 255, 0.12);
+    }
+
+    .btn-aspect-lock {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--text-muted);
+      border-radius: 4px;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+
+    .btn-aspect-lock:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.25);
+      color: var(--text-main);
+    }
+
+    .btn-aspect-lock.active-locked {
+      background: rgba(0, 168, 255, 0.2);
+      border-color: var(--primary);
+      color: #38bdf8;
+      box-shadow: 0 0 8px rgba(0, 168, 255, 0.25);
+    }
+
+    .aspect-lock-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      line-height: 1;
+    }
+
+    .aspect-ratio-chip {
+      font-family: monospace;
+      font-size: 9.5px;
+      padding: 1px 5px;
+      border-radius: 3px;
+      background: rgba(0, 0, 0, 0.4);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(0, 229, 255, 0.2);
+    }
+
+    .aspect-reset-btn-group {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn-aspect-reset {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--text-muted);
+      border-radius: 4px;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+
+    .btn-aspect-reset:hover {
+      background: rgba(0, 168, 255, 0.15);
+      border-color: var(--primary);
+      color: #ffffff;
+    }
+
+    .btn-aspect-reset:active {
+      transform: scale(0.97);
+    }
+
+    .btn-aspect-reset-square {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--text-muted);
+      border-radius: 4px;
+      padding: 3px 7px;
+      font-size: 10.5px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+
+    .btn-aspect-reset-square:hover {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: var(--accent-emerald);
+      color: #34d399;
+    }
+
+    /* Visual link connecting Width and Height when locked */
+    .dim-sliders-group.aspect-locked #dimItemWidth,
+    .dim-sliders-group.aspect-locked #dimItemHeight {
+      border-left: 2px solid var(--primary);
+      padding-left: 8px;
+      transition: border-color 0.2s ease, padding 0.2s ease;
+    }
+
+    .dim-sliders-group #dimItemWidth,
+    .dim-sliders-group #dimItemHeight {
+      border-left: 2px solid transparent;
+      padding-left: 0;
+      transition: border-color 0.2s ease, padding 0.2s ease;
     }

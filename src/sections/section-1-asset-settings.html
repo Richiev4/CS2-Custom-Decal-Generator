@@ -174,9 +174,9 @@
               <span class="form-val-badge" id="decalFootprintSummary">2.0m × 2.0m (4.0 m²)</span>
             </div>
 
-            <div class="dim-sliders-group" style="display: flex; flex-direction: column; gap: 10px; margin-top: 6px;">
+            <div class="dim-sliders-group" id="dimSlidersGroup" style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px;">
               <!-- Width Slider & Numeric Input -->
-              <div class="dim-control-item">
+              <div class="dim-control-item" id="dimItemWidth">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px;">
                   <div style="display: flex; align-items: baseline; gap: 6px;">
                     <span style="font-size: 11px; font-weight: 600; color: var(--text-main);">Width</span>
@@ -197,8 +197,29 @@
                 </div>
               </div>
 
+              <!-- Aspect Ratio Lock & Reset Control Bar -->
+              <div class="decal-aspect-row" id="decalAspectRow">
+                <button type="button" id="btnToggleAspectLock" class="btn-aspect-lock" onclick="toggleDecalAspectLock()" title="Click to lock or unlock the proportional aspect ratio between Width and Height" aria-pressed="false">
+                  <span class="aspect-lock-icon" id="aspectLockIcon">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+                  </span>
+                  <span id="aspectLockText">Lock Ratio</span>
+                  <span id="aspectLockRatioBadge" class="aspect-ratio-chip">1.00 : 1</span>
+                </button>
+
+                <div class="aspect-reset-btn-group">
+                  <button type="button" id="btnResetAspect" class="btn-aspect-reset" onclick="resetDecalAspectRatio()" title="Reset aspect ratio to match source image or 1:1">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                    <span id="btnResetAspectLabel">Reset Aspect Ratio</span>
+                  </button>
+                  <button type="button" id="btnResetSquare" class="btn-aspect-reset-square" onclick="resetDecalAspectRatio('square')" title="Quick reset to 1:1 Square (Height = Width)">
+                    1:1
+                  </button>
+                </div>
+              </div>
+
               <!-- Height Slider & Numeric Input -->
-              <div class="dim-control-item">
+              <div class="dim-control-item" id="dimItemHeight">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px;">
                   <div style="display: flex; align-items: baseline; gap: 6px;">
                     <span style="font-size: 11px; font-weight: 600; color: var(--text-main);">Height</span>

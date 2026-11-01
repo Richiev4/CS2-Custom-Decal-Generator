@@ -397,6 +397,12 @@ export function loadSample(type, force = false) {
     state.hasUnsavedChanges = false;
     state.currentLoadedAssetName = document.getElementById('assetName').value;
     state.currentLoadedAssetSeries = getAssetSeriesName();
+    if (state.decalAspectLocked) {
+      const w = parseFloat(document.getElementById('dimWidth')?.value || '2.0') || 2.0;
+      const h = parseFloat(document.getElementById('dimHeight')?.value || '2.0') || 2.0;
+      state.decalLockedRatio = h > 0 ? (w / h) : 1.0;
+    }
+    if (window.updateDecalAspectUI) window.updateDecalAspectUI();
     if (window.renderAllMaps) window.renderAllMaps();
     renderSeriesRibbon();
     showToast(`Loaded ${type} preset`);

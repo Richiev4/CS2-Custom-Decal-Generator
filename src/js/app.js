@@ -55,8 +55,12 @@ import {
 } from './normalMap.js';
 
 import {
+  handleCustomMaskSelect,
+  clearCustomMask,
+  updateCustomMaskUI,
   onMetalChange,
   onSmoothChange,
+  onMaskVariationChange,
   generateMaskMap
 } from './maskMap.js';
 
@@ -156,6 +160,7 @@ import {
   saveProjectToFile,
   handleProjectFileLoad,
   seedStarterLibraryIfEmpty,
+  initIndexedDBStorage,
   getSavedLibrary,
   getAssetSeriesName,
   setAssetSeriesName,
@@ -189,7 +194,12 @@ import {
   handleCommunityFolderImport,
   handleCommunityFilesImport,
   importCommunityAssetFromZip,
-  importCommunityAssetFromFiles
+  importCommunityAssetFromFiles,
+  getSourceImageAspectRatio,
+  toggleDecalAspectLock,
+  setDecalAspectLock,
+  resetDecalAspectRatio,
+  updateDecalAspectUI
 } from './exporter.js';
 
 import { loadSample } from './samples.js';
@@ -417,6 +427,7 @@ export function setMode(mode) {
   updateConfigJson();
   updateSimulationText();
   checkRotationNameReminder();
+  updateDecalAspectUI();
   renderAllMaps();
 }
 
@@ -452,14 +463,52 @@ export function renderAllMaps() {
   // 4. ICON MAP
   renderIconMap();
 
-  // 5. UPDATE SIMULATION & TILED VIEWS
+  // 5. IN-GAME LIT SIMULATION (Updates live in both 3D tab and grid card as sliders adjust)
+  renderSimulation();
+  updateGridSimulationCanvas();
+
+  // 6. UPDATE SINGLE & TILED VIEWS
   if (['single', 'base', 'normal', 'mask', 'icon'].includes(state.activeTab)) {
     updateSingleView();
-  } else if (state.activeTab === '3d') {
-    renderSimulation();
   } else if (state.activeTab === 'tiled') {
     renderTiledView();
   }
+}
+
+export function updateGridSimulationCanvas() {
+  const canvasSim = document.getElementById('canvasSim');
+  const canvasSimGrid = document.getElementById('canvasSimGrid');
+  if (canvasSim && canvasSimGrid) {
+    const ctx = canvasSimGrid.getContext('2d');
+    if (ctx) {
+      ctx.clearRect(0, 0, canvasSimGrid.width, canvasSimGrid.height);
+      ctx.drawImage(canvasSim, 0, 0, canvasSimGrid.width, canvasSimGrid.height);
+    }
+  }
+}
+
+export function initGridSimulationInteraction() {
+  const canvasSimGrid = document.getElementById('canvasSimGrid');
+  if (!canvasSimGrid) return;
+
+  function updateLightFromEvent(e) {
+    const rect = canvasSimGrid.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    let lx = (x / rect.width) * 2.0 - 1.0;
+    let ly = (y / rect.height) * 2.0 - 1.0;
+    const distSq = lx * lx + ly * ly;
+    let lz = Math.sqrt(Math.max(0.1, 1.0 - distSq * 0.7));
+
+    const len = Math.sqrt(lx * lx + ly * ly + lz * lz) || 1.0;
+    state.lightPos = { x: lx / len, y: ly / len, z: lz / len };
+
+    renderSimulation();
+    updateGridSimulationCanvas();
+  }
+
+  canvasSimGrid.addEventListener('mousemove', updateLightFromEvent);
 }
 
 // ==========================================
@@ -506,6 +555,7 @@ export function processUploadedFile(file, force = false) {
       state.isCustomImageLoaded = true;
       state.hasUnsavedChanges = true;
       renderAllMaps();
+      updateDecalAspectUI();
       showToast('Image loaded successfully');
     };
     img.src = event.target.result;
@@ -574,6 +624,10 @@ Object.assign(window, {
   updateCustomNormalUI,
   onBumpChange,
   onBlurChange,
+  handleCustomMaskSelect,
+  clearCustomMask,
+  updateCustomMaskUI,
+  onMaskVariationChange,
   onMetalChange,
   onSmoothChange,
   switchBadgeTab,
@@ -681,22 +735,33 @@ Object.assign(window, {
   handleCommunityFolderImport,
   handleCommunityFilesImport,
   importCommunityAssetFromZip,
-  importCommunityAssetFromFiles
+  importCommunityAssetFromFiles,
+  initIndexedDBStorage,
+  getSourceImageAspectRatio,
+  toggleDecalAspectLock,
+  setDecalAspectLock,
+  resetDecalAspectRatio,
+  updateDecalAspectUI,
+  updateGridSimulationCanvas,
+  initGridSimulationInteraction
 });
 
 // ==========================================
 // Initialization on Launch
 // ==========================================
-window.addEventListener('DOMContentLoaded', () => {
-  seedStarterLibraryIfEmpty();
+window.addEventListener('DOMContentLoaded', async () => {
+  await seedStarterLibraryIfEmpty();
   setMode('decal');
   loadSample('manhole');
+  updateDecalAspectUI();
   updateLibraryBadge();
   initBadgeDefaults();
   restoreSidebarSectionsState();
   updateRibbonSeriesDropdown();
   renderSeriesChips();
+  renderSeriesRibbon();
   initSimulationInteraction();
+  initGridSimulationInteraction();
 
   const dropZone = document.getElementById('dropZone');
   if (dropZone) {

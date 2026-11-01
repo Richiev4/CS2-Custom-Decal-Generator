@@ -97,6 +97,26 @@
             </div>
           </div>
 
+          <!-- Live In-Game Lit Preview Card -->
+          <div class="texture-card" id="cardSimGrid">
+            <div class="texture-card-header">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span class="texture-name" style="color: var(--accent-amber);">In-Game Lit Preview</span>
+                <span style="font-size: 9px; padding: 1px 5px; border-radius: 3px; background: rgba(245, 158, 11, 0.2); color: var(--accent-amber); font-weight: 700;">Live PBR</span>
+              </div>
+              <button class="btn-secondary" style="padding: 2px 8px; font-size: 11px;" onclick="switchTab('3d')" title="Open full interactive 3D simulation view">Full Sim</button>
+            </div>
+            <div class="texture-card-body">
+              <div class="texture-canvas-box" style="background: #090e17; cursor: crosshair;" id="gridSimBox" title="Move cursor across surface to test sun lighting angle & relief">
+                <canvas id="canvasSimGrid" width="512" height="512"></canvas>
+              </div>
+            </div>
+            <div class="texture-footer">
+              <span id="cardSimGridFooter">Real-Time Sun & Relief Shading</span>
+              <span class="resolution-badge" style="background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); border-color: rgba(245, 158, 11, 0.3);">Live 512²</span>
+            </div>
+          </div>
+
         </div>
 
         <!-- In-Game Lit Surface Simulation (Single Image/Tile) -->

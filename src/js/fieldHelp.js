@@ -57,7 +57,7 @@ export const FIELD_HELP = {
     badge: '3D Box (Meters)',
     badgeClass: 'pill-blue',
     desc: 'Physical 3D oriented bounding box in real-world meters.',
-    details: 'Defines the width, height, and projection depth in meters on the terrain/road in CS2.<br>• <strong>Defaults:</strong> 2.0m width, 2.0m height, 1.0m projection depth.<br>• Increase depth if your decal clips on curbs or uneven sloping hillsides.',
+    details: 'Defines the width, height, and projection depth in meters on the terrain/road in CS2.<br>• <strong>Defaults:</strong> 2.0m width, 2.0m height, 1.0m projection depth.<br>• <strong>🔒 Lock Ratio:</strong> Locks proportional scaling between Width and Height so editing either automatically scales the other.<br>• <strong>↺ Reset Aspect Ratio:</strong> Instantly matches the natural proportions of your source texture, or resets to 1:1 square.<br>• Increase depth if your decal clips on curbs or uneven sloping hillsides.',
     wikiTopic: 'wiki'
   },
   uvScale: {

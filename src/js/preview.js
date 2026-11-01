@@ -101,6 +101,14 @@ export function updateSingleView() {
     ctxSingle.clearRect(0, 0, canvasSingle.width, canvasSingle.height);
     ctxSingle.drawImage(srcCanvas, 0, 0);
   }
+
+  if (state.activeSingleMap === 'icon') {
+    if (window.initBadgeCanvasInteractions) {
+      window.initBadgeCanvasInteractions();
+    }
+  } else {
+    canvasSingle.style.cursor = 'default';
+  }
 }
 
 export function updateSimulationText() {

@@ -257,6 +257,7 @@ export function switchBadgeSubtab(tab) {
     else if (tab === 'extra2') badge.textContent = 'Overlay 4/4';
     else if (tab === 'defaults') badge.textContent = 'Defaults';
   }
+  renderIconMap();
 }
 export const switchBadgeTab = switchBadgeSubtab;
 
@@ -2595,8 +2596,10 @@ export function initBadgeDefaults() {
   loadIconBadgeDefaults(true);
 }
 
-// Icon Canvas Composition
-export function renderIconMap() {
+// Icon Canvas Composition & Overlay Hit Testing
+export let lastBadgeHitBoxes = [];
+
+export function renderIconMap(cleanOnly = false) {
   const { canvasBase, canvasIcon, ctxIcon } = getCanvases();
   if (!canvasIcon || !ctxIcon) return;
 
@@ -2808,6 +2811,9 @@ export function renderIconMap() {
     return { x: Math.round(x), y: Math.round(y) };
   }
 
+  // Reset hit-boxes for current render pass
+  lastBadgeHitBoxes = [];
+
   if (state.badge2Enabled) {
     const d2 = computeBadgeDim(b2ScalePct, b2Pos, b2Frame, state.badge2Type, b2InnerPad, b2EdgePad, state.badge2Img);
     const coords2 = (b2Pos === 'custom')
@@ -2817,6 +2823,15 @@ export function renderIconMap() {
         }
       : placeBadge(b2Pos, d2.w, d2.h, b2EdgePad);
     renderSeriesWatermark(ctxIcon, coords2.x, coords2.y, d2.w, d2.h, b2Opacity, b2Frame);
+    lastBadgeHitBoxes.push({
+      id: 'series',
+      name: 'Overlay 2: Series / Pack Badge',
+      shortName: 'Overlay 2 (Series)',
+      x: coords2.x,
+      y: coords2.y,
+      w: d2.w,
+      h: d2.h
+    });
   }
 
   if (state.badge3Enabled) {
@@ -2828,6 +2843,15 @@ export function renderIconMap() {
         }
       : placeBadge(b3Pos, d3.w, d3.h, b3EdgePad);
     renderExtraWatermark(ctxIcon, coords3.x, coords3.y, d3.w, d3.h, b3Opacity, b3Frame, 3);
+    lastBadgeHitBoxes.push({
+      id: 'extra1',
+      name: 'Overlay 3: Extra 1 Watermark Badge',
+      shortName: 'Overlay 3 (Extra 1)',
+      x: coords3.x,
+      y: coords3.y,
+      w: d3.w,
+      h: d3.h
+    });
   }
 
   if (state.badge4Enabled) {
@@ -2839,6 +2863,15 @@ export function renderIconMap() {
         }
       : placeBadge(b4Pos, d4.w, d4.h, b4EdgePad);
     renderExtraWatermark(ctxIcon, coords4.x, coords4.y, d4.w, d4.h, b4Opacity, b4Frame, 4);
+    lastBadgeHitBoxes.push({
+      id: 'extra2',
+      name: 'Overlay 4: Extra 2 Custom Overlay',
+      shortName: 'Overlay 4 (Extra 2)',
+      x: coords4.x,
+      y: coords4.y,
+      w: d4.w,
+      h: d4.h
+    });
   }
 
   if (state.badge1Enabled) {
@@ -2850,11 +2883,354 @@ export function renderIconMap() {
         }
       : placeBadge(b1Pos, d1.w, d1.h, b1EdgePad);
     renderCreatorWatermark(ctxIcon, coords1.x, coords1.y, d1.w, d1.h, b1Opacity, b1Frame);
+    lastBadgeHitBoxes.push({
+      id: 'creator',
+      name: 'Overlay 1: Creator Logo / Brand Watermark',
+      shortName: 'Overlay 1 (Creator)',
+      x: coords1.x,
+      y: coords1.y,
+      w: d1.w,
+      h: d1.h
+    });
   }
+
+  // Draw interactive visual selection box around the currently active overlay layer
+  if (!cleanOnly && state.activeBadgeTab && state.activeBadgeTab !== 'defaults') {
+    const activeBox = lastBadgeHitBoxes.find(b => b.id === state.activeBadgeTab);
+    if (activeBox) {
+      drawOverlaySelection(ctxIcon, activeBox);
+    }
+  }
+
+  initBadgeCanvasInteractions();
 
   if (state.activeTab === 'icon' && window.updateSingleView) {
     window.updateSingleView();
   }
+}
+
+export function drawOverlaySelection(ctx, box) {
+  ctx.save();
+  const { x, y, w, h } = box;
+  const pad = 4;
+  const rx = x - pad;
+  const ry = y - pad;
+  const rw = w + pad * 2;
+  const rh = h + pad * 2;
+
+  // Outer glow & animated dashed bounding box
+  ctx.shadowColor = '#38bdf8';
+  ctx.shadowBlur = 10;
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([6, 4]);
+
+  ctx.beginPath();
+  if (typeof ctx.roundRect === 'function') {
+    ctx.roundRect(rx, ry, rw, rh, 6);
+  } else {
+    ctx.rect(rx, ry, rw, rh);
+  }
+  ctx.stroke();
+
+  // Corner control handles
+  ctx.setLineDash([]);
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = '#ffffff';
+  ctx.strokeStyle = '#0284c7';
+  ctx.lineWidth = 1.5;
+  const handleSize = 6;
+  const corners = [
+    [rx, ry],
+    [rx + rw, ry],
+    [rx, ry + rh],
+    [rx + rw, ry + rh]
+  ];
+  corners.forEach(([cx, cy]) => {
+    ctx.beginPath();
+    ctx.rect(cx - handleSize / 2, cy - handleSize / 2, handleSize, handleSize);
+    ctx.fill();
+    ctx.stroke();
+  });
+
+  // Selected Overlay tag with live position coordinates
+  const currentPos = (box.id === 'creator' ? `${state.badge1PosX ?? 85}%, ${state.badge1PosY ?? 85}%`
+    : box.id === 'series' ? `${state.badge2PosX ?? 15}%, ${state.badge2PosY ?? 15}%`
+    : box.id === 'extra1' ? `${state.badge3PosX ?? 20}%, ${state.badge3PosY ?? 80}%`
+    : `${state.badge4PosX ?? 80}%, ${state.badge4PosY ?? 20}%`);
+
+  const label = `${box.shortName || 'Selected Overlay'} (${currentPos})`;
+  ctx.font = 'bold 11px Montserrat, sans-serif';
+  const textWidth = ctx.measureText(label).width;
+  const tagW = textWidth + 14;
+  const tagH = 18;
+  const tagY = ry >= tagH + 4 ? ry - tagH - 4 : ry + rh + 4;
+  const tagX = Math.max(4, Math.min(512 - tagW - 4, rx));
+
+  ctx.fillStyle = '#0284c7';
+  ctx.beginPath();
+  if (typeof ctx.roundRect === 'function') {
+    ctx.roundRect(tagX, tagY, tagW, tagH, 4);
+  } else {
+    ctx.rect(tagX, tagY, tagW, tagH);
+  }
+  ctx.fill();
+
+  ctx.strokeStyle = '#e0f2fe';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(label, tagX + tagW / 2, tagY + tagH / 2);
+
+  // Center move crosshair indicator
+  const midX = rx + rw / 2;
+  const midY = ry + rh / 2;
+  ctx.strokeStyle = 'rgba(56, 189, 248, 0.6)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(midX - 5, midY);
+  ctx.lineTo(midX + 5, midY);
+  ctx.moveTo(midX, midY - 5);
+  ctx.lineTo(midX, midY + 5);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+export function getBadgeAtPoint(x, y) {
+  const boxes = [...lastBadgeHitBoxes].reverse();
+  const pad = 6;
+  for (const box of boxes) {
+    if (x >= box.x - pad && x <= box.x + box.w + pad && y >= box.y - pad && y <= box.y + box.h + pad) {
+      return box;
+    }
+  }
+  return null;
+}
+
+export function updateBadgeLivePosition(badgeId, posX_pct, posY_pct) {
+  const clampX = Math.max(0, Math.min(100, Math.round(posX_pct)));
+  const clampY = Math.max(0, Math.min(100, Math.round(posY_pct)));
+
+  if (badgeId === 'creator') {
+    const posSel = document.getElementById('logoPosition');
+    if (posSel && posSel.value !== 'custom') posSel.value = 'custom';
+    const c = document.getElementById('creatorCustomPosContainer');
+    if (c) c.style.display = 'block';
+    state.badge1PosX = clampX;
+    state.badge1PosY = clampY;
+    const sx = document.getElementById('creatorPosX'); if (sx) sx.value = clampX;
+    const sy = document.getElementById('creatorPosY'); if (sy) sy.value = clampY;
+    const xVal = document.getElementById('creatorPosXVal'); if (xVal) xVal.textContent = `${clampX}%`;
+    const yVal = document.getElementById('creatorPosYVal'); if (yVal) yVal.textContent = `${clampY}%`;
+  } else if (badgeId === 'series') {
+    const posSel = document.getElementById('seriesPosition');
+    if (posSel && posSel.value !== 'custom') posSel.value = 'custom';
+    const c = document.getElementById('seriesCustomPosContainer');
+    if (c) c.style.display = 'block';
+    state.badge2PosX = clampX;
+    state.badge2PosY = clampY;
+    const sx = document.getElementById('seriesPosX'); if (sx) sx.value = clampX;
+    const sy = document.getElementById('seriesPosY'); if (sy) sy.value = clampY;
+    const xVal = document.getElementById('seriesPosXVal'); if (xVal) xVal.textContent = `${clampX}%`;
+    const yVal = document.getElementById('seriesPosYVal'); if (yVal) yVal.textContent = `${clampY}%`;
+  } else if (badgeId === 'extra1') {
+    const posSel = document.getElementById('extra1Position');
+    if (posSel && posSel.value !== 'custom') posSel.value = 'custom';
+    const c = document.getElementById('extra1CustomPosContainer');
+    if (c) c.style.display = 'block';
+    state.badge3PosX = clampX;
+    state.badge3PosY = clampY;
+    const sx = document.getElementById('extra1PosX'); if (sx) sx.value = clampX;
+    const sy = document.getElementById('extra1PosY'); if (sy) sy.value = clampY;
+    const xVal = document.getElementById('extra1PosXVal'); if (xVal) xVal.textContent = `${clampX}%`;
+    const yVal = document.getElementById('extra1PosYVal'); if (yVal) yVal.textContent = `${clampY}%`;
+  } else if (badgeId === 'extra2') {
+    const posSel = document.getElementById('extra2Position');
+    if (posSel && posSel.value !== 'custom') posSel.value = 'custom';
+    const c = document.getElementById('extra2CustomPosContainer');
+    if (c) c.style.display = 'block';
+    state.badge4PosX = clampX;
+    state.badge4PosY = clampY;
+    const sx = document.getElementById('extra2PosX'); if (sx) sx.value = clampX;
+    const sy = document.getElementById('extra2PosY'); if (sy) sy.value = clampY;
+    const xVal = document.getElementById('extra2PosXVal'); if (xVal) xVal.textContent = `${clampX}%`;
+    const yVal = document.getElementById('extra2PosYVal'); if (yVal) yVal.textContent = `${clampY}%`;
+  }
+
+  renderIconMap();
+}
+
+export function selectBadgeOverlay(id, name) {
+  switchBadgeSubtab(id);
+
+  const sec = document.getElementById('secToolsIcon');
+  if (sec && sec.classList.contains('collapsed')) {
+    if (window.toggleSection) {
+      window.toggleSection('secToolsIcon');
+    } else {
+      sec.classList.remove('collapsed');
+    }
+  }
+
+  const target = document.getElementById('badgeLayerSelect') || sec;
+  if (target) {
+    target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  const dropdown = document.getElementById('badgeLayerSelect');
+  if (dropdown) {
+    dropdown.style.transition = 'box-shadow 0.2s ease, border-color 0.2s ease';
+    dropdown.style.borderColor = '#38bdf8';
+    dropdown.style.boxShadow = '0 0 12px rgba(56, 189, 248, 0.6)';
+    setTimeout(() => {
+      dropdown.style.borderColor = '';
+      dropdown.style.boxShadow = '';
+    }, 900);
+  }
+
+  showToast(`Selected ${name || id}`);
+}
+
+let badgeDragState = null;
+
+export function initBadgeCanvasInteractions() {
+  const { canvasIcon, canvasSingle } = getCanvases();
+
+  const attachCanvasDragEvents = (canvas, isSingle = false) => {
+    if (!canvas || canvas.__badgeDragAttached) return;
+    canvas.__badgeDragAttached = true;
+
+    // Prevent default touch scrolling when dragging badges on mobile/tablets
+    canvas.style.touchAction = 'none';
+
+    // Hook export methods so clean icon without selection box is exported
+    if (!isSingle) {
+      const origToBlob = canvas.toBlob.bind(canvas);
+      const origToDataURL = canvas.toDataURL.bind(canvas);
+      canvas.toBlob = function(cb, type, quality) {
+        renderIconMap(true);
+        origToBlob((blob) => {
+          renderIconMap(false);
+          cb(blob);
+        }, type, quality);
+      };
+      canvas.toDataURL = function(...args) {
+        renderIconMap(true);
+        const res = origToDataURL(...args);
+        renderIconMap(false);
+        return res;
+      };
+    }
+
+    const getCoords = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = (canvas.width || 512) / (rect.width || 1);
+      const scaleY = (canvas.height || 512) / (rect.height || 1);
+      return {
+        x: (e.clientX - rect.left) * scaleX,
+        y: (e.clientY - rect.top) * scaleY
+      };
+    };
+
+    canvas.addEventListener('pointerdown', (e) => {
+      if (isSingle && state.activeSingleMap !== 'icon') return;
+      const { x, y } = getCoords(e);
+      const hit = getBadgeAtPoint(x, y);
+      if (!hit) return;
+
+      if (state.activeBadgeTab !== hit.id) {
+        selectBadgeOverlay(hit.id, hit.name);
+      }
+
+      try {
+        canvas.setPointerCapture(e.pointerId);
+      } catch (_) {}
+
+      badgeDragState = {
+        pointerId: e.pointerId,
+        canvas: canvas,
+        badgeId: hit.id,
+        badgeName: hit.name,
+        badgeW: hit.w,
+        badgeH: hit.h,
+        offsetX: x - hit.x,
+        offsetY: y - hit.y,
+        hasMoved: false
+      };
+
+      canvas.style.cursor = 'grabbing';
+      e.preventDefault();
+    });
+
+    canvas.addEventListener('pointermove', (e) => {
+      if (isSingle && state.activeSingleMap !== 'icon') {
+        canvas.style.cursor = 'default';
+        return;
+      }
+
+      const { x, y } = getCoords(e);
+
+      if (badgeDragState && badgeDragState.canvas === canvas) {
+        badgeDragState.hasMoved = true;
+        canvas.style.cursor = 'grabbing';
+
+        const targetX = x - badgeDragState.offsetX;
+        const targetY = y - badgeDragState.offsetY;
+
+        const maxSpanX = 512 - badgeDragState.badgeW;
+        const maxSpanY = 512 - badgeDragState.badgeH;
+
+        const clampedX = Math.max(0, Math.min(maxSpanX, targetX));
+        const clampedY = Math.max(0, Math.min(maxSpanY, targetY));
+
+        const pctX = maxSpanX > 0 ? (clampedX / maxSpanX) * 100 : 0;
+        const pctY = maxSpanY > 0 ? (clampedY / maxSpanY) * 100 : 0;
+
+        updateBadgeLivePosition(badgeDragState.badgeId, pctX, pctY);
+        e.preventDefault();
+        return;
+      }
+
+      const hit = getBadgeAtPoint(x, y);
+      if (hit) {
+        canvas.style.cursor = 'grab';
+        canvas.title = `Drag to reposition ${hit.name} (live)`;
+      } else {
+        canvas.style.cursor = 'default';
+        canvas.title = isSingle ? 'In-Game Icon Thumbnail' : 'In-game CS2 Icon';
+      }
+    });
+
+    const finishDrag = (e) => {
+      if (badgeDragState && badgeDragState.canvas === canvas) {
+        try {
+          canvas.releasePointerCapture(e.pointerId);
+        } catch (_) {}
+
+        if (badgeDragState.hasMoved) {
+          showToast(`${badgeDragState.badgeName} repositioned`);
+        }
+        badgeDragState = null;
+        canvas.style.cursor = 'grab';
+      }
+    };
+
+    canvas.addEventListener('pointerup', finishDrag);
+    canvas.addEventListener('pointercancel', finishDrag);
+
+    canvas.addEventListener('mouseleave', () => {
+      if (!badgeDragState) {
+        canvas.style.cursor = 'default';
+      }
+    });
+  };
+
+  attachCanvasDragEvents(canvasIcon, false);
+  attachCanvasDragEvents(canvasSingle, true);
 }
 
 export function computeBadgePlacement(pos, w, h, size, edgePad, isConflict, isSecond, otherW, otherH, otherEdgePad) {
@@ -3543,6 +3919,10 @@ if (typeof window !== 'undefined') {
     applyBadge1TextGradPresetByName,
     applyBadge2TextGradPresetByName,
     applyBadge3TextGradPresetByName,
-    applyBadge4TextGradPresetByName
+    applyBadge4TextGradPresetByName,
+    selectBadgeOverlay,
+    getBadgeAtPoint,
+    initBadgeCanvasInteractions,
+    updateBadgeLivePosition
   });
 }

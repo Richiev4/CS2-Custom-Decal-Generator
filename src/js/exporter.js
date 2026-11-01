@@ -6,8 +6,17 @@ import { state, getCanvases, showToast, escapeHtml } from './state.js';
 import { clearCustomNormal, updateCustomNormalUI } from './normalMap.js';
 import { renderIconMap, loadGoogleFont, populateFontDropdowns, setCreatorBadgeMode, setSeriesBadgeMode, setCreatorColorTheme, setCreatorGradDirection, setCreatorColorMode, setSeriesColorTheme, setSeriesGradDirection, setSeriesColorMode, onBadge1TextChange, onSeriesTextChange, clearDesignerLogo } from './badges.js';
 import { setSurfaceTiling } from './preview.js';
+import {
+  initIndexedDBStorage,
+  getSavedLibraryFromMemory,
+  saveAssetToIndexedDB,
+  deleteAssetFromIndexedDB,
+  STARTER_ASSETS,
+  LEGACY_STORAGE_KEY
+} from './db.js';
 
-export const STORAGE_KEY = 'cs2_decal_surface_library';
+export const STORAGE_KEY = LEGACY_STORAGE_KEY;
+export { initIndexedDBStorage };
 
 export function setAssetCategory(cat) {
   if (!cat) return;
@@ -190,19 +199,218 @@ export function updateDecalScaleIndicator(width, height, depth) {
   }
 }
 
+export function getSourceImageAspectRatio() {
+  if (!state.currentImage) return 1.0;
+  const rawW = state.currentImage.naturalWidth || state.currentImage.width || 1024;
+  const rawH = state.currentImage.naturalHeight || state.currentImage.height || 1024;
+  if (!rawW || !rawH) return 1.0;
+  // If texture has been rotated 90 or 270 degrees, visual width & height swap
+  if (state.textureRotation === 90 || state.textureRotation === 270) {
+    return rawH / rawW;
+  }
+  return rawW / rawH;
+}
+window.getSourceImageAspectRatio = getSourceImageAspectRatio;
+
+export function toggleDecalAspectLock(forceState) {
+  const wInput = document.getElementById('dimWidth');
+  const hInput = document.getElementById('dimHeight');
+  const w = parseFloat(wInput ? wInput.value : '2.0') || 2.0;
+  const h = parseFloat(hInput ? hInput.value : '2.0') || 2.0;
+
+  const targetState = typeof forceState === 'boolean' ? forceState : !state.decalAspectLocked;
+  state.decalAspectLocked = targetState;
+
+  if (targetState) {
+    state.decalLockedRatio = h > 0 ? (w / h) : 1.0;
+    showToast(`Aspect ratio locked (${state.decalLockedRatio.toFixed(2)} : 1)`);
+  } else {
+    showToast('Aspect ratio unlocked');
+  }
+
+  updateDecalAspectUI();
+}
+window.toggleDecalAspectLock = toggleDecalAspectLock;
+
+export function setDecalAspectLock(locked, ratio) {
+  state.decalAspectLocked = !!locked;
+  if (ratio && !isNaN(ratio) && ratio > 0) {
+    state.decalLockedRatio = ratio;
+  } else {
+    const w = parseFloat(document.getElementById('dimWidth')?.value || '2.0') || 2.0;
+    const h = parseFloat(document.getElementById('dimHeight')?.value || '2.0') || 2.0;
+    state.decalLockedRatio = h > 0 ? (w / h) : 1.0;
+  }
+  updateDecalAspectUI();
+}
+window.setDecalAspectLock = setDecalAspectLock;
+
+export function resetDecalAspectRatio(targetMode) {
+  const wInput = document.getElementById('dimWidth');
+  const hInput = document.getElementById('dimHeight');
+  if (!wInput || !hInput) return;
+
+  const currentW = parseFloat(wInput.value) || 2.0;
+  const currentH = parseFloat(hInput.value) || 2.0;
+  const currentRatio = currentH > 0 ? (currentW / currentH) : 1.0;
+  const imgRatio = getSourceImageAspectRatio();
+
+  let targetRatio = 1.0;
+
+  if (targetMode === 'square') {
+    targetRatio = 1.0;
+  } else if (targetMode === 'image') {
+    targetRatio = imgRatio;
+  } else {
+    // Smart reset: if current ratio doesn't match the image's native ratio, match image!
+    // If it already matches the image ratio (or if no non-square image), reset to 1:1 square.
+    if (Math.abs(currentRatio - imgRatio) > 0.02) {
+      targetRatio = imgRatio;
+    } else if (Math.abs(currentRatio - 1.0) > 0.02) {
+      targetRatio = 1.0;
+    } else {
+      targetRatio = imgRatio !== 1.0 ? imgRatio : 1.0;
+    }
+  }
+
+  // Calculate new height preserving current width
+  let newH = parseFloat((currentW / targetRatio).toFixed(1));
+  newH = Math.min(100.0, Math.max(0.1, newH));
+
+  hInput.value = newH.toFixed(1);
+  const hSlider = document.getElementById('dimHeightSlider');
+  const maxLabel = document.getElementById('dimHeightMaxLabel');
+  if (hSlider) {
+    const maxVal = Math.max(10.0, Math.ceil(newH));
+    hSlider.max = maxVal;
+    hSlider.value = newH;
+    if (maxLabel) maxLabel.textContent = `${maxVal}m`;
+  }
+
+  // If locked, update the locked ratio to match the newly reset ratio
+  if (state.decalAspectLocked) {
+    state.decalLockedRatio = targetRatio;
+  }
+
+  updateConfigJson();
+  updateDecalAspectUI();
+
+  if (Math.abs(targetRatio - 1.0) < 0.01) {
+    showToast(`Aspect ratio reset to 1:1 square (${currentW.toFixed(1)}m × ${newH.toFixed(1)}m)`);
+  } else {
+    showToast(`Aspect ratio reset to source image (${targetRatio.toFixed(2)}:1 → ${currentW.toFixed(1)}m × ${newH.toFixed(1)}m)`);
+  }
+}
+window.resetDecalAspectRatio = resetDecalAspectRatio;
+
+export function updateDecalAspectUI() {
+  const btnLock = document.getElementById('btnToggleAspectLock');
+  const iconSpan = document.getElementById('aspectLockIcon');
+  const textSpan = document.getElementById('aspectLockText');
+  const chipSpan = document.getElementById('aspectLockRatioBadge');
+  const aspectRow = document.getElementById('decalAspectRow');
+  const slidersGroup = document.getElementById('dimSlidersGroup');
+  const resetBtnLabel = document.getElementById('btnResetAspectLabel');
+  const resetBtn = document.getElementById('btnResetAspect');
+
+  const wInput = document.getElementById('dimWidth');
+  const hInput = document.getElementById('dimHeight');
+  const w = parseFloat(wInput ? wInput.value : '2.0') || 2.0;
+  const h = parseFloat(hInput ? hInput.value : '2.0') || 2.0;
+  const currentRatio = h > 0 ? (w / h) : 1.0;
+  const imgRatio = getSourceImageAspectRatio();
+
+  const isLocked = !!state.decalAspectLocked;
+  const displayRatio = isLocked ? state.decalLockedRatio : currentRatio;
+
+  if (chipSpan) {
+    chipSpan.textContent = `${displayRatio.toFixed(2)} : 1`;
+  }
+
+  if (btnLock) {
+    btnLock.classList.toggle('active-locked', isLocked);
+    btnLock.setAttribute('aria-pressed', isLocked ? 'true' : 'false');
+    btnLock.title = isLocked
+      ? `Aspect ratio is locked at ${displayRatio.toFixed(2)}:1 (Click to unlock)`
+      : `Aspect ratio is unlocked (Click to lock at ${currentRatio.toFixed(2)}:1)`;
+  }
+
+  if (textSpan) {
+    textSpan.textContent = isLocked ? 'Ratio Locked' : 'Lock Ratio';
+  }
+
+  if (iconSpan) {
+    if (isLocked) {
+      iconSpan.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
+    } else {
+      iconSpan.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>`;
+    }
+  }
+
+  if (aspectRow) {
+    aspectRow.classList.toggle('locked', isLocked);
+  }
+
+  if (slidersGroup) {
+    slidersGroup.classList.toggle('aspect-locked', isLocked);
+  }
+
+  if (resetBtnLabel && resetBtn) {
+    if (state.currentImage && Math.abs(imgRatio - 1.0) > 0.02) {
+      resetBtnLabel.textContent = `Reset to Image (${imgRatio.toFixed(2)}:1)`;
+      resetBtn.title = `Reset decal proportions to match loaded image (${imgRatio.toFixed(2)}:1)`;
+    } else {
+      resetBtnLabel.textContent = 'Reset Aspect Ratio';
+      resetBtn.title = 'Reset decal proportions to 1:1 square';
+    }
+  }
+}
+window.updateDecalAspectUI = updateDecalAspectUI;
+
 export function onDecalDimSliderChange(dim, val) {
   const numVal = parseFloat(val);
   if (dim === 'width') {
     const input = document.getElementById('dimWidth');
     if (input) input.value = numVal.toFixed(1);
+
+    if (state.decalAspectLocked && state.decalLockedRatio > 0) {
+      const newH = Math.max(0.1, Math.min(100.0, parseFloat((numVal / state.decalLockedRatio).toFixed(1))));
+      const hInput = document.getElementById('dimHeight');
+      if (hInput) hInput.value = newH.toFixed(1);
+
+      const hSlider = document.getElementById('dimHeightSlider');
+      const maxLabel = document.getElementById('dimHeightMaxLabel');
+      if (hSlider) {
+        const maxVal = Math.max(10.0, Math.ceil(newH));
+        hSlider.max = maxVal;
+        hSlider.value = newH;
+        if (maxLabel) maxLabel.textContent = `${maxVal}m`;
+      }
+    }
   } else if (dim === 'height') {
     const input = document.getElementById('dimHeight');
     if (input) input.value = numVal.toFixed(1);
+
+    if (state.decalAspectLocked && state.decalLockedRatio > 0) {
+      const newW = Math.max(0.1, Math.min(100.0, parseFloat((numVal * state.decalLockedRatio).toFixed(1))));
+      const wInput = document.getElementById('dimWidth');
+      if (wInput) wInput.value = newW.toFixed(1);
+
+      const wSlider = document.getElementById('dimWidthSlider');
+      const maxLabel = document.getElementById('dimWidthMaxLabel');
+      if (wSlider) {
+        const maxVal = Math.max(10.0, Math.ceil(newW));
+        wSlider.max = maxVal;
+        wSlider.value = newW;
+        if (maxLabel) maxLabel.textContent = `${maxVal}m`;
+      }
+    }
   } else if (dim === 'depth') {
     const input = document.getElementById('dimDepth');
     if (input) input.value = numVal.toFixed(1);
   }
   updateConfigJson();
+  updateDecalAspectUI();
 }
 window.onDecalDimSliderChange = onDecalDimSliderChange;
 
@@ -220,6 +428,21 @@ export function onDecalDimInputChange(dim, val) {
       slider.value = numVal;
       if (maxLabel) maxLabel.textContent = `${maxVal}m`;
     }
+
+    if (state.decalAspectLocked && state.decalLockedRatio > 0) {
+      const newH = Math.max(0.1, Math.min(100.0, parseFloat((numVal / state.decalLockedRatio).toFixed(1))));
+      const hInput = document.getElementById('dimHeight');
+      if (hInput) hInput.value = newH.toFixed(1);
+
+      const hSlider = document.getElementById('dimHeightSlider');
+      const hMaxLabel = document.getElementById('dimHeightMaxLabel');
+      if (hSlider) {
+        const maxVal = Math.max(10.0, Math.ceil(newH));
+        hSlider.max = maxVal;
+        hSlider.value = newH;
+        if (hMaxLabel) hMaxLabel.textContent = `${maxVal}m`;
+      }
+    }
   } else if (dim === 'height') {
     numVal = Math.min(100.0, Math.max(0.1, numVal));
     const slider = document.getElementById('dimHeightSlider');
@@ -229,6 +452,21 @@ export function onDecalDimInputChange(dim, val) {
       slider.max = maxVal;
       slider.value = numVal;
       if (maxLabel) maxLabel.textContent = `${maxVal}m`;
+    }
+
+    if (state.decalAspectLocked && state.decalLockedRatio > 0) {
+      const newW = Math.max(0.1, Math.min(100.0, parseFloat((numVal * state.decalLockedRatio).toFixed(1))));
+      const wInput = document.getElementById('dimWidth');
+      if (wInput) wInput.value = newW.toFixed(1);
+
+      const wSlider = document.getElementById('dimWidthSlider');
+      const wMaxLabel = document.getElementById('dimWidthMaxLabel');
+      if (wSlider) {
+        const maxVal = Math.max(10.0, Math.ceil(newW));
+        wSlider.max = maxVal;
+        wSlider.value = newW;
+        if (wMaxLabel) wMaxLabel.textContent = `${maxVal}m`;
+      }
     }
   } else if (dim === 'depth') {
     numVal = Math.min(20.0, Math.max(0.1, numVal));
@@ -242,6 +480,7 @@ export function onDecalDimInputChange(dim, val) {
     }
   }
   updateConfigJson();
+  updateDecalAspectUI();
 }
 window.onDecalDimInputChange = onDecalDimInputChange;
 
@@ -372,7 +611,12 @@ export function applyDecalDimPreset(w, h, d = 1.0) {
   if (hSlider) hSlider.value = h;
   if (dSlider) dSlider.value = d;
 
+  if (state.decalAspectLocked) {
+    state.decalLockedRatio = h > 0 ? (w / h) : 1.0;
+  }
+
   updateConfigJson();
+  updateDecalAspectUI();
   showToast(`Decal size set to ${w}m × ${h}m`);
 }
 window.applyDecalDimPreset = applyDecalDimPreset;
@@ -772,8 +1016,17 @@ INSTRUCTIONS:
 export function serializeCurrentProject() {
   const { canvasBase } = getCanvases();
   let baseDataUrl = '';
+  let thumbDataUrl = '';
   if (canvasBase && canvasBase.width > 0) {
     baseDataUrl = canvasBase.toDataURL('image/png');
+    try {
+      const thumbCanvas = document.createElement('canvas');
+      thumbCanvas.width = 96;
+      thumbCanvas.height = 96;
+      const tCtx = thumbCanvas.getContext('2d');
+      tCtx.drawImage(canvasBase, 0, 0, 96, 96);
+      thumbDataUrl = thumbCanvas.toDataURL('image/png');
+    } catch (_) {}
   }
 
   let customNormalData = null;
@@ -819,7 +1072,9 @@ export function serializeCurrentProject() {
     dimensions: {
       width: parseFloat(document.getElementById('dimWidth').value) || 2.0,
       height: parseFloat(document.getElementById('dimHeight').value) || 2.0,
-      depth: parseFloat(document.getElementById('dimDepth').value) || 1.0
+      depth: parseFloat(document.getElementById('dimDepth').value) || 1.0,
+      aspectLocked: !!state.decalAspectLocked,
+      lockedRatio: state.decalLockedRatio || 1.0
     },
     netlane: {
       width: parseFloat(document.getElementById('netlaneWidthSlider').value) || 1.0,
@@ -925,6 +1180,7 @@ export function serializeCurrentProject() {
       designerLogoData: designerLogoData
     },
     baseImageData: baseDataUrl,
+    thumbImageData: thumbDataUrl,
     timestamp: Date.now()
   };
 }
@@ -962,6 +1218,11 @@ export function deserializeAndLoadProject(proj) {
     if (proj.dimensions.depth !== undefined) {
       document.getElementById('dimDepth').value = proj.dimensions.depth;
       if (document.getElementById('dimDepthSlider')) document.getElementById('dimDepthSlider').value = proj.dimensions.depth;
+    }
+    if (proj.dimensions.aspectLocked !== undefined) {
+      setDecalAspectLock(proj.dimensions.aspectLocked, proj.dimensions.lockedRatio);
+    } else {
+      updateDecalAspectUI();
     }
   }
   if (proj.uvScale !== undefined) {
@@ -1807,78 +2068,13 @@ export async function parseAndApplyCommunityAsset(filesData) {
   }
 }
 
-// Browser Library & Series Ribbon
-export function seedStarterLibraryIfEmpty() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw === null) {
-      const starterList = [
-        {
-          version: "1.0",
-          type: "cs2-asset-project",
-          appMode: "decal",
-          assetName: "RoadMarking_TurnArrow_01",
-          seriesName: "Road Markings",
-          assetCategory: "RoadMarkings",
-          surfaceCategory: "RoadMarkings",
-          targetResolution: "1024",
-          fitStrategy: "cover",
-          dimensions: { width: 3.0, height: 6.0, depth: 0.5 },
-          uvScale: 1.0,
-          surfaceTiling: 4,
-          layerMask: { terrain: true, roads: true, buildings: true, vehicles: false },
-          drawOrder: 50,
-          baseImageData: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><rect width='100' height='100' fill='%230f172a'/><path d='M50 15 L74 42 L58 42 L58 85 L42 85 L42 42 L26 42 Z' fill='%23ffffff'/></svg>",
-          timestamp: Date.now() - 3600000
-        },
-        {
-          version: "1.0",
-          type: "cs2-asset-project",
-          appMode: "netlane",
-          assetName: "NetLane_WhiteDashedLine_01",
-          seriesName: "Road Markings",
-          assetCategory: "Lines",
-          surfaceCategory: "Lines",
-          targetResolution: "1024",
-          fitStrategy: "cover",
-          netlane: { width: 0.3, length: 3.0 },
-          uvScale: 1.0,
-          surfaceTiling: 4,
-          drawOrder: 60,
-          baseImageData: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><rect width='100' height='100' fill='%230f172a'/><rect x='44' y='10' width='12' height='32' fill='%23ffffff'/><rect x='44' y='58' width='12' height='32' fill='%23ffffff'/></svg>",
-          timestamp: Date.now() - 1800000
-        },
-        {
-          version: "1.0",
-          type: "cs2-asset-project",
-          appMode: "decal",
-          assetName: "CityUtility_Manhole_01",
-          seriesName: "City Utilities",
-          assetCategory: "Utilities",
-          surfaceCategory: "Utilities",
-          targetResolution: "1024",
-          fitStrategy: "cover",
-          dimensions: { width: 1.8, height: 1.8, depth: 0.5 },
-          uvScale: 1.0,
-          surfaceTiling: 4,
-          layerMask: { terrain: true, roads: true, buildings: true, vehicles: false },
-          drawOrder: 50,
-          baseImageData: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><rect width='100' height='100' fill='%230f172a'/><circle cx='50' cy='50' r='42' fill='%2322252a' stroke='%23474d57' stroke-width='3'/><circle cx='50' cy='50' r='24' fill='%2317191d'/><text x='50' y='54' fill='%239ca3af' font-size='10' font-family='sans-serif' text-anchor='middle' font-weight='bold'>SEWER</text></svg>",
-          timestamp: Date.now()
-        }
-      ];
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(starterList));
-    }
-  } catch (e) {}
+// Browser Library & Series Ribbon (IndexedDB Powered)
+export async function seedStarterLibraryIfEmpty() {
+  await initIndexedDBStorage();
 }
 
 export function getSavedLibrary() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch (e) {
-    return [];
-  }
+  return getSavedLibraryFromMemory();
 }
 
 export function getAssetSeriesName() {
@@ -2144,7 +2340,7 @@ export function renderSeriesRibbon() {
       detailText = `UV: ${item.uvScale || 1.0}×`;
     }
 
-    const thumbSrc = item.baseImageData || '';
+    const thumbSrc = item.thumbImageData || item.baseImageData || '';
     const itemSeries = (item.seriesName || item.icon?.badge2?.text || item.assetCategory || 'Road Markings').trim();
     const isActive = (item.assetName === state.currentLoadedAssetName);
 
@@ -2173,20 +2369,20 @@ export function renderSeriesRibbon() {
   }).join('');
 }
 
-export function saveCurrentToActiveSeries() {
+export async function saveCurrentToActiveSeries() {
   const targetSeries = (state.activeRibbonSeries && state.activeRibbonSeries !== 'all') ? state.activeRibbonSeries : getAssetSeriesName();
   setAssetSeriesName(targetSeries);
-  saveCurrentToBrowser();
+  await saveCurrentToBrowser();
 }
 
-export function promptReassignSeries(index) {
+export async function promptReassignSeries(index) {
   const list = getSavedLibrary();
   if (!list[index]) return;
   const oldSeries = list[index].seriesName || list[index].icon?.badge2?.text || list[index].assetCategory || 'Road Markings';
   const newSeries = prompt(`Move "${list[index].assetName}" to a different series name:`, oldSeries);
   if (newSeries && newSeries.trim() && newSeries.trim() !== oldSeries) {
     list[index].seriesName = newSeries.trim();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    await saveAssetToIndexedDB(list[index]);
     updateRibbonSeriesDropdown();
     renderSeriesRibbon();
     renderSavedAssetsList();
@@ -2195,7 +2391,7 @@ export function promptReassignSeries(index) {
   }
 }
 
-export function duplicateRibbonAsset(index) {
+export async function duplicateRibbonAsset(index) {
   const list = getSavedLibrary();
   if (!list[index]) return;
   const clone = JSON.parse(JSON.stringify(list[index]));
@@ -2203,8 +2399,7 @@ export function duplicateRibbonAsset(index) {
   const newName = `${baseName}_Var${Math.floor(Math.random() * 90 + 10)}`;
   clone.assetName = newName;
   clone.timestamp = Date.now();
-  list.unshift(clone);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  await saveAssetToIndexedDB(clone);
   state.currentLoadedAssetName = newName;
   state.currentLoadedAssetSeries = clone.seriesName || getAssetSeriesName();
   updateLibraryBadge();
@@ -2216,17 +2411,10 @@ export function duplicateRibbonAsset(index) {
   showToast(`Created variant "${newName}" in series "${clone.seriesName}"!`);
 }
 
-export function saveCurrentToBrowser() {
+export async function saveCurrentToBrowser() {
   const proj = serializeCurrentProject();
-  const list = getSavedLibrary();
-  const existingIdx = list.findIndex(item => item.assetName === proj.assetName);
-  if (existingIdx >= 0) {
-    list[existingIdx] = proj;
-  } else {
-    list.unshift(proj);
-  }
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    await saveAssetToIndexedDB(proj);
     state.hasUnsavedChanges = false;
     state.currentLoadedAssetName = proj.assetName;
     state.currentLoadedAssetSeries = proj.seriesName;
@@ -2235,9 +2423,10 @@ export function saveCurrentToBrowser() {
     renderSeriesRibbon();
     renderSavedAssetsList();
     renderSeriesChips();
-    showToast(`Saved "${proj.assetName}" to Series "${proj.seriesName}"`);
+    showToast(`Saved "${proj.assetName}" to Series "${proj.seriesName}" (IndexedDB)`);
   } catch (e) {
-    showToast('Storage quota exceeded, consider saving to file');
+    console.error('IndexedDB save error:', e);
+    showToast('Failed to save asset: ' + (e?.message || 'Storage error'));
   }
 }
 
@@ -2306,17 +2495,17 @@ export function loadFromBrowser(index, force = false) {
   renderSeriesRibbon();
 }
 
-export function deleteFromBrowser(index) {
+export async function deleteFromBrowser(index) {
   const list = getSavedLibrary();
   if (list[index]) {
-    const deleted = list.splice(index, 1);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    const target = list[index];
+    await deleteAssetFromIndexedDB(target.assetName);
     updateLibraryBadge();
     updateRibbonSeriesDropdown();
     renderSeriesRibbon();
     renderSavedAssetsList();
     renderSeriesChips();
-    showToast(`Removed "${deleted[0].assetName}"`);
+    showToast(`Removed "${target.assetName}"`);
   }
 }
 
@@ -2358,7 +2547,7 @@ export function renderSavedAssetsList() {
     const isDecal = item.appMode === 'decal';
     const isNetlane = item.appMode === 'netlane';
     const dateStr = item.timestamp ? new Date(item.timestamp).toLocaleDateString() : '';
-    const thumbSrc = item.baseImageData || '';
+    const thumbSrc = item.thumbImageData || item.baseImageData || '';
     let badgePill = 'pill-blue';
     let badgeLabel = 'DECAL';
     if (isNetlane) {
