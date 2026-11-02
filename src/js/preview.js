@@ -19,7 +19,11 @@ export function switchTab(tab) {
 
   const activeBtnId = tabButtonMap[tab] || `tabBtn_${tab}`;
   document.querySelectorAll('.view-tabs .tab-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.id === activeBtnId);
+    const isActive = (btn.id === activeBtnId);
+    btn.classList.toggle('active', isActive);
+    if (isActive && typeof btn.scrollIntoView === 'function') {
+      btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+    }
   });
 
   const vGrid = document.getElementById('viewGrid');
@@ -30,9 +34,9 @@ export function switchTab(tab) {
   const isSingleMode = ['base', 'normal', 'mask', 'icon', 'single'].includes(tab);
 
   if (vGrid) vGrid.style.display = tab === 'grid' ? 'grid' : 'none';
-  if (vSingle) vSingle.style.display = isSingleMode ? 'block' : 'none';
-  if (v3d) v3d.style.display = tab === '3d' ? 'block' : 'none';
-  if (vTiled) vTiled.style.display = tab === 'tiled' ? 'block' : 'none';
+  if (vSingle) vSingle.style.display = isSingleMode ? 'flex' : 'none';
+  if (v3d) v3d.style.display = tab === '3d' ? 'flex' : 'none';
+  if (vTiled) vTiled.style.display = tab === 'tiled' ? 'flex' : 'none';
 
   if (isSingleMode) {
     state.activeSingleMap = tab === 'single' ? 'base' : tab;
@@ -371,14 +375,34 @@ export function onTiledSeamChange() {
   if (state.activeTab === 'tiled') renderTiledView();
 }
 
+export function setPreviewScaleMode(mode) {
+  state.previewScaleMode = mode;
+  const container = document.getElementById('previewCanvasContainer');
+  const btnFit = document.getElementById('btnScaleFit');
+  const btnActual = document.getElementById('btnScaleActual');
+
+  if (btnFit) btnFit.classList.toggle('active', mode === 'fit');
+  if (btnActual) btnActual.classList.toggle('active', mode === 'actual');
+
+  if (container) {
+    if (mode === 'actual') {
+      container.classList.add('scale-mode-actual');
+    } else {
+      container.classList.remove('scale-mode-actual');
+    }
+  }
+}
+
 export function initSimulationInteraction() {
   const { canvasSim } = getCanvases();
   if (!canvasSim) return;
 
   function updateLightFromEvent(e) {
     const rect = canvasSim.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const clientX = e.touches && e.touches.length > 0 ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches && e.touches.length > 0 ? e.touches[0].clientY : e.clientY;
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
 
     let lx = (x / rect.width) * 2.0 - 1.0;
     let ly = (y / rect.height) * 2.0 - 1.0;
@@ -393,7 +417,67 @@ export function initSimulationInteraction() {
     }
   }
 
-  canvasSim.addEventListener('mousemove', (e) => {
+  canvasSim.addEventListener('mousemove', updateLightFromEvent);
+  canvasSim.addEventListener('touchmove', (e) => {
+    e.preventDefault();
     updateLightFromEvent(e);
-  });
+  }, { passive: false });
+  canvasSim.addEventListener('touchstart', (e) => {
+    updateLightFromEvent(e);
+  }, { passive: true });
+}
+
+export function scrollTabsNav(delta) {
+  const tabsScrollArea = document.getElementById('tabsScrollArea') || document.querySelector('.tabs-scroll-area');
+  if (!tabsScrollArea) return;
+  tabsScrollArea.scrollBy({ left: delta, behavior: 'smooth' });
+  setTimeout(checkTabScrollButtons, 220);
+}
+
+export function checkTabScrollButtons() {
+  const tabsScrollArea = document.getElementById('tabsScrollArea') || document.querySelector('.tabs-scroll-area');
+  const btnLeft = document.getElementById('tabScrollLeft');
+  const btnRight = document.getElementById('tabScrollRight');
+  if (!tabsScrollArea || !btnLeft || !btnRight) return;
+
+  const hasOverflow = tabsScrollArea.scrollWidth > tabsScrollArea.clientWidth + 4;
+  if (!hasOverflow) {
+    btnLeft.style.display = 'none';
+    btnRight.style.display = 'none';
+  } else {
+    btnLeft.style.display = tabsScrollArea.scrollLeft > 6 ? 'flex' : 'none';
+    btnRight.style.display = (tabsScrollArea.scrollLeft < tabsScrollArea.scrollWidth - tabsScrollArea.clientWidth - 6) ? 'flex' : 'none';
+  }
+}
+
+export function initTabsScroll() {
+  const tabsScrollArea = document.getElementById('tabsScrollArea') || document.querySelector('.tabs-scroll-area');
+  if (!tabsScrollArea) return;
+
+  tabsScrollArea.addEventListener('wheel', (e) => {
+    if (e.deltaY !== 0 && tabsScrollArea.scrollWidth > tabsScrollArea.clientWidth) {
+      e.preventDefault();
+      tabsScrollArea.scrollLeft += e.deltaY;
+      checkTabScrollButtons();
+    }
+  }, { passive: false });
+
+  tabsScrollArea.addEventListener('scroll', checkTabScrollButtons, { passive: true });
+  window.addEventListener('resize', checkTabScrollButtons);
+  checkTabScrollButtons();
+}
+
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initTabsScroll);
+  } else {
+    initTabsScroll();
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.setPreviewScaleMode = setPreviewScaleMode;
+  window.initTabsScroll = initTabsScroll;
+  window.scrollTabsNav = scrollTabsNav;
+  window.checkTabScrollButtons = checkTabScrollButtons;
 }

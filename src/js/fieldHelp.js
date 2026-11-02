@@ -14,10 +14,10 @@ export const FIELD_HELP = {
   },
   assetSeries: {
     title: 'Asset Series / Pack Collection',
-    badge: 'Series Ribbon',
+    badge: 'Pack Tag',
     badgeClass: 'pill-purple',
-    desc: 'Assigns this asset to a themed collection or series visible in the bottom Ribbon.',
-    details: 'Allows you to group related decals, surfaces, and net lanes into packs (e.g. <code>UK Roads</code>, <code>Speed Bumps</code>, <code>Manhole Series</code>, <code>Graffiti Pack 01</code>).<br><br>🎞️ <strong>Bottom Series Ribbon:</strong> All saved assets within a series appear in the bottom horizontal ribbon track for rapid 1-click loading, duplicating, and comparison.<br><br>💡 <strong>Switcher:</strong> You can switch anytime between the <strong>Series Ribbon</strong> and the <strong>Destination Folder Info</strong> at the bottom of the screen.',
+    desc: 'Assigns this asset to a themed collection or series tag.',
+    details: 'Allows you to group related decals, surfaces, and net lanes into packs (e.g. <code>UK Roads</code>, <code>Speed Bumps</code>, <code>Manhole Series</code>, <code>Graffiti Pack 01</code>).<br><br>💡 <strong>Icon Badge Sync:</strong> You can quickly sync this series name with your Overlay 2 series watermark badge on your in-game icon.',
     wikiTopic: 'install'
   },
   assetCategory: {
@@ -185,7 +185,7 @@ export const FIELD_HELP = {
     badge: '_Icon.png (256×256)',
     badgeClass: 'pill-purple',
     desc: 'Generates the official 256×256 in-game UI thumbnail with up to 4 simultaneous watermark overlays.',
-    details: '• <strong>Background Styles:</strong> CS2 Slate Vignette, 3D Hex Pedestal, Asphalt, Blueprint Grid, or Transparent.<br>• <strong>Overlay Switcher:</strong> Switch cleanly between <strong>Creator</strong>, <strong>Series</strong>, <strong>Extra 1</strong>, and <strong>Extra 2</strong> layers via dropdown.<br>• <strong>Style Sync:</strong> Quickly copy font, colors, and gradients across any badge layer with 1 click.',
+    details: '• <strong>Background Styles:</strong> CS2 Slate Vignette, 3D Hex Pedestal, Asphalt, Blueprint Grid, Custom (Image / Dual Gradient / Solid Color), or None.<br>• <strong>Custom Backdrops:</strong> Upload your own PNG/JPG backdrop image, select procedural asphalt/concrete presets, or craft custom linear/radial color gradients.<br>• <strong>Overlay Switcher:</strong> Switch cleanly between <strong>Creator</strong>, <strong>Series</strong>, <strong>Extra 1</strong>, and <strong>Extra 2</strong> layers via dropdown.<br>• <strong>Style Sync:</strong> Quickly copy font, colors, and gradients across any badge layer with 1 click.',
     wikiTopic: 'install'
   },
   badgeEdgePadding: {
@@ -261,12 +261,28 @@ export const FIELD_HELP = {
     wikiTopic: 'pbr'
   },
   uiPriority: {
-    title: 'UI Menu Priority (UiPriority)',
+    title: 'UI Menu Priority (UiPriority / m_Priority)',
     badge: 'Menu Sorting',
     badgeClass: 'pill-purple',
-    desc: 'Determines the asset sorting order inside ExtraAssetsImporter in-game tool menus.',
-    details: 'Integer sorting index (0 to 100, default <code>41</code>). Higher or lower values adjust the position of this asset relative to other installed mod assets within the CS2 toolbar.',
-    wikiTopic: 'install'
+    desc: 'Determines the exact display order of the asset within in-game toolbar menus.',
+    details: 'Verified against the official <strong>Cities: Skylines II Paradox Wiki</strong>:<br>• <strong>Valid Range:</strong> <code>0</code> to <code>99,999,999</code> (Default: <code>41</code>).<br>• <strong>Positioning:</strong> <code>0</code> places the asset first in its category. Higher numbers place assets further down.<br>• <strong>Why High Numbers?</strong> Setting a high base number (e.g. <code>10,000</code> or <code>50,000</code>) cleanly segregates custom modded assets from vanilla base game items and official DLCs.<br>• <strong>Asset Sequences (Stepped Decades):</strong> If assets share the same priority, CS2 sorts them unpredictably by loading order. Use the <em>Stepped Decade System</em> (e.g. Base <code>50,000</code> + Step <code>10</code>) to assign <code>50010</code>, <code>50020</code>, <code>50030</code>. This guarantees exact in-game order while leaving space between assets for future variants or flips!',
+    wikiTopic: 'wiki'
+  },
+  assetMetadata: {
+    title: 'Asset Set Metadata & Editor Flags',
+    badge: 'Set Tracking',
+    badgeClass: 'pill-purple',
+    desc: 'Stores set collections, author branding, version numbers, and Editor flags in your configuration JSON.',
+    details: '• <strong>asset_metadata:</strong> Adds a clean object containing <code>set_name</code> (e.g. "Road Markings"), <code>author</code>, <code>version</code>, and <code>notes</code>. Unity JSON deserializers safely ignore unknown properties, keeping this completely safe in-game.<br>• <strong>m_availableInEditor:</strong> The native Cities: Skylines II prefab flag allowing your asset to appear in the official Map/Asset Editor.<br>• <strong>Dual Priority:</strong> Outputs both <code>UiPriority</code> and <code>m_UIPriority</code> for 100% compatibility across legacy and future loaders.<br>• <strong>Recalling &amp; Tracking:</strong> Stored set profiles can be recalled with 1 click to auto-increment part numbering and priority sequences!',
+    wikiTopic: 'wiki'
+  },
+  setRegistry: {
+    title: 'Asset Set Registry & Overlap Protection',
+    badge: 'Range Allocator',
+    badgeClass: 'pill-green',
+    desc: 'Tracks priority ranges across multiple sets to prevent overlapping menu positions.',
+    details: '• <strong>1,000-Step Priority Bands:</strong> Each set reserves a clean range (e.g. 50,000–50,990 for Set A, 51,000–51,990 for Set B).<br>• <strong>Real-Time Collision Detection:</strong> Immediately alerts you if a priority number falls inside another set\'s allocated space.<br>• <strong>⚡ Next Safe Band:</strong> 1-click jump to the next unallocated 1,000-block boundary.<br>• <strong>Overview Modal:</strong> View all registered sets, total assets, and priority spans in one central table.',
+    wikiTopic: 'wiki'
   },
   jsonSchemaFormat: {
     title: 'JSON Configuration Format',

@@ -2006,6 +2006,28 @@ export function saveIconBadgeDefaults() {
       hasDefaults: true,
       savedAt: Date.now(),
       iconBgStyle: document.getElementById('iconBgStyle') ? document.getElementById('iconBgStyle').value : 'cs2-dark',
+      customBg: {
+        type: state.customIconBgType || 'image',
+        fit: state.iconBgFit || 'cover',
+        blur: state.iconBgBlur || 0,
+        brightness: state.iconBgBrightness !== undefined ? state.iconBgBrightness : 100,
+        vignette: state.iconBgVignette !== false,
+        gradType: state.iconBgGradType || 'radial',
+        grad1: state.iconBgGrad1 || '#1a2638',
+        grad2: state.iconBgGrad2 || '#080d16',
+        gradGrid: state.iconBgGradGrid === true,
+        color: state.iconBgColor || '#141e2e',
+        fileName: state.iconBgFileName || '',
+        imageData: state.iconBgImg ? (function() {
+          try {
+            const temp = document.createElement('canvas');
+            temp.width = state.iconBgImg.naturalWidth || state.iconBgImg.width || 512;
+            temp.height = state.iconBgImg.naturalHeight || state.iconBgImg.height || 512;
+            temp.getContext('2d').drawImage(state.iconBgImg, 0, 0);
+            return temp.toDataURL('image/png');
+          } catch(e) { return null; }
+        })() : null
+      },
       customGoogleFonts: state.customGoogleFonts || [],
       badge1: {
         enabled: document.getElementById('enableBadge1') ? document.getElementById('enableBadge1').checked : true,
@@ -2180,6 +2202,73 @@ export function loadIconBadgeDefaults(silent = false) {
     if (d.iconBgStyle && document.getElementById('iconBgStyle')) {
       document.getElementById('iconBgStyle').value = d.iconBgStyle;
     }
+    if (d.customBg) {
+      const cb = d.customBg;
+      state.customIconBgType = cb.type || 'image';
+      state.iconBgFit = cb.fit || 'cover';
+      state.iconBgBlur = cb.blur || 0;
+      state.iconBgBrightness = cb.brightness !== undefined ? cb.brightness : 100;
+      state.iconBgVignette = cb.vignette !== false;
+      state.iconBgGradType = cb.gradType || 'radial';
+      state.iconBgGrad1 = cb.grad1 || '#1a2638';
+      state.iconBgGrad2 = cb.grad2 || '#080d16';
+      state.iconBgGradGrid = cb.gradGrid === true;
+      state.iconBgColor = cb.color || '#141e2e';
+      state.iconBgFileName = cb.fileName || '';
+
+      const selType = document.getElementById('customIconBgType');
+      if (selType) selType.value = state.customIconBgType;
+      setCustomIconBgType(state.customIconBgType);
+
+      const selFit = document.getElementById('iconBgFitSelect');
+      if (selFit) selFit.value = state.iconBgFit;
+      const bSlider = document.getElementById('iconBgBlurSlider');
+      if (bSlider) {
+        bSlider.value = state.iconBgBlur;
+        const bVal = document.getElementById('iconBgBlurVal');
+        if (bVal) bVal.textContent = `${state.iconBgBlur} px`;
+      }
+      const brSlider = document.getElementById('iconBgBrightnessSlider');
+      if (brSlider) {
+        brSlider.value = state.iconBgBrightness;
+        const brVal = document.getElementById('iconBgBrightnessVal');
+        if (brVal) brVal.textContent = `${state.iconBgBrightness}%`;
+      }
+      const vCheck = document.getElementById('iconBgVignetteCheck');
+      if (vCheck) vCheck.checked = state.iconBgVignette;
+
+      const gDir = document.getElementById('iconBgGradDirSelect');
+      if (gDir) gDir.value = state.iconBgGradType;
+      const g1 = document.getElementById('iconBgGrad1Input');
+      const g2 = document.getElementById('iconBgGrad2Input');
+      const gh1 = document.getElementById('iconBgGrad1Hex');
+      const gh2 = document.getElementById('iconBgGrad2Hex');
+      if (g1) g1.value = state.iconBgGrad1;
+      if (g2) g2.value = state.iconBgGrad2;
+      if (gh1) gh1.textContent = state.iconBgGrad1;
+      if (gh2) gh2.textContent = state.iconBgGrad2;
+      const gGrid = document.getElementById('iconBgGradGridCheck');
+      if (gGrid) gGrid.checked = state.iconBgGradGrid;
+
+      const cInp = document.getElementById('iconBgColorInput');
+      const cHex = document.getElementById('iconBgColorHex');
+      if (cInp) cInp.value = state.iconBgColor;
+      if (cHex) cHex.textContent = state.iconBgColor;
+
+      if (cb.imageData) {
+        const img = new Image();
+        img.onload = () => {
+          state.iconBgImg = img;
+          const fn = document.getElementById('iconBgFileNameText');
+          if (fn) fn.textContent = state.iconBgFileName || 'Custom Backdrop';
+          const btnClear = document.getElementById('btnClearIconBgImg');
+          if (btnClear) btnClear.style.display = 'block';
+          renderIconMap();
+        };
+        img.src = cb.imageData;
+      }
+    }
+    onIconBgStyleChange();
 
     if (d.badge1) {
       const b1 = d.badge1;
@@ -2618,6 +2707,368 @@ export function initBadgeDefaults() {
   loadIconBadgeDefaults(true);
 }
 
+// ==========================================
+// Custom Icon Background Controls & Handlers
+// ==========================================
+
+export function onIconBgStyleChange() {
+  const val = document.getElementById('iconBgStyle')?.value || 'cs2-dark';
+  const customPanel = document.getElementById('customIconBgPanel');
+  if (customPanel) {
+    customPanel.style.display = (val === 'custom') ? 'block' : 'none';
+  }
+  renderIconMap();
+}
+
+export function setCustomIconBgType(type) {
+  state.customIconBgType = type;
+  const pImg = document.getElementById('customBgImageSubpanel');
+  const pGrad = document.getElementById('customBgGradientSubpanel');
+  const pColor = document.getElementById('customBgColorSubpanel');
+  const badge = document.getElementById('customBgModeBadge');
+
+  if (pImg) pImg.style.display = (type === 'image') ? 'block' : 'none';
+  if (pGrad) pGrad.style.display = (type === 'gradient') ? 'block' : 'none';
+  if (pColor) pColor.style.display = (type === 'color') ? 'block' : 'none';
+
+  if (badge) {
+    if (type === 'image') badge.textContent = 'Image Upload';
+    else if (type === 'gradient') badge.textContent = 'Dual Gradient';
+    else badge.textContent = 'Solid Color';
+  }
+
+  renderIconMap();
+}
+
+export function handleIconBgImageSelect(e) {
+  if (e.target.files && e.target.files.length > 0) {
+    const file = e.target.files[0];
+    state.iconBgFileName = file.name;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        state.iconBgImg = img;
+        const btn = document.getElementById('iconBgFileNameText');
+        if (btn) btn.textContent = file.name.length > 20 ? (file.name.substring(0, 18) + '...') : file.name;
+        const btnClear = document.getElementById('btnClearIconBgImg');
+        if (btnClear) btnClear.style.display = 'block';
+        renderIconMap();
+        showToast('Custom backdrop image loaded');
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+export function clearIconBgImage() {
+  state.iconBgImg = null;
+  state.iconBgFileName = '';
+  const btn = document.getElementById('iconBgFileNameText');
+  if (btn) btn.textContent = '📁 Upload Custom Backdrop...';
+  const btnClear = document.getElementById('btnClearIconBgImg');
+  if (btnClear) btnClear.style.display = 'none';
+  const inp = document.getElementById('iconBgFileInput');
+  if (inp) inp.value = '';
+  renderIconMap();
+  showToast('Removed custom backdrop image');
+}
+
+export function applyProceduralBackdrop(type) {
+  const c = document.createElement('canvas');
+  c.width = 512;
+  c.height = 512;
+  const ctx = c.getContext('2d');
+
+  if (type === 'wet-asphalt') {
+    ctx.fillStyle = '#11161d';
+    ctx.fillRect(0, 0, 512, 512);
+
+    for (let i = 0; i < 2200; i++) {
+      const rx = (Math.sin(i * 12.9898) * 43758.5453 % 1 + 1) % 1 * 512;
+      const ry = (Math.cos(i * 78.233) * 43758.5453 % 1 + 1) % 1 * 512;
+      const alpha = 0.04 + ((i % 12) / 100);
+      ctx.fillStyle = i % 2 === 0 ? `rgba(255,255,255,${alpha})` : `rgba(0,0,0,${alpha * 1.6})`;
+      ctx.fillRect(rx, ry, (i % 3) + 1, (i % 3) + 1);
+    }
+
+    const sheen = ctx.createLinearGradient(0, 80, 512, 420);
+    sheen.addColorStop(0, 'rgba(56, 189, 248, 0.05)');
+    sheen.addColorStop(0.5, 'rgba(255, 255, 255, 0.09)');
+    sheen.addColorStop(1, 'rgba(0, 0, 0, 0.25)');
+    ctx.fillStyle = sheen;
+    ctx.fillRect(0, 0, 512, 512);
+
+    state.iconBgFileName = 'Preset: Wet Asphalt';
+  } else if (type === 'concrete') {
+    ctx.fillStyle = '#2a3038';
+    ctx.fillRect(0, 0, 512, 512);
+
+    for (let i = 0; i < 1800; i++) {
+      const rx = (Math.sin(i * 37.1) * 43758.5453 % 1 + 1) % 1 * 512;
+      const ry = (Math.cos(i * 91.7) * 43758.5453 % 1 + 1) % 1 * 512;
+      const alpha = 0.03 + ((i % 8) / 100);
+      ctx.fillStyle = i % 2 === 0 ? `rgba(255,255,255,${alpha})` : `rgba(0,0,0,${alpha * 1.2})`;
+      ctx.fillRect(rx, ry, 2, 2);
+    }
+
+    ctx.strokeStyle = 'rgba(15, 20, 26, 0.5)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(0, 256);
+    ctx.lineTo(512, 256);
+    ctx.stroke();
+
+    state.iconBgFileName = 'Preset: Concrete';
+  } else if (type === 'studio-radial') {
+    const sGrad = ctx.createRadialGradient(256, 210, 20, 256, 256, 360);
+    sGrad.addColorStop(0, '#2b394a');
+    sGrad.addColorStop(0.5, '#151d28');
+    sGrad.addColorStop(1, '#070b10');
+    ctx.fillStyle = sGrad;
+    ctx.fillRect(0, 0, 512, 512);
+
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.2)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, 360);
+    ctx.lineTo(512, 360);
+    ctx.stroke();
+
+    state.iconBgFileName = 'Preset: Studio Spot';
+  } else if (type === 'carbon') {
+    ctx.fillStyle = '#0f1318';
+    ctx.fillRect(0, 0, 512, 512);
+
+    ctx.fillStyle = '#1c222b';
+    const patSize = 16;
+    for (let y = 0; y < 512; y += patSize) {
+      for (let x = 0; x < 512; x += patSize) {
+        if ((Math.floor(x / patSize) + Math.floor(y / patSize)) % 2 === 0) {
+          ctx.fillRect(x, y, patSize, patSize);
+        }
+      }
+    }
+    state.iconBgFileName = 'Preset: Carbon Weave';
+  }
+
+  const img = new Image();
+  img.onload = () => {
+    state.iconBgImg = img;
+    const btn = document.getElementById('iconBgFileNameText');
+    if (btn) btn.textContent = state.iconBgFileName;
+    const btnClear = document.getElementById('btnClearIconBgImg');
+    if (btnClear) btnClear.style.display = 'block';
+    renderIconMap();
+    showToast(`Applied ${state.iconBgFileName}`);
+  };
+  img.src = c.toDataURL('image/png');
+}
+
+export function onIconBgFitChange(fit) {
+  state.iconBgFit = fit;
+  renderIconMap();
+}
+
+export function onIconBgBlurChange(val) {
+  state.iconBgBlur = parseInt(val, 10) || 0;
+  const label = document.getElementById('iconBgBlurVal');
+  if (label) label.textContent = `${state.iconBgBlur} px`;
+  renderIconMap();
+}
+
+export function onIconBgBrightnessChange(val) {
+  state.iconBgBrightness = parseInt(val, 10) || 100;
+  const label = document.getElementById('iconBgBrightnessVal');
+  if (label) label.textContent = `${state.iconBgBrightness}%`;
+  renderIconMap();
+}
+
+export function onIconBgVignetteChange(checked) {
+  state.iconBgVignette = checked;
+  renderIconMap();
+}
+
+export function onIconBgGradDirChange(dir) {
+  state.iconBgGradType = dir;
+  renderIconMap();
+}
+
+export function onIconBgGradColorsChange() {
+  const c1 = document.getElementById('iconBgGrad1Input')?.value || '#1a2638';
+  const c2 = document.getElementById('iconBgGrad2Input')?.value || '#080d16';
+  state.iconBgGrad1 = c1;
+  state.iconBgGrad2 = c2;
+  const h1 = document.getElementById('iconBgGrad1Hex');
+  const h2 = document.getElementById('iconBgGrad2Hex');
+  if (h1) h1.textContent = c1;
+  if (h2) h2.textContent = c2;
+  renderIconMap();
+}
+
+export function applyIconBgGradPreset(key) {
+  const presets = {
+    'cs2-slate': ['#1e2b3c', '#090f18'],
+    'studio-dark': ['#2d3748', '#111827'],
+    'deep-midnight': ['#0a192f', '#020c1b'],
+    'neon-cyber': ['#2e1065', '#0f051d'],
+    'emerald-transit': ['#064e3b', '#022c22'],
+    'amber-sunset': ['#451a03', '#0c0a09'],
+    'crimson-dark': ['#4c0519', '#0f0508'],
+    'royal-gold': ['#3b2d07', '#140f02'],
+    'pure-dark': ['#262626', '#050505']
+  };
+  const pair = presets[key];
+  if (!pair) return;
+  state.iconBgGrad1 = pair[0];
+  state.iconBgGrad2 = pair[1];
+  const inp1 = document.getElementById('iconBgGrad1Input');
+  const inp2 = document.getElementById('iconBgGrad2Input');
+  const h1 = document.getElementById('iconBgGrad1Hex');
+  const h2 = document.getElementById('iconBgGrad2Hex');
+  if (inp1) inp1.value = pair[0];
+  if (inp2) inp2.value = pair[1];
+  if (h1) h1.textContent = pair[0];
+  if (h2) h2.textContent = pair[1];
+  renderIconMap();
+}
+
+export function onIconBgGradGridChange(checked) {
+  state.iconBgGradGrid = checked;
+  renderIconMap();
+}
+
+export function onIconBgSolidColorChange() {
+  const color = document.getElementById('iconBgColorInput')?.value || '#141e2e';
+  state.iconBgColor = color;
+  const h = document.getElementById('iconBgColorHex');
+  if (h) h.textContent = color;
+  renderIconMap();
+}
+
+export function applyIconBgSolidSwatch(colorHex) {
+  state.iconBgColor = colorHex;
+  const inp = document.getElementById('iconBgColorInput');
+  const h = document.getElementById('iconBgColorHex');
+  if (inp) inp.value = colorHex;
+  if (h) h.textContent = colorHex;
+  renderIconMap();
+}
+
+export function renderCustomIconBackground(ctx, size) {
+  const type = state.customIconBgType || 'image';
+
+  if (type === 'image') {
+    if (state.iconBgImg) {
+      ctx.save();
+      const blur = state.iconBgBlur || 0;
+      const brightness = state.iconBgBrightness !== undefined ? state.iconBgBrightness : 100;
+      if (blur > 0 || brightness !== 100) {
+        ctx.filter = `blur(${blur}px) brightness(${brightness}%)`;
+      }
+      const img = state.iconBgImg;
+      const fit = state.iconBgFit || 'cover';
+      const iw = img.naturalWidth || img.width || 512;
+      const ih = img.naturalHeight || img.height || 512;
+
+      if (fit === 'stretch') {
+        ctx.drawImage(img, 0, 0, size, size);
+      } else if (fit === 'contain') {
+        ctx.fillStyle = '#0a0f18';
+        ctx.fillRect(0, 0, size, size);
+        const scale = Math.min(size / iw, size / ih);
+        const nw = iw * scale;
+        const nh = ih * scale;
+        const ox = (size - nw) / 2;
+        const oy = (size - nh) / 2;
+        ctx.drawImage(img, ox, oy, nw, nh);
+      } else {
+        // cover
+        const scale = Math.max(size / iw, size / ih);
+        const nw = iw * scale;
+        const nh = ih * scale;
+        const ox = (size - nw) / 2;
+        const oy = (size - nh) / 2;
+        ctx.drawImage(img, ox, oy, nw, nh);
+      }
+      ctx.restore();
+
+      if (state.iconBgVignette) {
+        const vGrad = ctx.createRadialGradient(size / 2, size / 2, size * 0.35, size / 2, size / 2, size * 0.72);
+        vGrad.addColorStop(0, 'rgba(0,0,0,0)');
+        vGrad.addColorStop(1, 'rgba(0,0,0,0.65)');
+        ctx.fillStyle = vGrad;
+        ctx.fillRect(0, 0, size, size);
+      }
+    } else {
+      const pGrad = ctx.createRadialGradient(size / 2, size * 0.45, 20, size / 2, size * 0.5, size * 0.75);
+      pGrad.addColorStop(0, '#1c2838');
+      pGrad.addColorStop(1, '#0b111a');
+      ctx.fillStyle = pGrad;
+      ctx.fillRect(0, 0, size, size);
+
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([6, 6]);
+      ctx.strokeRect(20, 20, size - 40, size - 40);
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.85)';
+      ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Custom Backdrop Slot', size / 2, size * 0.86);
+      ctx.font = '11px sans-serif';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
+      ctx.fillText('Upload image or pick a procedural preset', size / 2, size * 0.91);
+    }
+  } else if (type === 'gradient') {
+    const c1 = state.iconBgGrad1 || '#1a2638';
+    const c2 = state.iconBgGrad2 || '#080d16';
+    const dir = state.iconBgGradType || 'radial';
+    let grad;
+
+    if (dir === 'radial') {
+      grad = ctx.createRadialGradient(size / 2, size / 2, 10, size / 2, size / 2, size * 0.72);
+      grad.addColorStop(0, c1);
+      grad.addColorStop(1, c2);
+    } else if (dir === 'diagonal') {
+      grad = ctx.createLinearGradient(0, 0, size, size);
+      grad.addColorStop(0, c1);
+      grad.addColorStop(1, c2);
+    } else if (dir === 'vertical') {
+      grad = ctx.createLinearGradient(0, 0, 0, size);
+      grad.addColorStop(0, c1);
+      grad.addColorStop(1, c2);
+    } else {
+      grad = ctx.createLinearGradient(0, 0, size, 0);
+      grad.addColorStop(0, c1);
+      grad.addColorStop(1, c2);
+    }
+
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, size, size);
+
+    if (state.iconBgGradGrid) {
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+      ctx.lineWidth = 1;
+      for (let p = 0; p <= size; p += 32) {
+        ctx.beginPath();
+        ctx.moveTo(p, 0);
+        ctx.lineTo(p, size);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(0, p);
+        ctx.lineTo(size, p);
+        ctx.stroke();
+      }
+    }
+  } else if (type === 'color') {
+    ctx.fillStyle = state.iconBgColor || '#141e2e';
+    ctx.fillRect(0, 0, size, size);
+  }
+}
+
 // Icon Canvas Composition & Overlay Hit Testing
 export let lastBadgeHitBoxes = [];
 
@@ -2664,6 +3115,40 @@ export function renderIconMap(cleanOnly = false) {
     ctxIcon.strokeStyle = '#38bdf8';
     ctxIcon.lineWidth = 1.5;
     ctxIcon.stroke();
+  } else if (bgStyle === 'cs2-pedestal') {
+    const grad = ctxIcon.createRadialGradient(size / 2, size * 0.45, 10, size / 2, size * 0.5, size * 0.75);
+    grad.addColorStop(0, '#1c2838');
+    grad.addColorStop(0.6, '#0f1722');
+    grad.addColorStop(1, '#070b12');
+    ctxIcon.fillStyle = grad;
+    ctxIcon.fillRect(0, 0, size, size);
+
+    const cx = size / 2;
+    const cy = size * 0.74;
+    const rx = size * 0.40;
+    const ry = size * 0.16;
+
+    ctxIcon.fillStyle = '#0f1724';
+    ctxIcon.beginPath();
+    ctxIcon.ellipse(cx, cy + 24, rx, ry, 0, 0, Math.PI);
+    ctxIcon.lineTo(cx - rx, cy);
+    ctxIcon.ellipse(cx, cy, rx, ry, 0, Math.PI, 0, true);
+    ctxIcon.closePath();
+    ctxIcon.fill();
+    ctxIcon.strokeStyle = '#1e293b';
+    ctxIcon.lineWidth = 2;
+    ctxIcon.stroke();
+
+    const topGrad = ctxIcon.createLinearGradient(cx, cy - ry, cx, cy + ry);
+    topGrad.addColorStop(0, '#243447');
+    topGrad.addColorStop(1, '#162231');
+    ctxIcon.fillStyle = topGrad;
+    ctxIcon.beginPath();
+    ctxIcon.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+    ctxIcon.fill();
+    ctxIcon.strokeStyle = '#38bdf8';
+    ctxIcon.lineWidth = 1.5;
+    ctxIcon.stroke();
   } else if (bgStyle === 'asphalt') {
     ctxIcon.fillStyle = '#14181f';
     ctxIcon.fillRect(0, 0, size, size);
@@ -2692,35 +3177,44 @@ export function renderIconMap(cleanOnly = false) {
       ctxIcon.lineTo(size, p);
       ctxIcon.stroke();
     }
+  } else if (bgStyle === 'custom') {
+    renderCustomIconBackground(ctxIcon, size);
   }
+  // When bgStyle === 'none' or 'transparent', nothing is filled in the background (100% transparent cutout)
 
   if (canvasBase && canvasBase.width > 0) {
     if (state.appMode === 'decal') {
-      const pad = 36;
+      const isNone = (bgStyle === 'none');
+      const pad = isNone ? 24 : 36;
       const targetW = size - pad * 2;
       const targetH = size - pad * 2;
 
       ctxIcon.save();
-      ctxIcon.shadowColor = 'rgba(0, 0, 0, 0.6)';
-      ctxIcon.shadowBlur = 12;
-      ctxIcon.shadowOffsetY = 6;
+      if (!isNone && bgStyle !== 'transparent') {
+        ctxIcon.shadowColor = 'rgba(0, 0, 0, 0.6)';
+        ctxIcon.shadowBlur = 12;
+        ctxIcon.shadowOffsetY = 6;
+      }
       ctxIcon.drawImage(canvasBase, pad, pad, targetW, targetH);
       ctxIcon.restore();
     } else {
-      const swatchSize = size - 36;
-      const ox = 18;
-      const oy = 18;
+      const isNone = (bgStyle === 'none' || bgStyle === 'transparent');
+      const swatchSize = isNone ? (size - 16) : (size - 36);
+      const ox = isNone ? 8 : 18;
+      const oy = isNone ? 8 : 18;
       ctxIcon.save();
       ctxIcon.beginPath();
-      ctxIcon.roundRect(ox, oy, swatchSize, swatchSize, 8);
+      ctxIcon.roundRect(ox, oy, swatchSize, swatchSize, isNone ? 0 : 8);
       ctxIcon.clip();
 
       ctxIcon.drawImage(canvasBase, ox, oy, swatchSize, swatchSize);
       ctxIcon.restore();
 
-      ctxIcon.strokeStyle = 'rgba(255, 255, 255, 0.25)';
-      ctxIcon.lineWidth = 2;
-      ctxIcon.strokeRect(ox, oy, swatchSize, swatchSize);
+      if (!isNone) {
+        ctxIcon.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+        ctxIcon.lineWidth = 2;
+        ctxIcon.strokeRect(ox, oy, swatchSize, swatchSize);
+      }
     }
   }
 

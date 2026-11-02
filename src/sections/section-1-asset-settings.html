@@ -2,7 +2,7 @@
         <div class="section-title collapsible-header" onclick="toggleSection('secToolsAsset')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleSection('secToolsAsset');}" tabindex="0" role="button" aria-expanded="true">
           <div class="section-header-left">
             <svg class="section-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-            <span id="sec1Title">1. Decal Settings & Geometry</span>
+            <span id="sec1Title">2. Decal Settings & Geometry</span>
           </div>
           <div class="section-header-right">
             <span id="modeBadge" style="font-size: 10px; color: var(--primary); font-weight: bold;">DECAL</span>
@@ -47,7 +47,7 @@
             </div>
           </div>
 
-          <!-- Asset Series / Pack Name (for Series Ribbon & Multi-Asset Collections) -->
+          <!-- Asset Series / Pack Name (for Collections & Badge Watermarks) -->
           <div class="form-group" style="margin-top: 10px;">
             <div class="form-label-row">
               <div class="form-label-left">
@@ -71,7 +71,7 @@
               <!-- Dynamic chips for existing series -->
             </div>
             <div style="font-size: 10px; color: var(--text-dim); margin-top: 3px; display: flex; justify-content: space-between; align-items: center;">
-              <span>Groups assets in the bottom Series Ribbon.</span>
+              <span>Themed collection tag for project organization &amp; icon badges.</span>
               <button type="button" style="color: var(--accent-cyan); background: none; border: none; font-size: 10px; cursor: pointer; text-decoration: underline; padding: 0;" onclick="syncWithSeriesBadge()">Sync with Icon Badge</button>
             </div>
           </div>
@@ -92,9 +92,11 @@
                 <option value="RoadMarkings" selected>RoadMarkings</option>
                 <option value="Utilities">Utilities</option>
                 <option value="Manholes">Manholes</option>
+                <option value="Earth">Earth / Terrain</option>
                 <option value="Graffiti">Graffiti</option>
                 <option value="Signage">Signage</option>
                 <option value="Cracks">Cracks / Wear</option>
+                <option value="Stains">Stains &amp; Spills</option>
               </select>
             </div>
             <div style="font-size: 10px; color: var(--text-dim); margin-top: 3px;">
@@ -484,20 +486,84 @@
             </div>
           </div>
 
-          <!-- UI Priority (Toolbar Menu Order) -->
-          <div class="form-group" style="margin-top: 12px;">
+          <!-- UI Priority & Sequence Manager (Toolbar Menu Order: UiPriority / m_Priority) -->
+          <div class="form-group" style="margin-top: 12px; background: rgba(14, 23, 36, 0.45); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px;">
             <div class="form-label-row">
               <div class="form-label-left">
-                <span>UI Priority (Menu Order: UiPriority)</span>
+                <span style="font-weight: 600; color: var(--text-main);">UI Priority (Menu Order: UiPriority)</span>
                 <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'uiPriority', event)" onmouseenter="showFieldHelp(this, 'uiPriority', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for UI Priority" title="Help for UI Priority">?</button>
               </div>
-              <span class="form-val-badge" id="uiPriorityVal">41</span>
+              <span class="form-val-badge" id="uiPriorityVal" style="font-family: monospace; font-size: 11px; background: rgba(192, 132, 252, 0.15); color: var(--accent-purple); border: 1px solid rgba(192, 132, 252, 0.35);">41</span>
             </div>
-            <div class="slider-container">
-              <input type="range" id="uiPrioritySlider" min="0" max="100" step="1" value="41" oninput="onUiPriorityChange()">
+
+            <!-- Direct Numeric Input & Stepping Controls -->
+            <div style="display: flex; gap: 6px; align-items: center; margin-top: 6px;">
+              <div style="position: relative; flex: 1;">
+                <input type="number" id="uiPriorityInput" value="41" min="0" max="99999999" step="1" oninput="onUiPriorityInputChange(this.value)" style="width: 100%; padding: 4px 8px; font-size: 12px; font-family: monospace; font-weight: 700; color: var(--accent-cyan); background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 4px;" title="Enter exact priority integer (0 to 99,999,999)">
+              </div>
+              <div style="display: flex; gap: 3px;">
+                <button type="button" class="preset-btn" style="padding: 3px 8px; font-size: 10px;" onclick="stepUiPriority(-10)" title="Step down by 10 (Previous sequence item)">-10</button>
+                <button type="button" class="preset-btn" style="padding: 3px 8px; font-size: 10px;" onclick="stepUiPriority(10)" title="Step up by 10 (Next sequence item)">+10</button>
+                <button type="button" class="preset-btn" style="padding: 3px 8px; font-size: 10px;" onclick="stepUiPriority(1)" title="Step up by 1">+1</button>
+              </div>
             </div>
-            <div style="font-size: 10px; color: var(--text-dim); margin-top: 3px;">
-              Controls the asset's sorting position within the ExtraAssetsImporter toolbar menu.
+
+            <!-- Priority Slider -->
+            <div class="slider-container" style="margin-top: 8px;">
+              <input type="range" id="uiPrioritySlider" min="0" max="100000" step="1" value="41" oninput="onUiPriorityChange()">
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 9px; color: var(--text-dim); font-family: monospace; margin-top: 2px;">
+              <span>0 (First)</span>
+              <span>10k (Custom)</span>
+              <span>50k (Safe Band)</span>
+              <span>100k+</span>
+            </div>
+
+            <!-- Quick Priority Band Presets -->
+            <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px;">
+              <span style="font-size: 10px; color: var(--text-dim); align-self: center; margin-right: 2px;">Bands:</span>
+              <button type="button" class="preset-btn" style="padding: 2px 6px; font-size: 10px;" onclick="applyUiPriorityPreset(41)" title="Default early priority (near top of menu)">Vanilla (41)</button>
+              <button type="button" class="preset-btn" style="padding: 2px 6px; font-size: 10px;" onclick="applyUiPriorityPreset(10010)" title="Standard high range for custom mods (10,010)">Pack (10k+)</button>
+              <button type="button" class="preset-btn" style="padding: 2px 6px; font-size: 10px;" onclick="applyUiPriorityPreset(50010)" title="Safe isolated band well past base game assets (50,010)">High Safe (50k+)</button>
+              <button type="button" class="preset-btn" style="padding: 2px 6px; font-size: 10px;" onclick="applyUiPriorityPreset(90010)" title="Far end of menu (90,010)">End (90k+)</button>
+            </div>
+
+            <!-- Asset Sequence / Series Calculator Card -->
+            <div style="margin-top: 10px; padding: 8px 10px; background: rgba(0, 168, 255, 0.05); border: 1px dashed rgba(0, 168, 255, 0.25); border-radius: 6px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                <span style="font-size: 10px; font-weight: 700; color: var(--accent-cyan); text-transform: uppercase; letter-spacing: 0.3px;">Pack Sequence Helper</span>
+                <span id="uiSeqDetectedBadge" style="font-size: 9px; font-family: monospace; color: var(--accent-emerald); background: rgba(16, 185, 129, 0.12); padding: 1px 5px; border-radius: 3px;">Auto-Detect Ready</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                <div>
+                  <label for="uiPriorityBase" style="font-size: 9px; color: var(--text-dim); display: block; margin-bottom: 2px;">Series Base #:</label>
+                  <input type="number" id="uiPriorityBase" value="50000" step="1000" min="0" max="99999000" oninput="updateUiPrioritySequenceUI()" style="width: 100%; padding: 2px 6px; font-size: 11px; font-family: monospace; background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px;">
+                </div>
+                <div>
+                  <label for="uiPriorityStep" style="font-size: 9px; color: var(--text-dim); display: block; margin-bottom: 2px;">Step Interval:</label>
+                  <select id="uiPriorityStep" onchange="updateUiPrioritySequenceUI()" style="width: 100%; padding: 2px 4px; font-size: 11px; height: 23px; background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px;">
+                    <option value="10" selected>+10 (Recommended: leaves room for variants)</option>
+                    <option value="100">+100 (Wide decade gaps)</option>
+                    <option value="1">+1 (Dense sequence)</option>
+                  </select>
+                </div>
+              </div>
+              <div style="display: flex; gap: 6px; align-items: center; justify-content: space-between; margin-top: 6px;">
+                <span id="uiSeqFormulaText" style="font-size: 9px; color: var(--text-muted); font-family: monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Base 50000 + (1 × 10) = 50010</span>
+                <button type="button" class="preset-btn" style="padding: 2px 7px; font-size: 10px; color: var(--accent-cyan); border-color: rgba(0, 168, 255, 0.4); white-space: nowrap;" onclick="autoCalculateUiPriorityFromName()" title="Auto-calculate UiPriority from Asset Name suffix (e.g. _01, _02)">⚡ Auto-Sequence</button>
+              </div>
+            </div>
+
+            <!-- Live Range Overlap / Conflict Alert Banner -->
+            <div id="setOverlapAlertBanner" class="set-overlap-banner safe" style="display: none;">
+              <div id="setOverlapAlertText" style="display: flex; align-items: center; gap: 5px; flex: 1; min-width: 0;">
+                ✓ Safe Range: No collision with other registered sets.
+              </div>
+              <button type="button" id="btnJumpSafeRange" class="preset-btn" style="display: none; padding: 1px 6px; font-size: 9px; color: #f87171; white-space: nowrap;" onclick="applySuggestedSafeRange()">⚡ Fix Overlap</button>
+            </div>
+
+            <div style="font-size: 10px; color: var(--text-dim); margin-top: 6px; line-height: 1.35;">
+              💡 <strong>CS2 Wiki:</strong> Values range <code>0</code> to <code>99,999,999</code>. High numbers (10,000+) place assets after vanilla items. Step by <code>10</code> between assets to preserve in-game ordering with room for future sub-variants.
             </div>
           </div>
 
@@ -546,6 +612,87 @@
                 </div>
                 <div class="slider-container">
                   <input type="range" id="globalSmoothnessSlider" min="0.0" max="1.0" step="0.05" value="0.0" oninput="onGlobalMaterialChange()">
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <!-- Asset Metadata & Pack Tracking Card -->
+          <details class="form-group" style="margin-top: 12px; background: rgba(14, 23, 36, 0.45); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px 10px;" id="metadataTrackingDetails">
+            <summary style="font-size: 11px; font-weight: 700; color: var(--accent-cyan); cursor: pointer; user-select: none; display: flex; align-items: center; justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span>📋 Asset &amp; Sequence Metadata Tracking</span>
+                <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'assetMetadata', event); event.stopPropagation();" onmouseenter="showFieldHelp(this, 'assetMetadata', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Asset Metadata" title="Help for Asset Metadata">?</button>
+                <span class="channel-pill pill-purple" style="font-size: 8px; padding: 1px 5px;">Optional</span>
+              </div>
+              <span id="metadataStatusBadge" style="font-size: 9px; font-family: monospace; color: var(--text-dim);">Disabled</span>
+            </summary>
+            
+            <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
+              <label class="checkbox-row" style="margin: 0; font-size: 11px; font-weight: 600; color: var(--text-main);">
+                <input type="checkbox" id="includeAssetMetadata" onchange="toggleAssetMetadataFields(this.checked)">
+                <span>Include "asset_metadata" &amp; Editor Flags in JSON</span>
+              </label>
+
+              <div id="metadataFieldsWrap" style="display: none; flex-direction: column; gap: 8px; margin-top: 4px; padding-top: 8px; border-top: 1px dashed rgba(255, 255, 255, 0.1);">
+                <!-- Set Profile Recaller & Storage Manager -->
+                <div style="background: rgba(0, 168, 255, 0.06); border: 1px solid rgba(0, 168, 255, 0.25); border-radius: 6px; padding: 8px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <div style="display: flex; align-items: center; gap: 4px;">
+                      <span style="font-size: 10px; font-weight: 700; color: var(--accent-cyan); text-transform: uppercase; letter-spacing: 0.3px;">Recall / Store Set Profile:</span>
+                      <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'setRegistry', event)" onmouseenter="showFieldHelp(this, 'setRegistry', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Set Registry" title="Help for Set Registry">?</button>
+                    </div>
+                    <button type="button" class="preset-btn" style="padding: 1px 6px; font-size: 9px; color: var(--accent-purple);" onclick="openSetRegistryModal()" title="View and manage all registered asset sets and priority bands">📊 All Sets &amp; Ranges</button>
+                  </div>
+                  <select id="setProfileSelector" onchange="recallSetProfile(this.value)" style="width: 100%; padding: 4px 6px; font-size: 11px; font-weight: 600; background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px;">
+                    <option value="">-- Recall Saved Set Profile --</option>
+                  </select>
+                  <div style="display: flex; gap: 4px; margin-top: 6px;">
+                    <button type="button" class="btn-secondary" style="flex: 1; padding: 4px 8px; font-size: 10px; font-weight: 600;" onclick="saveCurrentWorkspaceAsSet()" title="Save or update this set configuration in your local registry">
+                      💾 Save / Update Set
+                    </button>
+                    <button type="button" class="btn-secondary" style="padding: 4px 8px; font-size: 10px; color: var(--accent-emerald);" onclick="applySuggestedSafeRange()" title="Jump to next clean non-overlapping priority range">
+                      ⚡ Next Safe Band
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                    <label for="metaSetName" style="font-size: 9px; color: var(--text-dim); font-weight: 600;">Set / Collection Name (set_name):</label>
+                    <button type="button" class="preset-btn" style="padding: 1px 6px; font-size: 9px;" onclick="syncMetaSetNameFromSeries()" title="Sync with Asset Series input">Sync Series</button>
+                  </div>
+                  <input type="text" id="metaSetName" value="Road Markings" placeholder="e.g. Road Markings, Modular Houses, City Utilities..." spellcheck="false" oninput="updateConfigJson()" style="width: 100%; padding: 3px 6px; font-size: 11px; font-weight: 600; color: var(--accent-cyan); background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 4px;">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                  <div>
+                    <label for="metaAuthor" style="font-size: 9px; color: var(--text-dim); display: block; margin-bottom: 2px;">Author / Creator:</label>
+                    <input type="text" id="metaAuthor" value="Creator" placeholder="Your name or studio..." spellcheck="false" oninput="updateConfigJson()" style="width: 100%; padding: 3px 6px; font-size: 11px; background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px;">
+                  </div>
+                  <div>
+                    <label for="metaVersion" style="font-size: 9px; color: var(--text-dim); display: block; margin-bottom: 2px;">Version:</label>
+                    <input type="text" id="metaVersion" value="1.0.0" placeholder="e.g. 1.0.0" spellcheck="false" oninput="updateConfigJson()" style="width: 100%; padding: 3px 6px; font-size: 11px; background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px;">
+                  </div>
+                </div>
+
+                <div>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                    <label for="metaNotes" style="font-size: 9px; color: var(--text-dim);">Set Sequence &amp; Documentation Notes:</label>
+                    <button type="button" class="preset-btn" style="padding: 1px 6px; font-size: 9px;" onclick="autoFillSequenceNotes()" title="Auto-generate sequence note from current asset and sequence settings">⚡ Auto-Fill</button>
+                  </div>
+                  <textarea id="metaNotes" rows="2" placeholder="e.g. Part 1 of 4 in set. UI priority increments by +10 for parts 2-4." oninput="updateConfigJson()" style="width: 100%; padding: 4px 6px; font-size: 11px; background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; resize: vertical;"></textarea>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                  <label class="checkbox-row" style="margin: 0; font-size: 10px;">
+                    <input type="checkbox" id="metaAvailableInEditor" checked onchange="updateConfigJson()">
+                    <span>Include "m_availableInEditor": true (Expose in CS2 Map/Asset Editor)</span>
+                  </label>
+                  <label class="checkbox-row" style="margin: 0; font-size: 10px;">
+                    <input type="checkbox" id="metaDualPriority" checked onchange="updateConfigJson()">
+                    <span>Include both "UiPriority" &amp; "m_UIPriority" (Maximum mod compatibility)</span>
+                  </label>
                 </div>
               </div>
             </div>

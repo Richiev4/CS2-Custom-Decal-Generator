@@ -121,7 +121,22 @@ import {
   resetIconBadgeDefaults,
   updateBadgeDefaultsUI,
   initBadgeDefaults,
-  renderIconMap
+  renderIconMap,
+  onIconBgStyleChange,
+  setCustomIconBgType,
+  handleIconBgImageSelect,
+  clearIconBgImage,
+  applyProceduralBackdrop,
+  onIconBgFitChange,
+  onIconBgBlurChange,
+  onIconBgBrightnessChange,
+  onIconBgVignetteChange,
+  onIconBgGradDirChange,
+  onIconBgGradColorsChange,
+  applyIconBgGradPreset,
+  onIconBgGradGridChange,
+  onIconBgSolidColorChange,
+  applyIconBgSolidSwatch
 } from './badges.js';
 
 import {
@@ -137,6 +152,9 @@ import {
   stepTiling,
   onSeamToggleChange,
   onTiledSeamChange,
+  setPreviewScaleMode,
+  scrollTabsNav,
+  checkTabScrollButtons,
   initSimulationInteraction
 } from './preview.js';
 
@@ -144,6 +162,7 @@ import {
   setAssetCategory,
   getAssetCategory,
   applyCategoryQuickPick,
+  updateCategoryQuickPickerForMode,
   onNormalOpacityChange,
   onLayerMaskChange,
   onDrawOrderChange,
@@ -151,6 +170,15 @@ import {
   onUvScaleChange,
   setUvScale,
   onNetlaneParamChange,
+  onUiPriorityChange,
+  onUiPriorityInputChange,
+  applyUiPriorityPreset,
+  stepUiPriority,
+  updateUiPrioritySequenceUI,
+  autoCalculateUiPriorityFromName,
+  toggleAssetMetadataFields,
+  autoFillSequenceNotes,
+  syncMetaSetNameFromSeries,
   updateConfigJson,
   copyConfigJson,
   copyDecalPath,
@@ -207,6 +235,19 @@ import {
 
 import { loadSample } from './samples.js';
 
+import {
+  recallSetProfile,
+  saveCurrentWorkspaceAsSet,
+  applySuggestedSafeRange,
+  checkLiveOverlapAndAlert,
+  updateSetRegistryUI,
+  renderSetsTable,
+  deleteSetProfileFromUI,
+  openSetRegistryModal,
+  closeSetRegistryModal,
+  closeSetRegistryModalOnBackdrop
+} from './setRegistry.js';
+
 // ==========================================
 // Mode Switching: Decal Mode vs Surface Mode vs NetLane Mode
 // ==========================================
@@ -251,7 +292,7 @@ export function setMode(mode, force = false) {
     if (guidanceIcon) guidanceIcon.textContent = '💡';
     if (guidanceText) guidanceText.textContent = 'Images should have transparent backgrounds and do not need to tile.';
 
-    if (sec1Title) sec1Title.textContent = '1. Decal Settings & Geometry';
+    if (sec1Title) sec1Title.textContent = '2. Decal Settings & Geometry';
     if (modeBadge) {
       modeBadge.textContent = 'DECAL';
       modeBadge.style.color = 'var(--primary)';
@@ -264,18 +305,7 @@ export function setMode(mode, force = false) {
     const secNormOp = document.getElementById('sectionDecalNormalOpacity');
     if (secNormOp) secNormOp.style.display = 'block';
 
-    const categoryPicker = document.getElementById('categoryQuickPicker');
-    if (categoryPicker) {
-      categoryPicker.innerHTML = `
-        <option value="RoadMarkings" selected>RoadMarkings</option>
-        <option value="Utilities">Utilities</option>
-        <option value="Manholes">Manholes</option>
-        <option value="Graffiti">Graffiti</option>
-        <option value="Signage">Signage</option>
-        <option value="Cracks">Cracks</option>
-      `;
-    }
-    setAssetCategory('RoadMarkings');
+    updateCategoryQuickPickerForMode('decal');
 
     if (drawSlider) {
       const curr = parseInt(drawSlider.value, 10);
@@ -313,7 +343,7 @@ export function setMode(mode, force = false) {
     if (guidanceIcon) guidanceIcon.textContent = '🌐';
     if (guidanceText) guidanceText.textContent = 'Surfaces must be square, seamless tiling textures (no transparency).';
 
-    if (sec1Title) sec1Title.textContent = '1. Surface Settings & UV Tiling';
+    if (sec1Title) sec1Title.textContent = '2. Surface Settings & UV Tiling';
     if (modeBadge) {
       modeBadge.textContent = 'SURFACE';
       modeBadge.style.color = 'var(--accent-emerald)';
@@ -326,17 +356,7 @@ export function setMode(mode, force = false) {
     const secNormOp = document.getElementById('sectionDecalNormalOpacity');
     if (secNormOp) secNormOp.style.display = 'none';
 
-    const categoryPicker = document.getElementById('categoryQuickPicker');
-    if (categoryPicker) {
-      categoryPicker.innerHTML = `
-        <option value="Pavement" selected>Pavement</option>
-        <option value="Tiles">Tiles</option>
-        <option value="Asphalt">Asphalt</option>
-        <option value="Grass">Grass</option>
-        <option value="Dirt">Dirt</option>
-      `;
-    }
-    setAssetCategory('Pavement');
+    updateCategoryQuickPickerForMode('surface');
 
     if (drawSlider) {
       const curr = parseInt(drawSlider.value, 10);
@@ -375,7 +395,7 @@ export function setMode(mode, force = false) {
     if (guidanceIcon) guidanceIcon.textContent = '🛣️';
     if (guidanceText) guidanceText.textContent = 'Net Lanes are extruded along curved road splines (lines, curbs, and paths).';
 
-    if (sec1Title) sec1Title.textContent = '1. Net Lane Settings & Spline Parameters';
+    if (sec1Title) sec1Title.textContent = '2. Net Lane Settings & Spline Parameters';
     if (modeBadge) {
       modeBadge.textContent = 'NET LANE';
       modeBadge.style.color = 'var(--accent-orange)';
@@ -388,17 +408,7 @@ export function setMode(mode, force = false) {
     const secNormOp = document.getElementById('sectionDecalNormalOpacity');
     if (secNormOp) secNormOp.style.display = 'none';
 
-    const categoryPicker = document.getElementById('categoryQuickPicker');
-    if (categoryPicker) {
-      categoryPicker.innerHTML = `
-        <option value="Lines" selected>Lines</option>
-        <option value="Curbs">Curbs</option>
-        <option value="Markings">Markings</option>
-        <option value="Tracks">Tracks</option>
-        <option value="Paths">Paths</option>
-      `;
-    }
-    setAssetCategory('Lines');
+    updateCategoryQuickPickerForMode('netlane');
 
     if (drawSlider) {
       const curr = parseInt(drawSlider.value, 10);
@@ -503,8 +513,10 @@ export function initGridSimulationInteraction() {
 
   function updateLightFromEvent(e) {
     const rect = canvasSimGrid.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const clientX = e.touches && e.touches.length > 0 ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches && e.touches.length > 0 ? e.touches[0].clientY : e.clientY;
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
 
     let lx = (x / rect.width) * 2.0 - 1.0;
     let ly = (y / rect.height) * 2.0 - 1.0;
@@ -519,6 +531,13 @@ export function initGridSimulationInteraction() {
   }
 
   canvasSimGrid.addEventListener('mousemove', updateLightFromEvent);
+  canvasSimGrid.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    updateLightFromEvent(e);
+  }, { passive: false });
+  canvasSimGrid.addEventListener('touchstart', (e) => {
+    updateLightFromEvent(e);
+  }, { passive: true });
 }
 
 // ==========================================
@@ -585,7 +604,7 @@ export function onAssetNameInput() {
   updateConfigJson();
   checkRotationNameReminder();
   state.currentLoadedAssetName = document.getElementById('assetName').value.trim();
-  renderSeriesRibbon();
+  updateUiPrioritySequenceUI();
 }
 
 export function clearAllWorkspace(force = false) {
@@ -860,6 +879,21 @@ Object.assign(window, {
   loadIconBadgeDefaults,
   resetIconBadgeDefaults,
   renderIconMap,
+  onIconBgStyleChange,
+  setCustomIconBgType,
+  handleIconBgImageSelect,
+  clearIconBgImage,
+  applyProceduralBackdrop,
+  onIconBgFitChange,
+  onIconBgBlurChange,
+  onIconBgBrightnessChange,
+  onIconBgVignetteChange,
+  onIconBgGradDirChange,
+  onIconBgGradColorsChange,
+  applyIconBgGradPreset,
+  onIconBgGradGridChange,
+  onIconBgSolidColorChange,
+  applyIconBgSolidSwatch,
   toggleGoogleFontInput,
   addCustomGoogleFontFromInput,
   switchTab,
@@ -874,8 +908,12 @@ Object.assign(window, {
   stepTiling,
   onSeamToggleChange,
   onTiledSeamChange,
+  setPreviewScaleMode,
+  scrollTabsNav,
+  checkTabScrollButtons,
   setAssetCategory,
   applyCategoryQuickPick,
+  updateCategoryQuickPickerForMode,
   getAssetSeriesName,
   setAssetSeriesName,
   onAssetSeriesInput,
@@ -926,8 +964,27 @@ Object.assign(window, {
   setDecalAspectLock,
   resetDecalAspectRatio,
   updateDecalAspectUI,
+  onUiPriorityChange,
+  onUiPriorityInputChange,
+  applyUiPriorityPreset,
+  stepUiPriority,
+  updateUiPrioritySequenceUI,
+  autoCalculateUiPriorityFromName,
+  toggleAssetMetadataFields,
+  autoFillSequenceNotes,
+  syncMetaSetNameFromSeries,
   updateGridSimulationCanvas,
   initGridSimulationInteraction,
+  recallSetProfile,
+  saveCurrentWorkspaceAsSet,
+  applySuggestedSafeRange,
+  checkLiveOverlapAndAlert,
+  updateSetRegistryUI,
+  renderSetsTable,
+  deleteSetProfileFromUI,
+  openSetRegistryModal,
+  closeSetRegistryModal,
+  closeSetRegistryModalOnBackdrop,
   openWelcomeSplash,
   closeWelcomeSplash,
   closeWelcomeSplashOnBackdrop,
@@ -973,18 +1030,18 @@ export function toggleNeverShowSplashAgain(checked) {
 // Initialization on Launch
 // ==========================================
 window.addEventListener('DOMContentLoaded', async () => {
-  await seedStarterLibraryIfEmpty();
   setMode('decal');
   loadSample('manhole');
   updateDecalAspectUI();
-  updateLibraryBadge();
+  updateUiPrioritySequenceUI();
   initBadgeDefaults();
   restoreSidebarSectionsState();
   updateRibbonSeriesDropdown();
   renderSeriesChips();
-  renderSeriesRibbon();
   initSimulationInteraction();
   initGridSimulationInteraction();
+  updateSetRegistryUI();
+  checkLiveOverlapAndAlert();
 
   const hideSplash = localStorage.getItem('cs2_hide_welcome_splash') === 'true';
   if (!hideSplash) {
@@ -1046,11 +1103,8 @@ window.addEventListener('DOMContentLoaded', async () => {
       hideFieldHelp(true);
       closeWelcomeSplash();
       closeHelpModal();
-      closeLibraryModal();
+      closeSetRegistryModal();
       cancelGuardAction();
     }
   });
-
-  const prefView = localStorage.getItem('cs2_bottom_view_preference') || 'ribbon';
-  switchBottomView(prefView);
 });

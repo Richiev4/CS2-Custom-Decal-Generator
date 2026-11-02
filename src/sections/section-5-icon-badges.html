@@ -20,13 +20,185 @@
                 <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'iconSettings', event)" onmouseenter="showFieldHelp(this, 'iconSettings', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Icon Style" title="Help for Icon Style">?</button>
               </div>
             </div>
-            <select id="iconBgStyle" onchange="renderAllMaps()">
+            <select id="iconBgStyle" onchange="onIconBgStyleChange()">
+              <option value="none">None</option>
               <option value="cs2-dark" selected>CS2 In-Game Menu Tile (Slate Vignette)</option>
               <option value="cs2-pedestal">3D Hex Pedestal / Studio Stand</option>
               <option value="asphalt">Dark City Asphalt Texture</option>
-              <option value="transparent">Transparent Background</option>
               <option value="blueprint">Cyan Blueprint Grid</option>
+              <option value="custom">🎨 Custom Background (Image / Gradient / Color)...</option>
+              <option value="transparent">Transparent Background</option>
             </select>
+          </div>
+
+          <!-- Contextual Custom Icon Background Panel -->
+          <div id="customIconBgPanel" class="custom-icon-bg-panel" style="display: none; background: rgba(14, 23, 38, 0.7); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 6px; padding: 10px 12px; margin-top: 8px; margin-bottom: 12px;">
+            <div class="form-label-row" style="margin-bottom: 8px;">
+              <span style="font-size: 11px; font-weight: 700; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.5px;">🎨 Custom Background Settings</span>
+              <span class="form-val-badge" id="customBgModeBadge">Image Upload</span>
+            </div>
+
+            <!-- Submode Selector -->
+            <div class="form-group" style="margin-bottom: 8px;">
+              <div class="form-label-row" style="margin-bottom: 3px;">
+                <span style="font-size: 10.5px; color: var(--text-dim);">Background Mode:</span>
+              </div>
+              <select id="customIconBgType" onchange="setCustomIconBgType(this.value)">
+                <option value="image" selected>📁 Custom Image / Backdrop Upload</option>
+                <option value="gradient">🌈 Custom Dual-Color Gradient</option>
+                <option value="color">🎯 Custom Solid Color</option>
+              </select>
+            </div>
+
+            <!-- Mode 1: Image Upload -->
+            <div id="customBgImageSubpanel">
+              <div class="form-group" style="margin-bottom: 8px;">
+                <input type="file" id="iconBgFileInput" accept="image/png, image/jpeg, image/webp, image/svg+xml" style="display: none;" onchange="handleIconBgImageSelect(event)">
+                <div style="display: flex; gap: 6px; align-items: center;">
+                  <button type="button" class="btn-secondary" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px;" onclick="document.getElementById('iconBgFileInput').click()">
+                    <span id="iconBgFileNameText">📁 Upload Custom Backdrop...</span>
+                  </button>
+                  <button type="button" id="btnClearIconBgImg" class="btn-secondary" style="display: none; padding: 6px 10px; color: #ef4444;" onclick="clearIconBgImage()" title="Remove custom background image">✕</button>
+                </div>
+                <div style="font-size: 10px; color: var(--text-dim); margin-top: 4px;">PNG, JPG, WebP, or SVG backdrop image</div>
+              </div>
+
+              <!-- Quick Backdrop Presets -->
+              <div class="form-group" style="margin-bottom: 8px;">
+                <div class="form-label-row" style="margin-bottom: 3px;">
+                  <span style="font-size: 10px; color: var(--text-dim);">Or Pick a Procedural Backdrop:</span>
+                </div>
+                <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                  <button type="button" class="preset-btn" style="padding: 2px 7px; font-size: 10px;" onclick="applyProceduralBackdrop('wet-asphalt')">🛣️ Wet Asphalt</button>
+                  <button type="button" class="preset-btn" style="padding: 2px 7px; font-size: 10px;" onclick="applyProceduralBackdrop('concrete')">🏢 Concrete</button>
+                  <button type="button" class="preset-btn" style="padding: 2px 7px; font-size: 10px;" onclick="applyProceduralBackdrop('studio-radial')">💡 Studio Spot</button>
+                  <button type="button" class="preset-btn" style="padding: 2px 7px; font-size: 10px;" onclick="applyProceduralBackdrop('carbon')">🏁 Carbon Weave</button>
+                </div>
+              </div>
+
+              <!-- Image Fit -->
+              <div class="form-group" style="margin-bottom: 8px;">
+                <div class="form-label-row" style="margin-bottom: 3px;">
+                  <span style="font-size: 10.5px; color: var(--text-dim);">Image Fit Strategy:</span>
+                </div>
+                <select id="iconBgFitSelect" onchange="onIconBgFitChange(this.value)">
+                  <option value="cover" selected>Square Crop &amp; Fill (Cover)</option>
+                  <option value="contain">Fit Entire Image (Contain)</option>
+                  <option value="stretch">Stretch to 1:1</option>
+                </select>
+              </div>
+
+              <!-- Sliders: Blur & Brightness -->
+              <div class="form-group" style="margin-bottom: 6px;">
+                <div class="form-label-row">
+                  <span style="font-size: 10.5px; color: var(--text-muted);">Background Blur:</span>
+                  <span class="form-val-badge" id="iconBgBlurVal">0 px</span>
+                </div>
+                <div class="slider-container">
+                  <input type="range" id="iconBgBlurSlider" min="0" max="20" step="1" value="0" oninput="onIconBgBlurChange(this.value)">
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 6px;">
+                <div class="form-label-row">
+                  <span style="font-size: 10.5px; color: var(--text-muted);">Brightness / Dim:</span>
+                  <span class="form-val-badge" id="iconBgBrightnessVal">100%</span>
+                </div>
+                <div class="slider-container">
+                  <input type="range" id="iconBgBrightnessSlider" min="20" max="150" step="5" value="100" oninput="onIconBgBrightnessChange(this.value)">
+                </div>
+              </div>
+
+              <label class="checkbox-row" style="margin-top: 6px; margin-bottom: 0;">
+                <input type="checkbox" id="iconBgVignetteCheck" checked onchange="onIconBgVignetteChange(this.checked)">
+                <span style="font-size: 10.5px;">Add CS2 Dark Edge Vignette Overlay</span>
+              </label>
+            </div>
+
+            <!-- Mode 2: Gradient -->
+            <div id="customBgGradientSubpanel" style="display: none;">
+              <!-- Gradient Direction -->
+              <div class="form-group" style="margin-bottom: 8px;">
+                <div class="form-label-row" style="margin-bottom: 3px;">
+                  <span style="font-size: 10.5px; color: var(--text-dim);">Gradient Pattern / Direction:</span>
+                </div>
+                <select id="iconBgGradDirSelect" onchange="onIconBgGradDirChange(this.value)">
+                  <option value="radial" selected>🎯 Radial Spotlight (Studio Center Glow)</option>
+                  <option value="diagonal">⤡ Diagonal (135°)</option>
+                  <option value="vertical">⇅ Vertical (Top to Bottom)</option>
+                  <option value="horizontal">⇄ Horizontal (Left to Right)</option>
+                </select>
+              </div>
+
+              <!-- Colors -->
+              <div class="color-picker-grid" style="grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+                <div class="color-picker-row">
+                  <span class="color-picker-label" style="font-size: 10px;">Color 1 (Start/Center):</span>
+                  <div class="color-picker-wrap">
+                    <input type="color" id="iconBgGrad1Input" class="color-picker-input" value="#1a2638" oninput="onIconBgGradColorsChange()">
+                    <span class="color-hex-text" id="iconBgGrad1Hex" style="font-size: 10px;">#1a2638</span>
+                  </div>
+                </div>
+                <div class="color-picker-row">
+                  <span class="color-picker-label" style="font-size: 10px;">Color 2 (End/Edge):</span>
+                  <div class="color-picker-wrap">
+                    <input type="color" id="iconBgGrad2Input" class="color-picker-input" value="#080d16" oninput="onIconBgGradColorsChange()">
+                    <span class="color-hex-text" id="iconBgGrad2Hex" style="font-size: 10px;">#080d16</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Quick Presets -->
+              <div class="form-group" style="margin-bottom: 8px;">
+                <div class="form-label-row" style="margin-bottom: 3px;">
+                  <span style="font-size: 10px; color: var(--text-dim);">Quick Gradient Presets:</span>
+                </div>
+                <select id="iconBgGradPresetSelect" onchange="if(this.value){ applyIconBgGradPreset(this.value); this.value=''; }">
+                  <option value="">-- Select Gradient Preset --</option>
+                  <option value="cs2-slate">CS2 In-Game Slate (#1e2b3c ➔ #090f18)</option>
+                  <option value="studio-dark">Studio Clean Charcoal (#2d3748 ➔ #111827)</option>
+                  <option value="deep-midnight">Midnight Navy (#0a192f ➔ #020c1b)</option>
+                  <option value="neon-cyber">Cyber Violet (#2e1065 ➔ #0f051d)</option>
+                  <option value="emerald-transit">Emerald Transit (#064e3b ➔ #022c22)</option>
+                  <option value="amber-sunset">Sunset Bronze (#451a03 ➔ #0c0a09)</option>
+                  <option value="crimson-dark">Dark Crimson (#4c0519 ➔ #0f0508)</option>
+                  <option value="royal-gold">Royal Gold (#3b2d07 ➔ #140f02)</option>
+                  <option value="pure-dark">Deep Carbon (#262626 ➔ #050505)</option>
+                </select>
+              </div>
+
+              <label class="checkbox-row" style="margin-top: 4px; margin-bottom: 0;">
+                <input type="checkbox" id="iconBgGradGridCheck" onchange="onIconBgGradGridChange(this.checked)">
+                <span style="font-size: 10.5px;">Add Subtle Ground Grid Lines</span>
+              </label>
+            </div>
+
+            <!-- Mode 3: Solid Color -->
+            <div id="customBgColorSubpanel" style="display: none;">
+              <div class="color-picker-grid" style="grid-template-columns: 1fr; gap: 8px; margin-bottom: 8px;">
+                <div class="color-picker-row">
+                  <span class="color-picker-label" style="font-size: 10.5px;">Background Color:</span>
+                  <div class="color-picker-wrap">
+                    <input type="color" id="iconBgColorInput" class="color-picker-input" value="#141e2e" oninput="onIconBgSolidColorChange()">
+                    <span class="color-hex-text" id="iconBgColorHex">#141e2e</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 4px;">
+                <div class="form-label-row" style="margin-bottom: 3px;">
+                  <span style="font-size: 10px; color: var(--text-dim);">Quick Color Swatches:</span>
+                </div>
+                <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                  <button type="button" class="preset-btn" style="padding: 2px 7px; font-size: 10px;" onclick="applyIconBgSolidSwatch('#141e2e')">Slate</button>
+                  <button type="button" class="preset-btn" style="padding: 2px 7px; font-size: 10px;" onclick="applyIconBgSolidSwatch('#111827')">Charcoal</button>
+                  <button type="button" class="preset-btn" style="padding: 2px 7px; font-size: 10px;" onclick="applyIconBgSolidSwatch('#050505')">Jet Black</button>
+                  <button type="button" class="preset-btn" style="padding: 2px 7px; font-size: 10px;" onclick="applyIconBgSolidSwatch('#0a192f')">Navy</button>
+                  <button type="button" class="preset-btn" style="padding: 2px 7px; font-size: 10px;" onclick="applyIconBgSolidSwatch('#1e293b')">Steel</button>
+                  <button type="button" class="preset-btn" style="padding: 2px 7px; font-size: 10px;" onclick="applyIconBgSolidSwatch('#ffffff')">White</button>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Overlay Layer Dropdown Selector -->

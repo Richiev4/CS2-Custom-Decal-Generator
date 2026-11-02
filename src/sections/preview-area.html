@@ -1,27 +1,55 @@
     <div class="preview-area">
       <!-- Tabs -->
       <div class="view-tabs">
-        <button class="tab-btn active" id="tabGrid" onclick="switchTab('grid')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-          All Texture Maps
+        <button type="button" class="tab-scroll-btn tab-scroll-left" id="tabScrollLeft" onclick="scrollTabsNav(-120)" style="display: none;" title="Scroll tabs left">
+          ‹
         </button>
-        <button class="tab-btn" id="tab3d" onclick="switchTab('3d')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
-          <span id="tab3dLabel">In-Game Lit Surface Simulation</span>
+        <div class="tabs-scroll-area" id="tabsScrollArea">
+          <button class="tab-btn active" id="tabGrid" onclick="switchTab('grid')" title="All Texture Maps (Overview Grid)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            <span>All Maps</span>
+          </button>
+          <button class="tab-btn" id="tab3d" onclick="switchTab('3d')" title="In-Game Lit Surface Simulation (3D Blinn-Phong)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+            <span id="tab3dLabel">3D Lit Surface</span>
+          </button>
+          <button class="tab-btn" id="tabTiled" onclick="switchTab('tiled')" style="display: flex; align-items: center; gap: 5px;" title="Tiled Pattern Seamless Edge Verification">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h7v7H3z"/><path d="M14 3h7v7h-7z"/><path d="M14 14h7v7h-7z"/><path d="M3 14h7v7H3z"/></svg>
+            <span id="tabTiledLabel">Tiled</span>
+            <span id="tabTileBadge" class="tab-tile-badge">4×</span>
+          </button>
+          <button class="tab-btn" id="tabBase" onclick="switchTab('base')" title="_BaseColorMap.png (RGB Albedo Diffuse + Alpha Cutout)">
+            <span>_BaseColor</span>
+          </button>
+          <button class="tab-btn" id="tabNormal" onclick="switchTab('normal')" title="_NormalMap.png (OpenGL Tangent Normal +X, +Y)">
+            <span>_Normal</span>
+          </button>
+          <button class="tab-btn" id="tabMask" onclick="switchTab('mask')" title="_MaskMap.png (Red:Metallic, Green:0, Blue:0, Alpha:Smoothness)">
+            <span>_MaskMap</span>
+          </button>
+          <button class="tab-btn" id="tabIcon" onclick="switchTab('icon')" title="icon.png (CS2 UI In-Game Thumbnail)">
+            <span>icon.png</span>
+          </button>
+        </div>
+        <button type="button" class="tab-scroll-btn tab-scroll-right" id="tabScrollRight" onclick="scrollTabsNav(120)" style="display: none;" title="Scroll tabs right">
+          ›
         </button>
-        <button class="tab-btn" id="tabTiled" onclick="switchTab('tiled')" style="display: flex; align-items: center; gap: 6px;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h7v7H3z"/><path d="M14 3h7v7h-7z"/><path d="M14 14h7v7h-7z"/><path d="M3 14h7v7H3z"/></svg>
-          <span id="tabTiledLabel">Tiled Pattern</span>
-          <span id="tabTileBadge" style="font-size: 10px; font-weight: 700; color: var(--accent-emerald); background: rgba(16, 185, 129, 0.2); padding: 1px 6px; border-radius: 4px; border: 1px solid rgba(16, 185, 129, 0.3);">4× Slider</span>
-        </button>
-        <button class="tab-btn" id="tabBase" onclick="switchTab('base')">_BaseColorMap</button>
-        <button class="tab-btn" id="tabNormal" onclick="switchTab('normal')">_NormalMap</button>
-        <button class="tab-btn" id="tabMask" onclick="switchTab('mask')">_MaskMap</button>
-        <button class="tab-btn" id="tabIcon" onclick="switchTab('icon')">icon.png</button>
       </div>
 
       <!-- Canvas Render Views -->
-      <div class="preview-canvas-container">
+      <div class="preview-canvas-container" id="previewCanvasContainer">
+
+        <!-- Floating Viewport Scale Controls (Fit to Screen vs 1:1 Pixel Scale) -->
+        <div class="preview-scale-controls floating-viewport-controls" title="Toggle between Responsive Auto-Fit and 1:1 Native Pixel Scale">
+          <button type="button" class="preview-scale-btn active" id="btnScaleFit" onclick="setPreviewScaleMode('fit')" title="Scale canvas responsively to fit viewport size">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+            <span>Fit</span>
+          </button>
+          <button type="button" class="preview-scale-btn" id="btnScaleActual" onclick="setPreviewScaleMode('actual')" title="Display texture at 100% native resolution">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+            <span>100%</span>
+          </button>
+        </div>
 
         <!-- 3-Map Grid View -->
         <div id="viewGrid" class="texture-grid">
@@ -46,9 +74,9 @@
           <!-- Normal Map Card -->
           <div class="texture-card">
             <div class="texture-card-header">
-              <div style="display: flex; align-items: center; gap: 6px;">
+              <div style="display: flex; align-items: center; gap: 6px; min-width: 0;">
                 <span class="texture-name" id="nameCardNormal">_NormalMap.png</span>
-                <span id="cardNormalBadge" style="font-size: 9px; padding: 1px 5px; border-radius: 3px; background: rgba(56, 189, 248, 0.15); color: var(--primary);">Auto</span>
+                <span id="cardNormalBadge" style="font-size: 9px; padding: 1px 5px; border-radius: 3px; background: rgba(56, 189, 248, 0.15); color: var(--primary); flex-shrink: 0;">Auto</span>
               </div>
               <button class="btn-secondary" style="padding: 2px 8px; font-size: 11px;" onclick="downloadTexture('normal')">Save</button>
             </div>
@@ -58,7 +86,7 @@
               </div>
             </div>
             <div class="texture-footer">
-              <span id="cardNormalFooter">OpenGL Tangent Normal (+X, +Y)</span>
+              <span id="cardNormalFooter">OpenGL Normal (+X, +Y)</span>
               <span class="resolution-badge" id="resBadge2">1024×1024</span>
             </div>
           </div>
@@ -75,7 +103,7 @@
               </div>
             </div>
             <div class="texture-footer">
-              <span>R:Metallic, G:0, B:0, A:Smooth</span>
+              <span>R:Metal G:0 B:0 A:Smooth</span>
               <span class="resolution-badge" id="resBadge3">1024×1024</span>
             </div>
           </div>
@@ -93,10 +121,10 @@
             </div>
             <div class="texture-footer" style="flex-direction: column; gap: 6px; align-items: stretch;">
               <div style="display: flex; justify-content: space-between; align-items: center;">
-                <span>CS2 UI Menu Thumbnail</span>
+                <span>CS2 UI Thumbnail</span>
                 <span class="resolution-badge">256×256</span>
               </div>
-              <div id="gridIconOverlayToggles" style="display: flex; justify-content: space-between; align-items: center; gap: 6px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.08); font-size: 10px;">
+              <div id="gridIconOverlayToggles" class="grid-icon-toggles">
                 <label style="display: flex; align-items: center; gap: 3px; cursor: pointer;" title="Toggle Creator Overlay">
                   <input type="checkbox" id="toggleGridOverlay1" onchange="window.toggleBadge1Enable(this.checked)">
                   <span>Creator</span>
@@ -120,19 +148,19 @@
           <!-- Live In-Game Lit Preview Card -->
           <div class="texture-card" id="cardSimGrid">
             <div class="texture-card-header">
-              <div style="display: flex; align-items: center; gap: 6px;">
+              <div style="display: flex; align-items: center; gap: 6px; min-width: 0;">
                 <span class="texture-name" style="color: var(--accent-amber);">In-Game Lit Preview</span>
-                <span style="font-size: 9px; padding: 1px 5px; border-radius: 3px; background: rgba(245, 158, 11, 0.2); color: var(--accent-amber); font-weight: 700;">Live PBR</span>
+                <span style="font-size: 9px; padding: 1px 5px; border-radius: 3px; background: rgba(245, 158, 11, 0.2); color: var(--accent-amber); font-weight: 700; flex-shrink: 0;">Live PBR</span>
               </div>
               <button class="btn-secondary" style="padding: 2px 8px; font-size: 11px;" onclick="switchTab('3d')" title="Open full interactive 3D simulation view">Full Sim</button>
             </div>
             <div class="texture-card-body">
-              <div class="texture-canvas-box" style="background: #090e17; cursor: crosshair;" id="gridSimBox" title="Move cursor across surface to test sun lighting angle & relief">
+              <div class="texture-canvas-box" style="background: #090e17; cursor: crosshair;" id="gridSimBox" title="Move cursor or drag across surface to test sun lighting angle & relief">
                 <canvas id="canvasSimGrid" width="512" height="512"></canvas>
               </div>
             </div>
             <div class="texture-footer">
-              <span id="cardSimGridFooter">Real-Time Sun & Relief Shading</span>
+              <span id="cardSimGridFooter">Real-Time Sun & Relief</span>
               <span class="resolution-badge" style="background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); border-color: rgba(245, 158, 11, 0.3);">Live 512²</span>
             </div>
           </div>
@@ -144,10 +172,10 @@
           <div class="sim-surface" id="simContainer">
             <canvas id="canvasSim" width="512" height="512"></canvas>
             <div class="sim-hint">
-              💡 Move cursor across surface to change sun lighting angle & observe specular reflection!
+              💡 Move cursor or touch drag across surface to test sun lighting angle & specular relief!
             </div>
           </div>
-          <div style="margin-top: 12px; font-size: 12px; color: var(--text-muted); text-align: center;" id="simDescText">
+          <div class="sim-desc-text" id="simDescText">
             Simulating single tile with real-time Blinn-Phong lighting computed from Normal & Mask maps.
           </div>
         </div>
@@ -155,9 +183,9 @@
         <!-- Dedicated Tiled Pattern View -->
         <div id="viewTiled" class="preview-viewport" style="display: none;">
           <!-- Top Controls Bar: Presets, Map Dropdown & Seams Toggle -->
-          <div style="width: 100%; max-width: 602px; margin-bottom: 12px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 8px 14px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35); display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase;">Presets:</span>
+          <div class="tiled-top-bar">
+            <div class="tiled-presets-group">
+              <span class="tiled-control-label">Presets:</span>
               <div class="tiling-btn-group" id="tiledGroup">
                 <button type="button" class="tiling-pill" data-tile="1" onclick="setSurfaceTiling(1)">1×</button>
                 <button type="button" class="tiling-pill" data-tile="2" onclick="setSurfaceTiling(2)">2×</button>
@@ -169,46 +197,49 @@
               </div>
             </div>
 
-            <div style="display: flex; align-items: center; gap: 10px;">
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <span style="font-size: 11px; font-weight: 600; color: var(--text-dim);">Map:</span>
-                <select id="tiledMapSource" style="padding: 4px 8px; font-size: 11px; width: auto; background: var(--bg-input); border-radius: 4px; border: 1px solid var(--border-color); color: var(--text-main);" onchange="renderTiledView()">
+            <div class="tiled-options-group">
+              <div class="tiled-map-select-wrap">
+                <span class="tiled-control-label">Map:</span>
+                <select id="tiledMapSource" class="tiled-map-select" onchange="renderTiledView()">
                   <option value="base" selected>Base Color</option>
                   <option value="normal">Normal Map</option>
                   <option value="mask">Mask Map</option>
                   <option value="lit">3D Lit</option>
                 </select>
               </div>
-              <label class="checkbox-row" style="margin: 0; font-size: 11px; color: var(--text-dim); gap: 4px; cursor: pointer;">
+              <label class="checkbox-row" style="margin: 0; font-size: 11px; color: var(--text-dim); gap: 4px; cursor: pointer; white-space: nowrap;">
                 <input type="checkbox" id="tiledShowSeams" onchange="onTiledSeamChange()">
                 <span>Seams</span>
               </label>
             </div>
           </div>
 
-          <!-- Main Viewport: Vertical Slider Dock on Left + 512x512 Canvas on Right -->
-          <div style="display: flex; align-items: center; justify-content: center; gap: 14px;">
+          <!-- Main Viewport: Vertical Slider Dock on Left + Responsive Tiled Canvas on Right -->
+          <div class="tiled-main-layout">
             <!-- Left Vertical Slider Dock -->
             <div class="tiled-vertical-dock">
-              <span style="font-size: 9px; font-weight: 800; color: var(--text-dim); letter-spacing: 0.5px;">REPEATS</span>
-              <span id="tiledSliderVal" style="font-size: 13px; font-weight: 800; color: var(--accent-emerald); background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); padding: 2px 6px; border-radius: 4px; font-family: monospace;">4×</span>
-              <button type="button" class="btn-secondary" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800; border-radius: 6px; color: var(--accent-emerald);" onclick="stepTiling(1)" title="Increase repeated tiles">+</button>
-              <span style="font-size: 9px; color: var(--text-dim); font-weight: 600;">16×</span>
+              <span class="tiled-dock-header">REPEATS</span>
+              <span id="tiledSliderVal" class="tiled-dock-val">4×</span>
+              <button type="button" class="btn-secondary tiled-step-btn" onclick="stepTiling(1)" title="Increase repeated tiles">+</button>
+              <span class="tiled-dock-bound">16×</span>
 
               <input type="range" class="tiled-vertical-slider" id="tiledSlider" min="1" max="16" value="4" step="1" oninput="onTiledSliderInput(this.value)" orient="vertical" title="Slide up to increase, down to decrease tiles">
 
-              <span style="font-size: 9px; color: var(--text-dim); font-weight: 600;">1×</span>
-              <button type="button" class="btn-secondary" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800; border-radius: 6px; color: var(--accent-emerald);" onclick="stepTiling(-1)" title="Decrease repeated tiles">−</button>
-              <span id="tiledGridCountText" style="font-size: 9px; color: var(--text-dim); font-family: monospace; white-space: nowrap;">4×4 = 16</span>
+              <span class="tiled-dock-bound">1×</span>
+              <button type="button" class="btn-secondary tiled-step-btn" onclick="stepTiling(-1)" title="Decrease repeated tiles">−</button>
+              <span id="tiledGridCountText" class="tiled-dock-calc">4×4 = 16</span>
             </div>
 
-            <!-- Right: 512x512 Tiled Canvas -->
-            <div class="canvas-wrapper checkerboard" style="width: 512px; height: 512px; position: relative;">
+            <!-- Right: Responsive Tiled Canvas -->
+            <div class="tiled-canvas-wrapper canvas-wrapper checkerboard">
               <canvas id="canvasTiled" width="512" height="512"></canvas>
             </div>
+
+            <!-- Invisible balancing spacer for true horizontal center alignment -->
+            <div class="tiled-vertical-dock-spacer" aria-hidden="true"></div>
           </div>
 
-          <div style="margin-top: 10px; font-size: 12px; color: var(--text-muted); text-align: center;" id="tiledInfoText">
+          <div class="tiled-info-text" id="tiledInfoText">
             Viewing 4× (4×4 grid = 16 repeated tiles) to verify seamless edges across borders.
           </div>
         </div>
@@ -216,37 +247,37 @@
         <!-- Single Focus View -->
         <div id="viewSingle" class="preview-viewport" style="display: none;">
           <!-- Main Icon Overlays Toggle Bar (Active in icon.png tab view) -->
-          <div id="iconOverlayToggleBar" style="display: none; width: 100%; max-width: 540px; margin-bottom: 12px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px 14px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35); align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+          <div id="iconOverlayToggleBar" class="icon-overlay-bar" style="display: none;">
             <div style="display: flex; align-items: center; gap: 6px;">
               <span style="font-size: 11px; font-weight: 700; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 4px;">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
                 Overlays:
               </span>
             </div>
-            <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
-              <label class="checkbox-row" style="margin: 0; font-size: 11px; cursor: pointer; color: var(--text-main); font-weight: 600; gap: 5px;">
+            <div class="icon-overlay-options">
+              <label class="checkbox-row" style="margin: 0; font-size: 11px; cursor: pointer; color: var(--text-main); font-weight: 600; gap: 5px; white-space: nowrap;">
                 <input type="checkbox" id="toggleMainOverlay1" onchange="window.toggleBadge1Enable(this.checked)">
                 <span>⭐ Creator</span>
               </label>
-              <label class="checkbox-row" style="margin: 0; font-size: 11px; cursor: pointer; color: var(--text-main); font-weight: 600; gap: 5px;">
+              <label class="checkbox-row" style="margin: 0; font-size: 11px; cursor: pointer; color: var(--text-main); font-weight: 600; gap: 5px; white-space: nowrap;">
                 <input type="checkbox" id="toggleMainOverlay2" onchange="window.toggleBadge2Enable(this.checked)">
                 <span>🎨 Series</span>
               </label>
-              <label class="checkbox-row" style="margin: 0; font-size: 11px; cursor: pointer; color: var(--text-main); font-weight: 600; gap: 5px;">
+              <label class="checkbox-row" style="margin: 0; font-size: 11px; cursor: pointer; color: var(--text-main); font-weight: 600; gap: 5px; white-space: nowrap;">
                 <input type="checkbox" id="toggleMainOverlay3" onchange="window.toggleBadge3Enable(this.checked)">
                 <span>🏷️ Extra 1</span>
               </label>
-              <label class="checkbox-row" style="margin: 0; font-size: 11px; cursor: pointer; color: var(--text-main); font-weight: 600; gap: 5px;">
+              <label class="checkbox-row" style="margin: 0; font-size: 11px; cursor: pointer; color: var(--text-main); font-weight: 600; gap: 5px; white-space: nowrap;">
                 <input type="checkbox" id="toggleMainOverlay4" onchange="window.toggleBadge4Enable(this.checked)">
                 <span>✨ Extra 2</span>
               </label>
             </div>
           </div>
 
-          <div class="canvas-wrapper checkerboard">
+          <div class="canvas-wrapper checkerboard single-canvas-wrapper">
             <canvas id="canvasSingle"></canvas>
           </div>
-          <div style="margin-top: 12px; font-size: 13px; font-family: monospace; color: var(--accent-cyan);" id="singleName">
+          <div class="single-name-tag" id="singleName">
             _BaseColorMap.png
           </div>
         </div>

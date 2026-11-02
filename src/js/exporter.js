@@ -14,9 +14,59 @@ import {
   STARTER_ASSETS,
   LEGACY_STORAGE_KEY
 } from './db.js';
+import { checkLiveOverlapAndAlert, registerAssetExportToSet, updateSetRegistryUI } from './setRegistry.js';
 
 export const STORAGE_KEY = LEGACY_STORAGE_KEY;
 export { initIndexedDBStorage };
+
+export const MODE_CATEGORIES = {
+  decal: [
+    { value: 'RoadMarkings', label: 'RoadMarkings' },
+    { value: 'Utilities', label: 'Utilities' },
+    { value: 'Manholes', label: 'Manholes' },
+    { value: 'Earth', label: 'Earth / Terrain' },
+    { value: 'Graffiti', label: 'Graffiti' },
+    { value: 'Signage', label: 'Signage' },
+    { value: 'Cracks', label: 'Cracks / Wear' },
+    { value: 'Stains', label: 'Stains & Spills' }
+  ],
+  surface: [
+    { value: 'Pavement', label: 'Pavement' },
+    { value: 'Tiles', label: 'Tiles' },
+    { value: 'Asphalt', label: 'Asphalt' },
+    { value: 'Grass', label: 'Grass' },
+    { value: 'Dirt', label: 'Dirt / Soil' },
+    { value: 'Cobblestone', label: 'Cobblestone' },
+    { value: 'Concrete', label: 'Concrete' },
+    { value: 'Gravel', label: 'Gravel' }
+  ],
+  netlane: [
+    { value: 'Lines', label: 'Lines' },
+    { value: 'Curbs', label: 'Curbs' },
+    { value: 'Markings', label: 'Markings' },
+    { value: 'Tracks', label: 'Tracks' },
+    { value: 'Paths', label: 'Paths' }
+  ]
+};
+
+export function updateCategoryQuickPickerForMode(mode) {
+  const picker = document.getElementById('categoryQuickPicker');
+  if (!picker) return;
+
+  const categories = MODE_CATEGORIES[mode] || MODE_CATEGORIES.decal;
+  const currentCat = getAssetCategory();
+
+  picker.innerHTML = categories.map(cat => 
+    `<option value="${cat.value}">${cat.label}</option>`
+  ).join('');
+
+  const match = categories.find(c => c.value.toLowerCase() === currentCat.toLowerCase());
+  if (match) {
+    setAssetCategory(match.value);
+  } else {
+    setAssetCategory(categories[0].value);
+  }
+}
 
 export function setAssetCategory(cat) {
   if (!cat) return;
@@ -80,15 +130,177 @@ export function onMetallicOpacityChange() {
 }
 window.onMetallicOpacityChange = onMetallicOpacityChange;
 
+export function updateUiPrioritySequenceUI() {
+  const assetNameInput = document.getElementById('assetName');
+  const name = assetNameInput ? assetNameInput.value.trim() : '';
+  const match = name.match(/[_-](\d+)$/) || name.match(/(\d+)$/);
+
+  const baseInput = document.getElementById('uiPriorityBase');
+  const stepSelect = document.getElementById('uiPriorityStep');
+  const base = parseInt(baseInput ? baseInput.value : '50000', 10) || 50000;
+  const step = parseInt(stepSelect ? stepSelect.value : '10', 10) || 10;
+
+  const badge = document.getElementById('uiSeqDetectedBadge');
+  const formulaText = document.getElementById('uiSeqFormulaText');
+
+  let idx = 1;
+  if (match) {
+    idx = parseInt(match[1], 10);
+    if (badge) {
+      badge.textContent = `Item #${idx} detected`;
+      badge.style.color = 'var(--accent-emerald)';
+      badge.style.background = 'rgba(16, 185, 129, 0.15)';
+    }
+  } else {
+    if (badge) {
+      badge.textContent = `Item #1 (Default)`;
+      badge.style.color = 'var(--text-dim)';
+      badge.style.background = 'rgba(255, 255, 255, 0.05)';
+    }
+  }
+
+  const calculated = base + (idx * step);
+  if (formulaText) {
+    formulaText.textContent = `Base ${base.toLocaleString()} + (#${idx} × ${step}) = ${calculated.toLocaleString()}`;
+    formulaText.title = `Calculated sequence priority: ${calculated.toLocaleString()}`;
+  }
+}
+window.updateUiPrioritySequenceUI = updateUiPrioritySequenceUI;
+
 export function onUiPriorityChange() {
-  const input = document.getElementById('uiPrioritySlider');
-  if (!input) return;
-  const val = parseInt(input.value, 10);
+  const slider = document.getElementById('uiPrioritySlider');
+  if (!slider) return;
+  const val = parseInt(slider.value, 10);
+  const numInput = document.getElementById('uiPriorityInput');
+  if (numInput && document.activeElement !== numInput) {
+    numInput.value = val;
+  }
   const valBadge = document.getElementById('uiPriorityVal');
-  if (valBadge) valBadge.textContent = val;
+  if (valBadge) valBadge.textContent = val.toLocaleString();
   updateConfigJson();
+  updateUiPrioritySequenceUI();
 }
 window.onUiPriorityChange = onUiPriorityChange;
+
+export function onUiPriorityInputChange(rawVal) {
+  let val = parseInt(rawVal, 10);
+  if (isNaN(val)) val = 0;
+  val = Math.max(0, Math.min(99999999, val));
+
+  const slider = document.getElementById('uiPrioritySlider');
+  if (slider) {
+    if (val > parseInt(slider.max, 10)) {
+      slider.max = Math.min(99999999, Math.max(100000, val));
+    }
+    slider.value = Math.min(parseInt(slider.max, 10), val);
+  }
+  const valBadge = document.getElementById('uiPriorityVal');
+  if (valBadge) valBadge.textContent = val.toLocaleString();
+
+  updateConfigJson();
+  updateUiPrioritySequenceUI();
+}
+window.onUiPriorityInputChange = onUiPriorityInputChange;
+
+export function applyUiPriorityPreset(val) {
+  const numInput = document.getElementById('uiPriorityInput');
+  const slider = document.getElementById('uiPrioritySlider');
+  if (slider) {
+    if (val > parseInt(slider.max, 10)) {
+      slider.max = Math.min(99999999, Math.max(100000, val));
+    }
+    slider.value = Math.min(parseInt(slider.max, 10), val);
+  }
+  if (numInput) numInput.value = val;
+  const valBadge = document.getElementById('uiPriorityVal');
+  if (valBadge) valBadge.textContent = val.toLocaleString();
+
+  updateConfigJson();
+  updateUiPrioritySequenceUI();
+  showToast(`UI Priority set to ${val.toLocaleString()}`);
+}
+window.applyUiPriorityPreset = applyUiPriorityPreset;
+
+export function stepUiPriority(delta) {
+  const numInput = document.getElementById('uiPriorityInput');
+  let curr = parseInt(numInput ? numInput.value : '41', 10);
+  if (isNaN(curr)) curr = 41;
+  const nextVal = Math.max(0, Math.min(99999999, curr + delta));
+  applyUiPriorityPreset(nextVal);
+}
+window.stepUiPriority = stepUiPriority;
+
+export function autoCalculateUiPriorityFromName() {
+  const assetNameInput = document.getElementById('assetName');
+  const name = assetNameInput ? assetNameInput.value.trim() : '';
+  const match = name.match(/[_-](\d+)$/) || name.match(/(\d+)$/);
+
+  const baseInput = document.getElementById('uiPriorityBase');
+  const stepSelect = document.getElementById('uiPriorityStep');
+  const base = parseInt(baseInput ? baseInput.value : '50000', 10) || 50000;
+  const step = parseInt(stepSelect ? stepSelect.value : '10', 10) || 10;
+
+  let idx = 1;
+  if (match) {
+    idx = parseInt(match[1], 10);
+  }
+
+  const calculated = base + (idx * step);
+  applyUiPriorityPreset(calculated);
+  showToast(`Sequence priority applied: #${idx} → ${calculated.toLocaleString()}`);
+}
+window.autoCalculateUiPriorityFromName = autoCalculateUiPriorityFromName;
+
+export function syncMetaSetNameFromSeries() {
+  const series = getAssetSeriesName();
+  const input = document.getElementById('metaSetName');
+  if (input && series) {
+    input.value = series;
+    updateConfigJson();
+    showToast(`Set name synced: "${series}"`);
+  }
+}
+window.syncMetaSetNameFromSeries = syncMetaSetNameFromSeries;
+
+export function autoFillSequenceNotes() {
+  const assetName = document.getElementById('assetName')?.value?.trim() || 'Asset';
+  const metaSetName = document.getElementById('metaSetName')?.value?.trim();
+  const seriesName = metaSetName || getAssetSeriesName() || 'Pack';
+  const match = assetName.match(/[_-](\d+)$/) || assetName.match(/(\d+)$/);
+  const stepSelect = document.getElementById('uiPriorityStep');
+  const step = parseInt(stepSelect ? stepSelect.value : '10', 10) || 10;
+
+  const partStr = match ? `Part ${parseInt(match[1], 10)}` : 'Part 1';
+  const note = `${partStr} of the ${seriesName} set. UI priority increments by +${step} for subsequent parts.`;
+
+  const notesEl = document.getElementById('metaNotes');
+  if (notesEl) {
+    notesEl.value = note;
+    updateConfigJson();
+    showToast('Sequence notes auto-filled');
+  }
+}
+window.autoFillSequenceNotes = autoFillSequenceNotes;
+
+export function toggleAssetMetadataFields(enabled) {
+  const wrap = document.getElementById('metadataFieldsWrap');
+  const badge = document.getElementById('metadataStatusBadge');
+  if (wrap) wrap.style.display = enabled ? 'flex' : 'none';
+  if (badge) {
+    badge.textContent = enabled ? 'Included in JSON' : 'Disabled';
+    badge.style.color = enabled ? 'var(--accent-emerald)' : 'var(--text-dim)';
+  }
+  const details = document.getElementById('metadataTrackingDetails');
+  if (details && enabled) details.open = true;
+
+  const notesEl = document.getElementById('metaNotes');
+  if (enabled && notesEl && !notesEl.value.trim()) {
+    autoFillSequenceNotes();
+  } else {
+    updateConfigJson();
+  }
+}
+window.toggleAssetMetadataFields = toggleAssetMetadataFields;
 
 export function onLayerMaskChange() {
   updateConfigJson();
@@ -660,7 +872,45 @@ export function updateConfigJson() {
   const globalMetallic = parseFloat(document.getElementById('globalMetallicSlider').value) || 0.0;
   const globalSmoothness = parseFloat(document.getElementById('globalSmoothnessSlider').value) || 0.0;
   const schemaFormat = document.getElementById('jsonSchemaFormat')?.value || 'extended';
-  const uiPriority = parseInt(document.getElementById('uiPrioritySlider')?.value, 10) ?? 41;
+  const uiPriorityInput = document.getElementById('uiPriorityInput');
+  const uiPrioritySlider = document.getElementById('uiPrioritySlider');
+  let uiPriority = 41;
+  if (uiPriorityInput && uiPriorityInput.value !== '') {
+    uiPriority = parseInt(uiPriorityInput.value, 10);
+  } else if (uiPrioritySlider) {
+    uiPriority = parseInt(uiPrioritySlider.value, 10);
+  }
+  if (isNaN(uiPriority)) uiPriority = 41;
+  const uiPriorityBadge = document.getElementById('uiPriorityVal');
+  if (uiPriorityBadge) uiPriorityBadge.textContent = uiPriority.toLocaleString();
+
+  const includeMeta = document.getElementById('includeAssetMetadata')?.checked || false;
+  const metaSetName = document.getElementById('metaSetName')?.value?.trim() || getAssetSeriesName() || '';
+  const metaAuthor = document.getElementById('metaAuthor')?.value?.trim() || '';
+  const metaVersion = document.getElementById('metaVersion')?.value?.trim() || '1.0.0';
+  const metaNotes = document.getElementById('metaNotes')?.value?.trim() || '';
+  const metaAvailableInEditor = document.getElementById('metaAvailableInEditor')?.checked !== false;
+  const metaDualPriority = document.getElementById('metaDualPriority')?.checked !== false;
+
+  const baseProps = {};
+  if (includeMeta) {
+    const metaObj = {};
+    if (metaSetName) metaObj.set_name = metaSetName;
+    if (metaAuthor) metaObj.author = metaAuthor;
+    if (metaVersion) metaObj.version = metaVersion;
+    if (metaNotes) metaObj.notes = metaNotes;
+    baseProps.asset_metadata = metaObj;
+  }
+
+  baseProps.UiPriority = isNaN(uiPriority) ? 41 : uiPriority;
+  if (includeMeta && metaDualPriority) {
+    baseProps.m_UIPriority = isNaN(uiPriority) ? 41 : uiPriority;
+  }
+  if (includeMeta && metaAvailableInEditor) {
+    baseProps.m_availableInEditor = true;
+  }
+  checkLiveOverlapAndAlert();
+
   const normalOpacity = parseFloat(document.getElementById('normalOpacitySlider')?.value) ?? 1.0;
   const baseOpacity = parseFloat(document.getElementById('baseOpacitySlider')?.value) ?? 1.0;
   const metallicOpacity = parseFloat(document.getElementById('metallicOpacitySlider')?.value) ?? 0.0;
@@ -702,7 +952,7 @@ export function updateConfigJson() {
 
     if (schemaFormat === 'extended') {
       jsonString = JSON.stringify({
-        UiPriority: isNaN(uiPriority) ? 41 : uiPriority,
+        ...baseProps,
         Float: {
           _DrawOrder: drawOrder,
           _Metallic: Number(globalMetallic.toFixed(2)),
@@ -730,6 +980,7 @@ export function updateConfigJson() {
       }, null, 2);
     } else {
       jsonString = JSON.stringify({
+        ...baseProps,
         width: Number(width.toFixed(2)),
         height: Number(height.toFixed(2)),
         depth: Number(depth.toFixed(2)),
@@ -740,13 +991,15 @@ export function updateConfigJson() {
       }, null, 2);
     }
 
-    pathTextEl.textContent = `%AppData%\\..\\LocalLow\\Colossal Order\\Cities Skylines II\\ModsData\\ExtraAssetsImporter\\CustomDecals\\${category}\\${name}\\`;
+    if (pathTextEl) {
+      pathTextEl.textContent = `%AppData%\\..\\LocalLow\\Colossal Order\\Cities Skylines II\\ModsData\\ExtraAssetsImporter\\CustomDecals\\${category}\\${name}\\`;
+    }
   } else if (state.appMode === 'surface') {
     const uvScale = parseFloat(document.getElementById('uvScaleSlider').value) || 1.0;
 
     if (schemaFormat === 'extended') {
       jsonString = JSON.stringify({
-        UiPriority: isNaN(uiPriority) ? 41 : uiPriority,
+        ...baseProps,
         Float: {
           _DrawOrder: drawOrder,
           _Metallic: Number(globalMetallic.toFixed(2)),
@@ -767,6 +1020,7 @@ export function updateConfigJson() {
       }, null, 2);
     } else {
       jsonString = JSON.stringify({
+        ...baseProps,
         uvScale: Number(uvScale.toFixed(2)),
         "_Draw Order": drawOrder,
         _Metallic: Number(globalMetallic.toFixed(2)),
@@ -774,14 +1028,16 @@ export function updateConfigJson() {
       }, null, 2);
     }
 
-    pathTextEl.textContent = `%AppData%\\..\\LocalLow\\Colossal Order\\Cities Skylines II\\ModsData\\ExtraAssetsImporter\\CustomSurfaces\\${category}\\${name}\\`;
+    if (pathTextEl) {
+      pathTextEl.textContent = `%AppData%\\..\\LocalLow\\Colossal Order\\Cities Skylines II\\ModsData\\ExtraAssetsImporter\\CustomSurfaces\\${category}\\${name}\\`;
+    }
   } else {
     const laneWidth = parseFloat(document.getElementById('netlaneWidthSlider').value) || 1.0;
     const texLength = parseFloat(document.getElementById('netlaneLengthSlider').value) || 2.0;
 
     if (schemaFormat === 'extended') {
       jsonString = JSON.stringify({
-        UiPriority: isNaN(uiPriority) ? 41 : uiPriority,
+        ...baseProps,
         Float: {
           _DrawOrder: drawOrder,
           _Metallic: Number(globalMetallic.toFixed(2)),
@@ -807,6 +1063,7 @@ export function updateConfigJson() {
       }, null, 2);
     } else {
       jsonString = JSON.stringify({
+        ...baseProps,
         width: Number(laneWidth.toFixed(2)),
         length: Number(texLength.toFixed(2)),
         "_Draw Order": drawOrder,
@@ -815,7 +1072,9 @@ export function updateConfigJson() {
       }, null, 2);
     }
 
-    pathTextEl.textContent = `%AppData%\\..\\LocalLow\\Colossal Order\\Cities Skylines II\\ModsData\\ExtraAssetsImporter\\CustomNetlanes\\${category}\\${name}\\`;
+    if (pathTextEl) {
+      pathTextEl.textContent = `%AppData%\\..\\LocalLow\\Colossal Order\\Cities Skylines II\\ModsData\\ExtraAssetsImporter\\CustomNetlanes\\${category}\\${name}\\`;
+    }
   }
 
   document.getElementById('jsonCodeText').textContent = jsonString;
@@ -830,10 +1089,13 @@ export function copyConfigJson() {
 }
 
 export function copyDecalPath() {
-  const text = document.getElementById('targetPathText').textContent.trim();
-  navigator.clipboard.writeText(text).then(() => {
-    showToast('Directory path copied to clipboard!');
-  });
+  const el = document.getElementById('targetPathText');
+  const text = el ? el.textContent.trim() : '';
+  if (text) {
+    navigator.clipboard.writeText(text).then(() => {
+      showToast('Directory path copied to clipboard!');
+    });
+  }
 }
 
 export function downloadConfigJson() {
@@ -1000,6 +1262,9 @@ INSTRUCTIONS:
     state.originalNameBeforeTransform = assetName;
     state.isReminderDismissed = false;
     if (window.checkRotationNameReminder) window.checkRotationNameReminder();
+    const prioInput = document.getElementById('uiPriorityInput');
+    const prioVal = parseInt(prioInput ? prioInput.value : '41', 10) || 41;
+    registerAssetExportToSet(assetName, prioVal);
     showToast(`Exported ${assetName}_${state.appMode === 'decal' ? 'Decal' : (state.appMode === 'netlane' ? 'NetLane' : 'Surface')}Package.zip!`);
   } catch (err) {
     console.error(err);
@@ -1085,7 +1350,16 @@ export function serializeCurrentProject() {
     },
     drawOrder: parseInt(document.getElementById('drawOrderSlider').value, 10) || (state.appMode === 'decal' ? 50 : -50),
     jsonSchemaFormat: document.getElementById('jsonSchemaFormat')?.value || 'extended',
-    uiPriority: parseInt(document.getElementById('uiPrioritySlider')?.value, 10) || 41,
+    uiPriority: parseInt(document.getElementById('uiPriorityInput')?.value || document.getElementById('uiPrioritySlider')?.value, 10) || 41,
+    uiPriorityBase: parseInt(document.getElementById('uiPriorityBase')?.value, 10) || 50000,
+    uiPriorityStep: parseInt(document.getElementById('uiPriorityStep')?.value, 10) || 10,
+    includeAssetMetadata: document.getElementById('includeAssetMetadata')?.checked || false,
+    metaSetName: document.getElementById('metaSetName')?.value || '',
+    metaAuthor: document.getElementById('metaAuthor')?.value || '',
+    metaVersion: document.getElementById('metaVersion')?.value || '1.0.0',
+    metaNotes: document.getElementById('metaNotes')?.value || '',
+    metaAvailableInEditor: document.getElementById('metaAvailableInEditor')?.checked !== false,
+    metaDualPriority: document.getElementById('metaDualPriority')?.checked !== false,
     baseOpacity: parseFloat(document.getElementById('baseOpacitySlider')?.value) || 1.0,
     metallicOpacity: parseFloat(document.getElementById('metallicOpacitySlider')?.value) || 0.0,
     globalFallbacks: {
@@ -1109,6 +1383,28 @@ export function serializeCurrentProject() {
     icon: {
       enableIconGen: true,
       iconBgStyle: document.getElementById('iconBgStyle')?.value || 'cs2-dark',
+      customBg: {
+        type: state.customIconBgType || 'image',
+        fit: state.iconBgFit || 'cover',
+        blur: state.iconBgBlur || 0,
+        brightness: state.iconBgBrightness !== undefined ? state.iconBgBrightness : 100,
+        vignette: state.iconBgVignette !== false,
+        gradType: state.iconBgGradType || 'radial',
+        grad1: state.iconBgGrad1 || '#1a2638',
+        grad2: state.iconBgGrad2 || '#080d16',
+        gradGrid: state.iconBgGradGrid === true,
+        color: state.iconBgColor || '#141e2e',
+        fileName: state.iconBgFileName || '',
+        imageData: state.iconBgImg ? (function() {
+          try {
+            const temp = document.createElement('canvas');
+            temp.width = state.iconBgImg.naturalWidth || state.iconBgImg.width || 512;
+            temp.height = state.iconBgImg.naturalHeight || state.iconBgImg.height || 512;
+            temp.getContext('2d').drawImage(state.iconBgImg, 0, 0);
+            return temp.toDataURL('image/png');
+          } catch(e) { return null; }
+        })() : null
+      },
       badge1: {
         enabled: state.badge1Enabled,
         type: state.badge1Type,
@@ -1253,11 +1549,52 @@ export function deserializeAndLoadProject(proj) {
   if (proj.jsonSchemaFormat && document.getElementById('jsonSchemaFormat')) {
     document.getElementById('jsonSchemaFormat').value = proj.jsonSchemaFormat;
   }
-  if (proj.uiPriority !== undefined && document.getElementById('uiPrioritySlider')) {
-    document.getElementById('uiPrioritySlider').value = proj.uiPriority;
+  if (proj.uiPriority !== undefined) {
+    const val = parseInt(proj.uiPriority, 10);
+    const input = document.getElementById('uiPriorityInput');
+    const slider = document.getElementById('uiPrioritySlider');
     const badge = document.getElementById('uiPriorityVal');
-    if (badge) badge.textContent = proj.uiPriority;
+    if (input) input.value = val;
+    if (slider) {
+      if (val > parseInt(slider.max, 10)) {
+        slider.max = Math.min(99999999, Math.max(100000, val));
+      }
+      slider.value = Math.min(parseInt(slider.max, 10), val);
+    }
+    if (badge) badge.textContent = val.toLocaleString();
   }
+  if (proj.uiPriorityBase !== undefined && document.getElementById('uiPriorityBase')) {
+    document.getElementById('uiPriorityBase').value = proj.uiPriorityBase;
+  }
+  if (proj.uiPriorityStep !== undefined && document.getElementById('uiPriorityStep')) {
+    document.getElementById('uiPriorityStep').value = proj.uiPriorityStep;
+  }
+  if (proj.includeAssetMetadata !== undefined) {
+    const chk = document.getElementById('includeAssetMetadata');
+    if (chk) {
+      chk.checked = !!proj.includeAssetMetadata;
+      toggleAssetMetadataFields(chk.checked);
+    }
+  }
+  if (proj.metaSetName !== undefined && document.getElementById('metaSetName')) {
+    document.getElementById('metaSetName').value = proj.metaSetName;
+  }
+  if (proj.metaAuthor !== undefined && document.getElementById('metaAuthor')) {
+    document.getElementById('metaAuthor').value = proj.metaAuthor;
+  }
+  if (proj.metaVersion !== undefined && document.getElementById('metaVersion')) {
+    document.getElementById('metaVersion').value = proj.metaVersion;
+  }
+  if (proj.metaNotes !== undefined && document.getElementById('metaNotes')) {
+    document.getElementById('metaNotes').value = proj.metaNotes;
+  }
+  if (proj.metaAvailableInEditor !== undefined && document.getElementById('metaAvailableInEditor')) {
+    document.getElementById('metaAvailableInEditor').checked = !!proj.metaAvailableInEditor;
+  }
+  if (proj.metaDualPriority !== undefined && document.getElementById('metaDualPriority')) {
+    document.getElementById('metaDualPriority').checked = !!proj.metaDualPriority;
+  }
+  updateUiPrioritySequenceUI();
   if (proj.baseOpacity !== undefined && document.getElementById('baseOpacitySlider')) {
     document.getElementById('baseOpacitySlider').value = proj.baseOpacity;
     const badge = document.getElementById('baseOpacityVal');
@@ -1333,6 +1670,75 @@ export function deserializeAndLoadProject(proj) {
     }
     if (proj.icon.iconBgStyle && document.getElementById('iconBgStyle')) {
       document.getElementById('iconBgStyle').value = proj.icon.iconBgStyle;
+    }
+    if (proj.icon.customBg) {
+      const cb = proj.icon.customBg;
+      state.customIconBgType = cb.type || 'image';
+      state.iconBgFit = cb.fit || 'cover';
+      state.iconBgBlur = cb.blur || 0;
+      state.iconBgBrightness = cb.brightness !== undefined ? cb.brightness : 100;
+      state.iconBgVignette = cb.vignette !== false;
+      state.iconBgGradType = cb.gradType || 'radial';
+      state.iconBgGrad1 = cb.grad1 || '#1a2638';
+      state.iconBgGrad2 = cb.grad2 || '#080d16';
+      state.iconBgGradGrid = cb.gradGrid === true;
+      state.iconBgColor = cb.color || '#141e2e';
+      state.iconBgFileName = cb.fileName || '';
+
+      const selType = document.getElementById('customIconBgType');
+      if (selType) selType.value = state.customIconBgType;
+      if (typeof window.setCustomIconBgType === 'function') window.setCustomIconBgType(state.customIconBgType);
+
+      const selFit = document.getElementById('iconBgFitSelect');
+      if (selFit) selFit.value = state.iconBgFit;
+      const bSlider = document.getElementById('iconBgBlurSlider');
+      if (bSlider) {
+        bSlider.value = state.iconBgBlur;
+        const bVal = document.getElementById('iconBgBlurVal');
+        if (bVal) bVal.textContent = `${state.iconBgBlur} px`;
+      }
+      const brSlider = document.getElementById('iconBgBrightnessSlider');
+      if (brSlider) {
+        brSlider.value = state.iconBgBrightness;
+        const brVal = document.getElementById('iconBgBrightnessVal');
+        if (brVal) brVal.textContent = `${state.iconBgBrightness}%`;
+      }
+      const vCheck = document.getElementById('iconBgVignetteCheck');
+      if (vCheck) vCheck.checked = state.iconBgVignette;
+
+      const gDir = document.getElementById('iconBgGradDirSelect');
+      if (gDir) gDir.value = state.iconBgGradType;
+      const g1 = document.getElementById('iconBgGrad1Input');
+      const g2 = document.getElementById('iconBgGrad2Input');
+      const gh1 = document.getElementById('iconBgGrad1Hex');
+      const gh2 = document.getElementById('iconBgGrad2Hex');
+      if (g1) g1.value = state.iconBgGrad1;
+      if (g2) g2.value = state.iconBgGrad2;
+      if (gh1) gh1.textContent = state.iconBgGrad1;
+      if (gh2) gh2.textContent = state.iconBgGrad2;
+      const gGrid = document.getElementById('iconBgGradGridCheck');
+      if (gGrid) gGrid.checked = state.iconBgGradGrid;
+
+      const cInp = document.getElementById('iconBgColorInput');
+      const cHex = document.getElementById('iconBgColorHex');
+      if (cInp) cInp.value = state.iconBgColor;
+      if (cHex) cHex.textContent = state.iconBgColor;
+
+      if (cb.imageData) {
+        const img = new Image();
+        img.onload = () => {
+          state.iconBgImg = img;
+          const fn = document.getElementById('iconBgFileNameText');
+          if (fn) fn.textContent = state.iconBgFileName || 'Custom Backdrop';
+          const btnClear = document.getElementById('btnClearIconBgImg');
+          if (btnClear) btnClear.style.display = 'block';
+          if (typeof window.renderIconMap === 'function') window.renderIconMap();
+        };
+        img.src = cb.imageData;
+      }
+    }
+    if (typeof window.onIconBgStyleChange === 'function') {
+      window.onIconBgStyleChange();
     }
 
     if (proj.icon.customGoogleFonts && Array.isArray(proj.icon.customGoogleFonts)) {
@@ -2212,377 +2618,24 @@ export function updateRibbonSeriesDropdown() {
   }
 }
 
-export function onRibbonSeriesSelectChange(val) {
-  state.activeRibbonSeries = val;
-  updateRibbonSeriesDropdown();
-  renderSeriesRibbon();
-}
+// Ribbon and Library functions removed per user request
+export function onRibbonSeriesSelectChange() {}
+export function switchBottomView() {}
+export function toggleBottomCollapse() {}
+export function scrollRibbon() {}
+export function renderSeriesRibbon() {}
+export function saveCurrentToActiveSeries() {}
+export function promptReassignSeries() {}
+export function duplicateRibbonAsset() {}
+export function saveCurrentToBrowser() {}
+export function updateLibraryBadge() {}
+export function openSavedLibraryModal() {}
+export function closeLibraryModal() {}
+export function closeLibraryModalOnBackdrop() {}
+export function filterLibraryBySeries() {}
+export function filterLibraryBySearch() {}
+export function openRibbonFromLibrary() {}
+export function loadFromBrowser() {}
+export function deleteFromBrowser() {}
+export function renderSavedAssetsList() {}
 
-export function switchBottomView(view) {
-  localStorage.setItem('cs2_bottom_view_preference', view);
-  const tabRibbon = document.getElementById('tabBtnRibbon');
-  const tabGuide = document.getElementById('tabBtnGuide');
-  const viewRibbon = document.getElementById('bottomRibbonView');
-  const viewGuide = document.getElementById('bottomGuideView');
-  const headerControls = document.getElementById('ribbonHeaderControls');
-  const btnSave = document.getElementById('btnSaveToActiveSeries');
-
-  if (view === 'ribbon') {
-    if (tabRibbon) {
-      tabRibbon.classList.add('active');
-      tabRibbon.setAttribute('aria-selected', 'true');
-    }
-    if (tabGuide) {
-      tabGuide.classList.remove('active');
-      tabGuide.setAttribute('aria-selected', 'false');
-    }
-    if (viewRibbon) viewRibbon.style.display = 'block';
-    if (viewGuide) viewGuide.style.display = 'none';
-    if (headerControls) headerControls.style.display = 'flex';
-    if (btnSave) btnSave.style.display = 'inline-flex';
-    renderSeriesRibbon();
-  } else {
-    if (tabRibbon) {
-      tabRibbon.classList.remove('active');
-      tabRibbon.setAttribute('aria-selected', 'false');
-    }
-    if (tabGuide) {
-      tabGuide.classList.add('active');
-      tabGuide.setAttribute('aria-selected', 'true');
-    }
-    if (viewRibbon) viewRibbon.style.display = 'none';
-    if (viewGuide) viewGuide.style.display = 'block';
-    if (headerControls) headerControls.style.display = 'none';
-    if (btnSave) btnSave.style.display = 'none';
-  }
-}
-
-export function toggleBottomCollapse() {
-  const footer = document.getElementById('appFooter');
-  if (footer) {
-    footer.classList.toggle('collapsed');
-  }
-}
-
-export function scrollRibbon(direction) {
-  const track = document.getElementById('ribbonCardsTrack');
-  if (!track) return;
-  const amount = 300;
-  if (direction === 'left') {
-    track.scrollBy({ left: -amount, behavior: 'smooth' });
-  } else {
-    track.scrollBy({ left: amount, behavior: 'smooth' });
-  }
-}
-
-export function renderSeriesRibbon() {
-  const track = document.getElementById('ribbonCardsTrack');
-  if (!track) return;
-  const list = getSavedLibrary();
-
-  const filtered = list.map((item, originalIndex) => ({ item, originalIndex })).filter(({ item }) => {
-    if (state.activeRibbonSeries === 'all') return true;
-    const s = (item.seriesName || item.icon?.badge2?.text || item.assetCategory || 'Road Markings').trim().toLowerCase();
-    return s === state.activeRibbonSeries.trim().toLowerCase();
-  });
-
-  const countBadge = document.getElementById('ribbonSeriesCountBadge');
-  if (countBadge) countBadge.textContent = filtered.length;
-  const totalBadge = document.getElementById('ribbonLibraryTotalBadge');
-  if (totalBadge) totalBadge.textContent = list.length;
-
-  if (!filtered.length) {
-    const curName = document.getElementById('assetName')?.value || 'Current Asset';
-    const targetSeries = (state.activeRibbonSeries && state.activeRibbonSeries !== 'all') ? state.activeRibbonSeries : getAssetSeriesName();
-    track.innerHTML = `
-      <div class="ribbon-empty-state">
-        <span style="font-size: 20px;">🎞️</span>
-        <div>
-          <div style="font-weight: 700; color: #f1f5f9; margin-bottom: 2px;">
-            No saved assets in series <span style="color: var(--accent-cyan); font-weight: 800;">"${escapeHtml(targetSeries)}"</span> yet
-          </div>
-          <div style="font-size: 11px; color: var(--text-dim);">
-            Assign your current asset to "${escapeHtml(targetSeries)}" and click "+ Add Current to Series" to build out this collection.
-          </div>
-        </div>
-        <button type="button" class="btn-primary" style="padding: 6px 14px; font-size: 11px; white-space: nowrap;" onclick="saveCurrentToActiveSeries()">
-          + Save "${escapeHtml(curName)}" to Series
-        </button>
-        ${state.activeRibbonSeries !== 'all' ? `<button type="button" class="btn-secondary" style="padding: 6px 10px; font-size: 11px; white-space: nowrap;" onclick="onRibbonSeriesSelectChange('all')">View All Series (${list.length})</button>` : ''}
-      </div>
-    `;
-    return;
-  }
-
-  track.innerHTML = filtered.map(({ item, originalIndex }) => {
-    const isDecal = item.appMode === 'decal';
-    const isNetlane = item.appMode === 'netlane';
-    let badgePill = 'pill-blue';
-    let badgeLabel = 'DECAL';
-    if (isNetlane) {
-      badgePill = 'pill-orange';
-      badgeLabel = 'NET LANE';
-    } else if (!isDecal) {
-      badgePill = 'pill-green';
-      badgeLabel = 'SURFACE';
-    }
-    let detailText = '';
-    if (isNetlane) {
-      detailText = `${item.netlane?.width || 1.0}m width`;
-    } else if (isDecal) {
-      detailText = `${item.dimensions?.width || 2.0}×${item.dimensions?.height || 2.0}m`;
-    } else {
-      detailText = `UV: ${item.uvScale || 1.0}×`;
-    }
-
-    const thumbSrc = item.thumbImageData || item.baseImageData || '';
-    const itemSeries = (item.seriesName || item.icon?.badge2?.text || item.assetCategory || 'Road Markings').trim();
-    const isActive = (item.assetName === state.currentLoadedAssetName);
-
-    return `
-      <div class="ribbon-card ${isActive ? 'active-workspace' : ''}" onclick="loadFromBrowser(${originalIndex})" title="Click to load ${escapeHtml(item.assetName)}">
-        ${isActive ? '<span class="ribbon-card-active-pill">● ACTIVE IN WORKSPACE</span>' : ''}
-        <div class="ribbon-card-thumb-wrap">
-          ${thumbSrc ? `<img src="${thumbSrc}" class="ribbon-card-thumb" alt="${escapeHtml(item.assetName)}">` : '<span style="font-size: 18px;">🖼️</span>'}
-        </div>
-        <div class="ribbon-card-details">
-          <div class="ribbon-card-name" title="${escapeHtml(item.assetName)}">${escapeHtml(item.assetName)}</div>
-          <div class="ribbon-card-meta">
-            <span class="channel-pill ${badgePill}" style="font-size: 8.5px; padding: 0 4px;">${badgeLabel}</span>
-            <span class="ribbon-card-series-pill" title="Series: ${escapeHtml(itemSeries)}">🎨 ${escapeHtml(itemSeries)}</span>
-            <span>• ${detailText}</span>
-          </div>
-          <div class="ribbon-card-actions" onclick="event.stopPropagation()">
-            <button type="button" class="ribbon-card-btn" onclick="loadFromBrowser(${originalIndex})" title="Load into workspace">Load</button>
-            <button type="button" class="ribbon-card-btn btn-dup" onclick="duplicateRibbonAsset(${originalIndex})" title="Duplicate asset into new variant">+ Variant</button>
-            <button type="button" class="ribbon-card-btn" onclick="promptReassignSeries(${originalIndex})" title="Move to another series">Move Series</button>
-            <button type="button" class="ribbon-card-btn" style="color: #f87171;" onclick="deleteFromBrowser(${originalIndex})" title="Delete asset">✕</button>
-          </div>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-export async function saveCurrentToActiveSeries() {
-  const targetSeries = (state.activeRibbonSeries && state.activeRibbonSeries !== 'all') ? state.activeRibbonSeries : getAssetSeriesName();
-  setAssetSeriesName(targetSeries);
-  await saveCurrentToBrowser();
-}
-
-export async function promptReassignSeries(index) {
-  const list = getSavedLibrary();
-  if (!list[index]) return;
-  const oldSeries = list[index].seriesName || list[index].icon?.badge2?.text || list[index].assetCategory || 'Road Markings';
-  const newSeries = prompt(`Move "${list[index].assetName}" to a different series name:`, oldSeries);
-  if (newSeries && newSeries.trim() && newSeries.trim() !== oldSeries) {
-    list[index].seriesName = newSeries.trim();
-    await saveAssetToIndexedDB(list[index]);
-    updateRibbonSeriesDropdown();
-    renderSeriesRibbon();
-    renderSavedAssetsList();
-    renderSeriesChips();
-    showToast(`Moved "${list[index].assetName}" to series "${newSeries.trim()}"`);
-  }
-}
-
-export async function duplicateRibbonAsset(index) {
-  const list = getSavedLibrary();
-  if (!list[index]) return;
-  const clone = JSON.parse(JSON.stringify(list[index]));
-  const baseName = clone.assetName.replace(/(_Var\d*|_0\d+)$/, '');
-  const newName = `${baseName}_Var${Math.floor(Math.random() * 90 + 10)}`;
-  clone.assetName = newName;
-  clone.timestamp = Date.now();
-  await saveAssetToIndexedDB(clone);
-  state.currentLoadedAssetName = newName;
-  state.currentLoadedAssetSeries = clone.seriesName || getAssetSeriesName();
-  updateLibraryBadge();
-  updateRibbonSeriesDropdown();
-  renderSeriesRibbon();
-  renderSavedAssetsList();
-  renderSeriesChips();
-  deserializeAndLoadProject(clone);
-  showToast(`Created variant "${newName}" in series "${clone.seriesName}"!`);
-}
-
-export async function saveCurrentToBrowser() {
-  const proj = serializeCurrentProject();
-  try {
-    await saveAssetToIndexedDB(proj);
-    state.hasUnsavedChanges = false;
-    state.currentLoadedAssetName = proj.assetName;
-    state.currentLoadedAssetSeries = proj.seriesName;
-    updateLibraryBadge();
-    updateRibbonSeriesDropdown();
-    renderSeriesRibbon();
-    renderSavedAssetsList();
-    renderSeriesChips();
-    showToast(`Saved "${proj.assetName}" to Series "${proj.seriesName}" (IndexedDB)`);
-  } catch (e) {
-    console.error('IndexedDB save error:', e);
-    showToast('Failed to save asset: ' + (e?.message || 'Storage error'));
-  }
-}
-
-export function updateLibraryBadge() {
-  const list = getSavedLibrary();
-  const badge = document.getElementById('savedCountBadge');
-  if (badge) badge.textContent = list.length;
-  const totalBadge = document.getElementById('ribbonLibraryTotalBadge');
-  if (totalBadge) totalBadge.textContent = list.length;
-}
-
-export function openSavedLibraryModal() {
-  updateRibbonSeriesDropdown();
-  renderSavedAssetsList();
-  document.getElementById('libraryModal').style.display = 'flex';
-}
-
-export function closeLibraryModal() {
-  document.getElementById('libraryModal').style.display = 'none';
-}
-
-export function closeLibraryModalOnBackdrop(e) {
-  if (e.target.id === 'libraryModal') {
-    closeLibraryModal();
-  }
-}
-
-export function filterLibraryBySeries(series) {
-  state.libraryFilterSeries = series;
-  renderSavedAssetsList();
-}
-
-export function filterLibraryBySearch(query) {
-  state.librarySearchQuery = (query || '').toLowerCase().trim();
-  renderSavedAssetsList();
-}
-
-export function openRibbonFromLibrary() {
-  closeLibraryModal();
-  switchBottomView('ribbon');
-  if (state.libraryFilterSeries && state.libraryFilterSeries !== 'all') {
-    state.activeRibbonSeries = state.libraryFilterSeries;
-    updateRibbonSeriesDropdown();
-    renderSeriesRibbon();
-  }
-}
-
-export function loadFromBrowser(index, force = false) {
-  const list = getSavedLibrary();
-  if (!list[index]) return;
-
-  if (!force && state.isCustomImageLoaded && state.hasUnsavedChanges) {
-    state.pendingGuardAction = () => {
-      loadFromBrowser(index, true);
-    };
-    closeLibraryModal();
-    if (window.openUnsavedModal) window.openUnsavedModal();
-    return;
-  }
-
-  const item = list[index];
-  state.currentLoadedAssetName = item.assetName;
-  state.currentLoadedAssetSeries = item.seriesName || item.icon?.badge2?.text || item.assetCategory || 'Road Markings';
-  deserializeAndLoadProject(item);
-  closeLibraryModal();
-  renderSeriesRibbon();
-}
-
-export async function deleteFromBrowser(index) {
-  const list = getSavedLibrary();
-  if (list[index]) {
-    const target = list[index];
-    await deleteAssetFromIndexedDB(target.assetName);
-    updateLibraryBadge();
-    updateRibbonSeriesDropdown();
-    renderSeriesRibbon();
-    renderSavedAssetsList();
-    renderSeriesChips();
-    showToast(`Removed "${target.assetName}"`);
-  }
-}
-
-export function renderSavedAssetsList() {
-  const list = getSavedLibrary();
-  const container = document.getElementById('savedAssetsList');
-  if (!container) return;
-
-  if (!list.length) {
-    container.innerHTML = `
-      <div style="padding: 24px; text-align: center; color: var(--text-dim); font-size: 13px;">
-        No saved assets found in browser storage.<br>Click "Save Current Asset" to store your decals and surfaces here.
-      </div>
-    `;
-    return;
-  }
-
-  const filtered = list.map((item, originalIndex) => ({ item, originalIndex })).filter(({ item }) => {
-    const matchesSeries = (state.libraryFilterSeries === 'all') || ((item.seriesName || item.icon?.badge2?.text || item.assetCategory || 'Road Markings').trim().toLowerCase() === state.libraryFilterSeries.trim().toLowerCase());
-    const matchesSearch = !state.librarySearchQuery ||
-      (item.assetName && item.assetName.toLowerCase().includes(state.librarySearchQuery)) ||
-      (item.appMode && item.appMode.toLowerCase().includes(state.librarySearchQuery)) ||
-      (item.seriesName && item.seriesName.toLowerCase().includes(state.librarySearchQuery)) ||
-      (item.assetCategory && item.assetCategory.toLowerCase().includes(state.librarySearchQuery));
-    return matchesSeries && matchesSearch;
-  });
-
-  if (!filtered.length) {
-    container.innerHTML = `
-      <div style="padding: 20px; text-align: center; color: var(--text-dim); font-size: 12px;">
-        No assets match current series filter or search query.<br>
-        <button class="btn-secondary" style="margin-top: 8px; font-size: 11px; padding: 4px 10px;" onclick="filterLibraryBySeries('all'); document.getElementById('librarySeriesFilter').value='all'; document.getElementById('librarySearchInput').value=''; filterLibraryBySearch('');">Clear Filters</button>
-      </div>
-    `;
-    return;
-  }
-
-  container.innerHTML = filtered.map(({ item, originalIndex }) => {
-    const isDecal = item.appMode === 'decal';
-    const isNetlane = item.appMode === 'netlane';
-    const dateStr = item.timestamp ? new Date(item.timestamp).toLocaleDateString() : '';
-    const thumbSrc = item.thumbImageData || item.baseImageData || '';
-    let badgePill = 'pill-blue';
-    let badgeLabel = 'DECAL';
-    if (isNetlane) {
-      badgePill = 'pill-orange';
-      badgeLabel = 'NET LANE';
-    } else if (!isDecal) {
-      badgePill = 'pill-green';
-      badgeLabel = 'SURFACE';
-    }
-    let detailText = '';
-    if (isNetlane) {
-      detailText = `Width: ${item.netlane?.width || 1.0}m • ${item.assetCategory || item.surfaceCategory || 'Lines'}`;
-    } else if (isDecal) {
-      detailText = `${item.dimensions?.width || 2.0}×${item.dimensions?.height || 2.0}m`;
-    } else {
-      detailText = `UV: ${item.uvScale || 1.0} • ${item.assetCategory || item.surfaceCategory || 'Pavement'}`;
-    }
-    const itemSeries = (item.seriesName || item.icon?.badge2?.text || item.assetCategory || 'Road Markings').trim();
-
-    return `
-      <div class="saved-asset-item">
-        <div style="display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1;">
-          ${thumbSrc ? `<img src="${thumbSrc}" style="width: 42px; height: 42px; border-radius: 4px; object-fit: contain; background: #080d14; border: 1px solid var(--border-color); flex-shrink: 0;">` : ''}
-          <div style="min-width: 0; flex: 1;">
-            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-              <span style="font-size: 13px; font-weight: 700; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(item.assetName)}</span>
-              <span class="channel-pill ${badgePill}" style="font-size: 9px;">${badgeLabel}</span>
-              <span class="ribbon-card-series-pill" style="max-width: 130px;" title="Series: ${escapeHtml(itemSeries)}">🎨 ${escapeHtml(itemSeries)}</span>
-            </div>
-            <div style="font-size: 11px; color: var(--text-dim); margin-top: 2px;">
-              ${detailText} • ${dateStr}
-            </div>
-          </div>
-        </div>
-        <div style="display: flex; gap: 5px; align-items: center;">
-          <button class="btn-secondary" style="padding: 4px 10px; font-size: 11px;" onclick="loadFromBrowser(${originalIndex})">Load</button>
-          <button class="btn-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="promptReassignSeries(${originalIndex})" title="Change series">Series</button>
-          <button class="btn-secondary" style="padding: 4px 8px; font-size: 11px; color: #f87171;" onclick="deleteFromBrowser(${originalIndex})">✕</button>
-        </div>
-      </div>
-    `;
-  }).join('');
-}

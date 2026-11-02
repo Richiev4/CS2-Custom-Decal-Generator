@@ -176,7 +176,21 @@ export const state = {
 
   customGoogleFonts: [],
   activeBadgeTab: 'creator',
-  currentHelpCategory: 'all'
+  currentHelpCategory: 'all',
+
+  // Custom Icon Background
+  customIconBgType: 'image', // 'image' | 'gradient' | 'color'
+  iconBgImg: null,
+  iconBgFileName: '',
+  iconBgFit: 'cover', // 'cover' | 'contain' | 'stretch'
+  iconBgBlur: 0,
+  iconBgBrightness: 100,
+  iconBgVignette: true,
+  iconBgGradType: 'radial', // 'radial' | 'diagonal' | 'vertical' | 'horizontal'
+  iconBgGrad1: '#1a2638',
+  iconBgGrad2: '#080d16',
+  iconBgGradGrid: false,
+  iconBgColor: '#141e2e'
 };
 
 // Canvas references
