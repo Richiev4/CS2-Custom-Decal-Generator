@@ -1953,6 +1953,9 @@ export function deserializeAndLoadProject(proj) {
 
 export function saveProjectToFile() {
   const proj = serializeCurrentProject();
+  if (typeof saveAssetToIndexedDB === 'function') {
+    saveAssetToIndexedDB(proj);
+  }
   const jsonStr = JSON.stringify(proj, null, 2);
   const blob = new Blob([jsonStr], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -1988,6 +1991,9 @@ export function loadProjectFromFileObject(file) {
     try {
       const proj = JSON.parse(event.target.result);
       deserializeAndLoadProject(proj);
+      if (typeof saveAssetToIndexedDB === 'function') {
+        saveAssetToIndexedDB(proj);
+      }
     } catch (err) {
       console.error(err);
       showToast('Failed to parse project file');
@@ -2492,6 +2498,9 @@ export function setAssetSeriesName(series) {
   state.currentLoadedAssetSeries = clean;
   updateRibbonSeriesDropdown();
   renderSeriesChips();
+  if (typeof window.renderSetThumbnailsStrip === 'function') {
+    window.renderSetThumbnailsStrip();
+  }
 }
 
 export function onAssetSeriesInput() {
@@ -2502,16 +2511,15 @@ export function onAssetSeriesInput() {
   state.hasUnsavedChanges = true;
   updateRibbonSeriesDropdown();
   renderSeriesChips();
+  if (typeof window.renderSetThumbnailsStrip === 'function') {
+    window.renderSetThumbnailsStrip();
+  }
 }
 
 export function applySeriesQuickPick(val) {
   if (val === '__new__') {
-    const newName = prompt('Enter a new series name (e.g. UK Road Signs, Speed Bumps, Industrial):');
-    if (newName && newName.trim()) {
-      setAssetSeriesName(newName.trim());
-      state.activeRibbonSeries = newName.trim();
-      updateRibbonSeriesDropdown();
-      renderSeriesRibbon();
+    if (typeof window.initiateCreateNewSetFlow === 'function') {
+      window.initiateCreateNewSetFlow();
     }
     return;
   }
@@ -2520,6 +2528,9 @@ export function applySeriesQuickPick(val) {
     state.activeRibbonSeries = val;
     updateRibbonSeriesDropdown();
     renderSeriesRibbon();
+    if (typeof window.renderSetThumbnailsStrip === 'function') {
+      window.renderSetThumbnailsStrip();
+    }
   }
 }
 

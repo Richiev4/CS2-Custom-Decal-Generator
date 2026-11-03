@@ -233,6 +233,8 @@ import {
   updateDecalAspectUI
 } from './exporter.js';
 
+import { getSavedLibraryFromMemory, saveAssetToIndexedDB } from './db.js';
+
 import { loadSample } from './samples.js';
 
 import {
@@ -245,8 +247,71 @@ import {
   deleteSetProfileFromUI,
   openSetRegistryModal,
   closeSetRegistryModal,
-  closeSetRegistryModalOnBackdrop
+  closeSetRegistryModalOnBackdrop,
+  renderSetThumbnailsStrip,
+  openCreateSetAssetModal,
+  closeCreateSetAssetModal,
+  closeCreateSetAssetModalOnBackdrop,
+  handleModalNewAssetFileSelect,
+  handleModalNewAssetDragOver,
+  handleModalNewAssetDragLeave,
+  handleModalNewAssetDrop,
+  applySuggestedNewNameSuffix,
+  confirmCreateSetAsset,
+  loadAssetFromSet,
+  deleteAssetFromSet,
+  initiateCreateNewSetFlow,
+  startCreateNewSetWizard,
+  closeCreateNewSetWizard,
+  closeCreateNewSetWizardOnBackdrop,
+  setWizardStep,
+  wizardGoNext,
+  wizardGoBack,
+  applyWizardThemePreset,
+  onWizardSetNameInput,
+  onWizardModeChange,
+  onWizardBasePriorityChange,
+  applyWizardAutoSafeRange,
+  updateWizardDimSummary,
+  applyWizardDimPreset,
+  applyWizardFirstAssetSuffix,
+  handleWizardGraphicFileSelect,
+  handleWizardGraphicDragOver,
+  handleWizardGraphicDragLeave,
+  handleWizardGraphicDrop,
+  useWizardStarterGraphic,
+  confirmCreateNewSet,
+  exportAllSetsAndStorageBackup,
+  handleBackupFileSelect,
+  importStorageBackupFromFile
 } from './setRegistry.js';
+
+import {
+  openNewStandaloneAssetWizard,
+  closeNewStandaloneAssetWizard,
+  closeNewStandaloneAssetWizardOnBackdrop,
+  setStandWizardStep,
+  standWizardGoNext,
+  standWizardGoBack,
+  selectStandWizardMode,
+  applyStandWizardNamePreset,
+  applyStandWizardSuffix,
+  onStandWizardSetOptionChange,
+  onStandWizardExistingSetSelected,
+  onStandWizardPriorityInput,
+  setStandWizardPriority,
+  updateStandWizardDimSummary,
+  setStandWizardDims,
+  setStandWizardUv,
+  applyStandWizardMaterial,
+  handleStandWizardGraphicFileSelect,
+  handleStandWizardGraphicDragOver,
+  handleStandWizardGraphicDragLeave,
+  handleStandWizardGraphicDrop,
+  useStandWizardStarterGraphic,
+  updateStandWizardSummary,
+  confirmNewStandaloneAsset
+} from './assetWizard.js';
 
 // ==========================================
 // Mode Switching: Decal Mode vs Surface Mode vs NetLane Mode
@@ -605,6 +670,9 @@ export function onAssetNameInput() {
   checkRotationNameReminder();
   state.currentLoadedAssetName = document.getElementById('assetName').value.trim();
   updateUiPrioritySequenceUI();
+  if (typeof renderSetThumbnailsStrip === 'function') {
+    renderSetThumbnailsStrip();
+  }
 }
 
 export function clearAllWorkspace(force = false) {
@@ -975,6 +1043,10 @@ Object.assign(window, {
   syncMetaSetNameFromSeries,
   updateGridSimulationCanvas,
   initGridSimulationInteraction,
+  serializeCurrentProject,
+  deserializeAndLoadProject,
+  getSavedLibraryFromMemory,
+  saveAssetToIndexedDB,
   recallSetProfile,
   saveCurrentWorkspaceAsSet,
   applySuggestedSafeRange,
@@ -985,10 +1057,70 @@ Object.assign(window, {
   openSetRegistryModal,
   closeSetRegistryModal,
   closeSetRegistryModalOnBackdrop,
+  renderSetThumbnailsStrip,
+  openCreateSetAssetModal,
+  closeCreateSetAssetModal,
+  closeCreateSetAssetModalOnBackdrop,
+  handleModalNewAssetFileSelect,
+  handleModalNewAssetDragOver,
+  handleModalNewAssetDragLeave,
+  handleModalNewAssetDrop,
+  applySuggestedNewNameSuffix,
+  confirmCreateSetAsset,
+  loadAssetFromSet,
+  deleteAssetFromSet,
+  initiateCreateNewSetFlow,
+  startCreateNewSetWizard,
+  closeCreateNewSetWizard,
+  closeCreateNewSetWizardOnBackdrop,
+  setWizardStep,
+  wizardGoNext,
+  wizardGoBack,
+  applyWizardThemePreset,
+  onWizardSetNameInput,
+  onWizardModeChange,
+  onWizardBasePriorityChange,
+  applyWizardAutoSafeRange,
+  updateWizardDimSummary,
+  applyWizardDimPreset,
+  applyWizardFirstAssetSuffix,
+  handleWizardGraphicFileSelect,
+  handleWizardGraphicDragOver,
+  handleWizardGraphicDragLeave,
+  handleWizardGraphicDrop,
+  useWizardStarterGraphic,
+  confirmCreateNewSet,
+  exportAllSetsAndStorageBackup,
+  handleBackupFileSelect,
+  importStorageBackupFromFile,
   openWelcomeSplash,
   closeWelcomeSplash,
   closeWelcomeSplashOnBackdrop,
-  toggleNeverShowSplashAgain
+  toggleNeverShowSplashAgain,
+  openNewStandaloneAssetWizard,
+  closeNewStandaloneAssetWizard,
+  closeNewStandaloneAssetWizardOnBackdrop,
+  setStandWizardStep,
+  standWizardGoNext,
+  standWizardGoBack,
+  selectStandWizardMode,
+  applyStandWizardNamePreset,
+  applyStandWizardSuffix,
+  onStandWizardSetOptionChange,
+  onStandWizardExistingSetSelected,
+  onStandWizardPriorityInput,
+  setStandWizardPriority,
+  updateStandWizardDimSummary,
+  setStandWizardDims,
+  setStandWizardUv,
+  applyStandWizardMaterial,
+  handleStandWizardGraphicFileSelect,
+  handleStandWizardGraphicDragOver,
+  handleStandWizardGraphicDragLeave,
+  handleStandWizardGraphicDrop,
+  useStandWizardStarterGraphic,
+  updateStandWizardSummary,
+  confirmNewStandaloneAsset
 });
 
 // ==========================================
@@ -1042,6 +1174,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   initGridSimulationInteraction();
   updateSetRegistryUI();
   checkLiveOverlapAndAlert();
+  renderSetThumbnailsStrip();
 
   const hideSplash = localStorage.getItem('cs2_hide_welcome_splash') === 'true';
   if (!hideSplash) {
@@ -1104,6 +1237,9 @@ window.addEventListener('DOMContentLoaded', async () => {
       closeWelcomeSplash();
       closeHelpModal();
       closeSetRegistryModal();
+      closeCreateSetAssetModal();
+      closeCreateNewSetWizard();
+      closeNewStandaloneAssetWizard();
       cancelGuardAction();
     }
   });

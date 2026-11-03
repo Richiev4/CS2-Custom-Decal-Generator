@@ -586,6 +586,30 @@
           </table>
         </div>
 
+        <!-- Storage Backup & Restore Utility Bar -->
+        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 6px; padding: 10px 14px;">
+          <input type="file" id="backupRestoreFileInput" accept=".json,.cs2backup" style="display:none;" onchange="handleBackupFileSelect(event)">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 28px; height: 28px; border-radius: 6px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); display: flex; align-items: center; justify-content: center; color: var(--accent-emerald);">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            </div>
+            <div>
+              <div style="font-size: 11.5px; font-weight: 700; color: #f1f5f9;">Browser Storage Backup &amp; Portability</div>
+              <div style="font-size: 10.5px; color: var(--text-dim);">Save all your registered sets, allocated priority bands, thumbnails, and custom assets to a single portable file.</div>
+            </div>
+          </div>
+          <div style="display: flex; gap: 6px;">
+            <button type="button" class="btn-secondary" style="padding: 5px 10px; font-size: 11px; color: var(--accent-cyan); display: flex; align-items: center; gap: 5px;" onclick="exportAllSetsAndStorageBackup()" title="Download a JSON backup containing all sets, priorities, thumbnails, and saved projects">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>Export Backup (.json)</span>
+            </button>
+            <button type="button" class="btn-secondary" style="padding: 5px 10px; font-size: 11px; color: var(--accent-emerald); display: flex; align-items: center; gap: 5px;" onclick="document.getElementById('backupRestoreFileInput').click()" title="Restore sets, priorities, and assets from a previously saved backup file">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <span>Restore Backup</span>
+            </button>
+          </div>
+        </div>
+
         <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text-dim); border-top: 1px solid rgba(255,255,255,0.06); padding-top: 10px;">
           <span>💡 <strong>Tip:</strong> Recalling a set automatically configures metadata and increments to the next unused priority number!</span>
           <div style="display: flex; gap: 8px;">
@@ -593,6 +617,847 @@
             <button type="button" class="btn-primary" style="padding: 6px 16px; font-size: 11px;" onclick="closeSetRegistryModal()">Done</button>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create New Asset in Set Modal -->
+  <div class="modal-overlay" id="createSetAssetModal" onclick="closeCreateSetAssetModalOnBackdrop(event)">
+    <div class="modal-card create-set-asset-modal-card">
+      <div class="modal-header" style="background: linear-gradient(135deg, #131c28 0%, #172437 100%); border-bottom: 1px solid rgba(0, 168, 255, 0.3);">
+        <div class="modal-title" style="display: flex; align-items: center; gap: 8px; color: #ffffff;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.2">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+          <span id="createModalTitle">New Asset in Set: City Utilities</span>
+        </div>
+        <button class="preset-btn" style="padding: 4px 8px;" onclick="closeCreateSetAssetModal()">✕</button>
+      </div>
+
+      <div class="modal-body" style="padding: 18px 20px; gap: 14px;">
+        <!-- Preserved Settings Notification Banner -->
+        <div class="preserved-settings-banner">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+            <span style="font-size: 11px; font-weight: 700; color: var(--accent-emerald); display: flex; align-items: center; gap: 5px;">
+              <span>✓</span> Current Settings Preserved
+            </span>
+            <span id="createModalNextPriorityBadge" style="font-size: 10px; font-family: monospace; color: var(--accent-cyan); background: rgba(0, 229, 255, 0.12); padding: 1px 6px; border-radius: 4px;">
+              Next Priority: 52,020 (Item #2)
+            </span>
+          </div>
+          <div class="preserved-chips-grid" id="preservedChipsGrid">
+            <!-- Dynamically populated preserved properties -->
+          </div>
+          <div style="font-size: 10.5px; color: var(--text-dim); margin-top: 6px; line-height: 1.35;">
+            All physical 3D dimensions, PBR normal/mask values, layer masks, and icon watermark branding are kept intact for this new asset in the series.
+          </div>
+        </div>
+
+        <!-- Step 1: Asset Name -->
+        <div class="form-group" style="margin: 0;">
+          <div class="form-label-row">
+            <label for="newAssetInputName" style="font-size: 12px; font-weight: 700; color: #f1f5f9;">
+              1. Asset Name for New Variant:
+            </label>
+            <span id="newAssetNameDetectedIndex" style="font-size: 10px; color: var(--text-muted); font-family: monospace;">Item #2</span>
+          </div>
+          <input type="text" id="newAssetInputName" value="CityUtility_Manhole_02" placeholder="e.g. CityUtility_Manhole_02" spellcheck="false" style="width: 100%; padding: 6px 10px; font-size: 13px; font-weight: 600; font-family: monospace; color: var(--accent-cyan); background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px;">
+          <div class="quick-suffix-row" style="display: flex; gap: 4px; margin-top: 5px; flex-wrap: wrap;">
+            <span style="font-size: 10px; color: var(--text-dim); align-self: center;">Quick suggestions:</span>
+            <button type="button" class="preset-btn" style="padding: 1px 6px; font-size: 10px;" onclick="applySuggestedNewNameSuffix('_02')">_02</button>
+            <button type="button" class="preset-btn" style="padding: 1px 6px; font-size: 10px;" onclick="applySuggestedNewNameSuffix('_03')">_03</button>
+            <button type="button" class="preset-btn" style="padding: 1px 6px; font-size: 10px;" onclick="applySuggestedNewNameSuffix('_Drain')">_Drain</button>
+            <button type="button" class="preset-btn" style="padding: 1px 6px; font-size: 10px;" onclick="applySuggestedNewNameSuffix('_Grate')">_Grate</button>
+            <button type="button" class="preset-btn" style="padding: 1px 6px; font-size: 10px;" onclick="applySuggestedNewNameSuffix('_Round')">_Round</button>
+          </div>
+        </div>
+
+        <!-- Step 2: New Graphic Input (Dropzone & Preview) -->
+        <div class="form-group" style="margin: 0;">
+          <label style="font-size: 12px; font-weight: 700; color: #f1f5f9; display: block; margin-bottom: 6px;">
+            2. Import New Graphic:
+          </label>
+          <input type="file" id="modalNewAssetFileInput" accept="image/png,image/jpeg,image/webp" style="display: none;" onchange="handleModalNewAssetFileSelect(event)">
+          
+          <div class="new-asset-dropzone" id="newAssetDropzone" onclick="document.getElementById('modalNewAssetFileInput').click()" ondragover="handleModalNewAssetDragOver(event)" ondragleave="handleModalNewAssetDragLeave(event)" ondrop="handleModalNewAssetDrop(event)">
+            <!-- Dropzone Content when no file chosen yet -->
+            <div id="dropzoneEmptyView" style="display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; padding: 16px;">
+              <div style="font-size: 26px;">📥</div>
+              <div style="font-size: 12px; font-weight: 700; color: #ffffff;">Drop PNG or JPG graphic here, or <span style="color: var(--primary); text-decoration: underline;">Browse File</span></div>
+              <div style="font-size: 10px; color: var(--text-dim);">Transparent background recommended for decals • Power-of-2 square</div>
+            </div>
+
+            <!-- Dropzone Content when file chosen -->
+            <div id="dropzoneSelectedView" style="display: none; align-items: center; gap: 14px; width: 100%; padding: 10px;">
+              <div class="dropzone-thumb-preview checkerboard">
+                <img id="modalSelectedImgPreview" src="" alt="Selected graphic" style="width: 100%; height: 100%; object-fit: contain;">
+              </div>
+              <div style="flex: 1; min-width: 0; text-align: left;">
+                <div id="modalSelectedFileName" style="font-size: 12px; font-weight: 700; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">manhole_variant.png</div>
+                <div id="modalSelectedFileDims" style="font-size: 10.5px; color: var(--accent-cyan); font-family: monospace; margin-top: 2px;">1024 × 1024 px</div>
+                <button type="button" class="btn-link-subtle" style="font-size: 10px; margin-top: 4px; padding: 0;" onclick="event.stopPropagation(); document.getElementById('modalNewAssetFileInput').click();">Change Graphic ↺</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Actions -->
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px;">
+          <button type="button" class="btn-secondary" style="padding: 8px 16px; font-size: 12px;" onclick="closeCreateSetAssetModal()">
+            Cancel
+          </button>
+          <button type="button" class="btn-primary" id="btnConfirmCreateSetAsset" style="padding: 8px 18px; font-size: 12px; font-weight: 700; background: linear-gradient(135deg, #0284c7 0%, #06b6d4 100%);" onclick="confirmCreateSetAsset()" disabled>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Create &amp; Load into Workspace
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create New Set Wizard Modal -->
+  <div class="modal-overlay" id="createNewSetWizardModal" onclick="closeCreateNewSetWizardOnBackdrop(event)">
+    <div class="modal-card create-set-wizard-modal-card">
+      <div class="modal-header" style="background: linear-gradient(135deg, #0f1c2e 0%, #162a3f 100%); border-bottom: 1px solid rgba(16, 185, 129, 0.35);">
+        <div class="modal-title" style="display: flex; align-items: center; gap: 8px; color: #ffffff;">
+          <div style="width: 26px; height: 26px; border-radius: 6px; background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); display: flex; align-items: center; justify-content: center; color: var(--accent-emerald);">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+          </div>
+          <div>
+            <span style="font-weight: 700; font-size: 14px;">Create New Asset Set</span>
+            <div style="font-size: 10.5px; color: var(--text-dim); font-weight: normal;">Configure a themed asset collection with isolated safe priority range</div>
+          </div>
+        </div>
+        <button class="preset-btn" style="padding: 4px 8px;" onclick="closeCreateNewSetWizard()">✕</button>
+      </div>
+
+      <!-- Step Navigation Indicator -->
+      <div class="wizard-steps-nav">
+        <button type="button" class="wizard-step-tab active" id="wizardTab1" onclick="setWizardStep(1)">
+          <span class="step-num">1</span>
+          <span class="step-label">Set Identity &amp; Priority</span>
+        </button>
+        <div class="wizard-step-sep">›</div>
+        <button type="button" class="wizard-step-tab" id="wizardTab2" onclick="setWizardStep(2)">
+          <span class="step-num">2</span>
+          <span class="step-label">Shared Defaults</span>
+        </button>
+        <div class="wizard-step-sep">›</div>
+        <button type="button" class="wizard-step-tab" id="wizardTab3" onclick="setWizardStep(3)">
+          <span class="step-num">3</span>
+          <span class="step-label">First Asset</span>
+        </button>
+      </div>
+
+      <div class="modal-body" style="padding: 16px 20px; gap: 14px;">
+        
+        <!-- STEP 1: Set Identity & Safe Range -->
+        <div class="wizard-step-panel active" id="wizardStepPanel1">
+          <div class="form-group" style="margin: 0;">
+            <label for="wizardSetName" style="font-size: 12px; font-weight: 700; color: #f1f5f9; display: flex; justify-content: space-between;">
+              <span>Set / Series Name:</span>
+              <span style="font-size: 10px; color: var(--text-dim); font-weight: normal;">Collection identifier</span>
+            </label>
+            <input type="text" id="wizardSetName" value="UK Road Markings" placeholder="e.g. UK Road Markings, Airport Decals, Utility Hatches..." spellcheck="false" oninput="onWizardSetNameInput()" style="width: 100%; padding: 7px 10px; font-size: 13px; font-weight: 600; color: var(--accent-cyan); background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px;">
+            
+            <!-- Quick Preset Theme Chips -->
+            <div style="display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; align-items: center;">
+              <span style="font-size: 10px; color: var(--text-dim);">Theme suggestions:</span>
+              <button type="button" class="preset-btn" style="padding: 2px 7px; font-size: 10px;" onclick="applyWizardThemePreset('utilities')">🕳️ Utility Hatches</button>
+              <button type="button" class="preset-btn" style="padding: 2px 7px; font-size: 10px;" onclick="applyWizardThemePreset('road_arrows')">↗️ Road Signage</button>
+              <button type="button" class="preset-btn" style="padding: 2px 7px; font-size: 10px;" onclick="applyWizardThemePreset('airport')">✈️ Airport Markings</button>
+              <button type="button" class="preset-btn" style="padding: 2px 7px; font-size: 10px;" onclick="applyWizardThemePreset('asphalt_wear')">⚡ Asphalt Wear</button>
+              <button type="button" class="preset-btn" style="padding: 2px 7px; font-size: 10px;" onclick="applyWizardThemePreset('surfaces')">🧱 Plaza Surfaces</button>
+            </div>
+          </div>
+
+          <!-- Mode & Category Row -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+            <div class="form-group" style="margin: 0;">
+              <label for="wizardModeSelect" style="font-size: 11.5px; font-weight: 700; color: #f1f5f9; display: block; margin-bottom: 4px;">
+                Asset Type (Mode):
+              </label>
+              <select id="wizardModeSelect" onchange="onWizardModeChange(this.value)" style="width: 100%; padding: 6px 8px; font-size: 12px;">
+                <option value="decal" selected>Decal (Projected Ground Markings)</option>
+                <option value="surface">Surface (Seamless Tiled Material)</option>
+                <option value="netlane">NetLane (Road Curb / Spline Mesh)</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="margin: 0;">
+              <label for="wizardCategory" style="font-size: 11.5px; font-weight: 700; color: #f1f5f9; display: block; margin-bottom: 4px;">
+                Category (Subfolder):
+              </label>
+              <div style="display: flex; gap: 4px;">
+                <input type="text" id="wizardCategory" value="RoadMarkings" placeholder="Subfolder name" spellcheck="false" style="flex: 1; padding: 6px 8px; font-size: 12px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; color: #f1f5f9;">
+                <select id="wizardCategorySelect" onchange="document.getElementById('wizardCategory').value=this.value; onWizardBasePriorityChange();" style="width: 90px; font-size: 11px;">
+                  <option value="RoadMarkings" selected>RoadMarkings</option>
+                  <option value="Utilities">Utilities</option>
+                  <option value="Cracks">Cracks</option>
+                  <option value="Signs">Signs</option>
+                  <option value="Pavement">Pavement</option>
+                  <option value="Ground">Ground</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Safe Priority Allocation Banner -->
+          <div class="wizard-priority-card" style="margin-top: 10px; background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 8px; padding: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span style="font-size: 11.5px; font-weight: 700; color: var(--accent-emerald); display: flex; align-items: center; gap: 6px;">
+                <span>🛡️</span> Non-Overlapping Safe Range Allocation
+              </span>
+              <span id="wizardRangeBadge" style="font-size: 10.5px; font-family: monospace; font-weight: 700; color: var(--accent-cyan); background: rgba(0, 229, 255, 0.12); border: 1px solid rgba(0, 229, 255, 0.25); padding: 2px 7px; border-radius: 4px;">
+                53,000 – 53,990
+              </span>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <div>
+                <label for="wizardBasePriority" style="font-size: 11px; color: var(--text-dim); display: block; margin-bottom: 2px;">
+                  Base Priority:
+                </label>
+                <div style="display: flex; gap: 4px;">
+                  <input type="number" id="wizardBasePriority" value="53000" min="0" max="99999000" step="1000" oninput="onWizardBasePriorityChange()" style="flex: 1; padding: 5px 8px; font-size: 12px; font-family: monospace; font-weight: 700; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; color: var(--accent-cyan);">
+                  <button type="button" class="preset-btn" style="padding: 2px 7px; font-size: 10.5px; color: var(--accent-emerald);" onclick="applyWizardAutoSafeRange()" title="Automatically find the next free safe range">Auto Safe ⚡</button>
+                </div>
+              </div>
+
+              <div>
+                <label for="wizardStepInterval" style="font-size: 11px; color: var(--text-dim); display: block; margin-bottom: 2px;">
+                  Step Interval (Per Asset):
+                </label>
+                <select id="wizardStepInterval" onchange="onWizardBasePriorityChange()" style="width: 100%; padding: 5px 8px; font-size: 12px; font-family: monospace;">
+                  <option value="5">+5 (Tighter series)</option>
+                  <option value="10" selected>+10 (Recommended CS2 Standard)</option>
+                  <option value="20">+20</option>
+                  <option value="50">+50</option>
+                  <option value="100">+100 (Sparse sequence)</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="wizardSafeStatusText" style="font-size: 10.5px; color: var(--accent-emerald); margin-top: 8px; display: flex; align-items: center; gap: 5px;">
+              <span>✓</span> Zero collision with all existing sets. Guaranteed safe in Cities: Skylines II menus.
+            </div>
+          </div>
+
+          <!-- Author & Version -->
+          <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-top: 10px;">
+            <div class="form-group" style="margin: 0;">
+              <label for="wizardAuthor" style="font-size: 11px; color: var(--text-dim); display: block; margin-bottom: 2px;">
+                Author / Creator:
+              </label>
+              <input type="text" id="wizardAuthor" value="CS2 Creator" placeholder="Your name or handle" style="width: 100%; padding: 5px 8px; font-size: 11.5px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; color: #f1f5f9;">
+            </div>
+            <div class="form-group" style="margin: 0;">
+              <label for="wizardVersion" style="font-size: 11px; color: var(--text-dim); display: block; margin-bottom: 2px;">
+                Initial Version:
+              </label>
+              <input type="text" id="wizardVersion" value="1.0.0" placeholder="1.0.0" style="width: 100%; padding: 5px 8px; font-size: 11.5px; font-family: monospace; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; color: #f1f5f9;">
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2: Shared Defaults (3D Dimensions, PBR, Layers & Badges) -->
+        <div class="wizard-step-panel" id="wizardStepPanel2" style="display: none;">
+          <!-- Decal Dimensions Defaults -->
+          <div id="wizardDecalDimsSection" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px;">
+            <div style="font-size: 11.5px; font-weight: 700; color: #f1f5f9; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span>Default Physical Decal Dimensions:</span>
+              <span id="wizardDimSummaryBadge" style="font-size: 10.5px; font-family: monospace; color: var(--primary);">2.0m × 2.0m × 0.5m</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+              <div>
+                <label for="wizardDimW" style="font-size: 10.5px; color: var(--text-dim);">Width (m):</label>
+                <input type="number" id="wizardDimW" value="2.0" step="0.1" min="0.1" max="50" oninput="updateWizardDimSummary()" style="width: 100%; padding: 4px 6px; font-size: 12px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 4px; color: #f1f5f9;">
+              </div>
+              <div>
+                <label for="wizardDimH" style="font-size: 10.5px; color: var(--text-dim);">Height (m):</label>
+                <input type="number" id="wizardDimH" value="2.0" step="0.1" min="0.1" max="50" oninput="updateWizardDimSummary()" style="width: 100%; padding: 4px 6px; font-size: 12px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 4px; color: #f1f5f9;">
+              </div>
+              <div>
+                <label for="wizardDimD" style="font-size: 10.5px; color: var(--text-dim);">Depth (m):</label>
+                <input type="number" id="wizardDimD" value="0.5" step="0.1" min="0.1" max="10" oninput="updateWizardDimSummary()" style="width: 100%; padding: 4px 6px; font-size: 12px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 4px; color: #f1f5f9;">
+              </div>
+            </div>
+
+            <!-- Quick Dimension Presets -->
+            <div style="display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap;">
+              <span style="font-size: 10px; color: var(--text-dim); align-self: center;">Size presets:</span>
+              <button type="button" class="preset-btn" style="padding: 2px 6px; font-size: 10px;" onclick="applyWizardDimPreset(1.8, 1.8, 0.5)">1.8×1.8m (Utility)</button>
+              <button type="button" class="preset-btn" style="padding: 2px 6px; font-size: 10px;" onclick="applyWizardDimPreset(3.0, 6.0, 0.5)">3×6m (Road Arrow)</button>
+              <button type="button" class="preset-btn" style="padding: 2px 6px; font-size: 10px;" onclick="applyWizardDimPreset(4.0, 4.0, 0.8)">4×4m (Fissure)</button>
+              <button type="button" class="preset-btn" style="padding: 2px 6px; font-size: 10px;" onclick="applyWizardDimPreset(2.0, 2.0, 0.5)">2×2m (Standard)</button>
+            </div>
+          </div>
+
+          <!-- Decal Layer Masks Defaults -->
+          <div style="margin-top: 10px;">
+            <div style="font-size: 11.5px; font-weight: 700; color: #f1f5f9; margin-bottom: 5px;">
+              Shared Decal Projection Surfaces:
+            </div>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap; background: rgba(0,0,0,0.25); padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border-color);">
+              <label style="font-size: 11px; display: flex; align-items: center; gap: 5px; cursor: pointer; color: #e2e8f0;">
+                <input type="checkbox" id="wizardLayerRoads" checked> Roads (+2)
+              </label>
+              <label style="font-size: 11px; display: flex; align-items: center; gap: 5px; cursor: pointer; color: #e2e8f0;">
+                <input type="checkbox" id="wizardLayerTerrain" checked> Terrain (+1)
+              </label>
+              <label style="font-size: 11px; display: flex; align-items: center; gap: 5px; cursor: pointer; color: #e2e8f0;">
+                <input type="checkbox" id="wizardLayerBuildings"> Buildings (+4)
+              </label>
+              <label style="font-size: 11px; display: flex; align-items: center; gap: 5px; cursor: pointer; color: #e2e8f0;">
+                <input type="checkbox" id="wizardLayerVehicles"> Vehicles (+8)
+              </label>
+              <label style="font-size: 11px; display: flex; align-items: center; gap: 5px; cursor: pointer; color: #e2e8f0;">
+                <input type="checkbox" id="wizardLayerProps"> Props (+32)
+              </label>
+            </div>
+          </div>
+
+          <!-- PBR Defaults -->
+          <div style="margin-top: 10px;">
+            <div style="font-size: 11.5px; font-weight: 700; color: #f1f5f9; margin-bottom: 5px;">
+              Shared Material Defaults (Normal &amp; Mask):
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; background: rgba(0,0,0,0.25); padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border-color);">
+              <div>
+                <label for="wizardBump" style="font-size: 10.5px; color: var(--text-dim); display: block;">Bump (Height):</label>
+                <select id="wizardBump" style="width: 100%; font-size: 11.5px; padding: 4px;">
+                  <option value="1.0">1.0× (Subtle)</option>
+                  <option value="2.2">2.2× (Standard Paint)</option>
+                  <option value="3.5" selected>3.5× (Heavy Emboss / Iron)</option>
+                  <option value="4.5">4.5× (Deep Crack)</option>
+                </select>
+              </div>
+              <div>
+                <label for="wizardMetal" style="font-size: 10.5px; color: var(--text-dim); display: block;">Metallic (Red):</label>
+                <select id="wizardMetal" style="width: 100%; font-size: 11.5px; padding: 4px;">
+                  <option value="0" selected>0 (Non-metal / Paint)</option>
+                  <option value="128">128 (Half Metallic)</option>
+                  <option value="180">180 (Cast Iron / Grate)</option>
+                  <option value="255">255 (Full Metal / Chrome)</option>
+                </select>
+              </div>
+              <div>
+                <label for="wizardSmooth" style="font-size: 10.5px; color: var(--text-dim); display: block;">Smoothness (Alpha):</label>
+                <select id="wizardSmooth" style="width: 100%; font-size: 11.5px; padding: 4px;">
+                  <option value="10">10 (Rough Asphalt)</option>
+                  <option value="25" selected>25 (Semi-Matte Road Paint)</option>
+                  <option value="80">80 (Slightly Shiny Iron)</option>
+                  <option value="180">180 (Glossy Plastic / Wet)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Series Icon Badge Synchronization -->
+          <div style="margin-top: 10px; background: rgba(147, 51, 234, 0.08); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 6px; padding: 10px;">
+            <label style="font-size: 11.5px; font-weight: 700; color: #d8b4fe; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+              <input type="checkbox" id="wizardEnableSeriesBadge" checked>
+              <span>Auto-create Matching Series Badge on Icon Map</span>
+            </label>
+            <div style="font-size: 10px; color: var(--text-dim); margin-top: 4px; margin-left: 20px;">
+              Applies a branded top-left series banner to your icon.png matching the set name so all assets in this pack are unified in the CS2 catalog.
+            </div>
+            <div style="margin-left: 20px; margin-top: 6px; display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 10.5px; color: var(--text-dim);">Badge Color:</span>
+              <select id="wizardBadgeTheme" style="font-size: 11px; padding: 3px 6px;">
+                <option value="purple" selected>Purple (Pack Default)</option>
+                <option value="cyan">Cyan (Tech / Utilities)</option>
+                <option value="emerald">Emerald (Parks / Eco)</option>
+                <option value="gold">Gold (Special / Highway)</option>
+                <option value="red">Red (Hazard / Warning)</option>
+                <option value="blue">Blue (Municipal / City)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 3: First Asset & Launch -->
+        <div class="wizard-step-panel" id="wizardStepPanel3" style="display: none;">
+          <!-- First Asset Name -->
+          <div class="form-group" style="margin: 0;">
+            <label for="wizardFirstAssetName" style="font-size: 12px; font-weight: 700; color: #f1f5f9; display: flex; justify-content: space-between;">
+              <span>First Asset Name (#1 in Set):</span>
+              <span id="wizardAssetPriorityPill" style="font-size: 10.5px; font-family: monospace; color: var(--accent-cyan); background: rgba(0,229,255,0.12); padding: 1px 6px; border-radius: 4px;">Priority: 53,010</span>
+            </label>
+            <input type="text" id="wizardFirstAssetName" value="UK_RoadMarking_01" placeholder="e.g. UK_RoadMarking_01" spellcheck="false" style="width: 100%; padding: 6px 10px; font-size: 13px; font-weight: 600; font-family: monospace; color: var(--accent-cyan); background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px;">
+            <div style="display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap;">
+              <span style="font-size: 10px; color: var(--text-dim); align-self: center;">Suffix:</span>
+              <button type="button" class="preset-btn" style="padding: 1px 6px; font-size: 10px;" onclick="applyWizardFirstAssetSuffix('_01')">_01</button>
+              <button type="button" class="preset-btn" style="padding: 1px 6px; font-size: 10px;" onclick="applyWizardFirstAssetSuffix('_Start')">_Start</button>
+              <button type="button" class="preset-btn" style="padding: 1px 6px; font-size: 10px;" onclick="applyWizardFirstAssetSuffix('_White')">_White</button>
+              <button type="button" class="preset-btn" style="padding: 1px 6px; font-size: 10px;" onclick="applyWizardFirstAssetSuffix('_Standard')">_Standard</button>
+            </div>
+          </div>
+
+          <!-- Graphic Import Choice -->
+          <div class="form-group" style="margin-top: 10px;">
+            <label style="font-size: 12px; font-weight: 700; color: #f1f5f9; display: block; margin-bottom: 6px;">
+              First Asset Graphic:
+            </label>
+            <input type="file" id="wizardGraphicFileInput" accept="image/png,image/jpeg,image/webp" style="display: none;" onchange="handleWizardGraphicFileSelect(event)">
+
+            <div class="new-asset-dropzone" id="wizardGraphicDropzone" onclick="document.getElementById('wizardGraphicFileInput').click()" ondragover="handleWizardGraphicDragOver(event)" ondragleave="handleWizardGraphicDragLeave(event)" ondrop="handleWizardGraphicDrop(event)">
+              <!-- Dropzone empty view -->
+              <div id="wizardDropEmptyView" style="display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; padding: 14px;">
+                <div style="font-size: 24px;">📥</div>
+                <div style="font-size: 12px; font-weight: 700; color: #ffffff;">Drop Graphic here, or <span style="color: var(--primary); text-decoration: underline;">Browse File</span></div>
+                <div style="font-size: 10px; color: var(--text-dim);">Square PNG or JPG (or leave blank to start with a clean category starter template)</div>
+              </div>
+
+              <!-- Dropzone file selected view -->
+              <div id="wizardDropSelectedView" style="display: none; align-items: center; gap: 12px; width: 100%; padding: 8px 12px;">
+                <div class="dropzone-thumb-preview checkerboard">
+                  <img id="wizardSelectedImgPreview" src="" alt="Selected graphic" style="width: 100%; height: 100%; object-fit: contain;">
+                </div>
+                <div style="flex: 1; min-width: 0; text-align: left;">
+                  <div id="wizardSelectedFileName" style="font-size: 12px; font-weight: 700; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">graphic.png</div>
+                  <div id="wizardSelectedFileDims" style="font-size: 10.5px; color: var(--accent-cyan); font-family: monospace;">1024 × 1024 px</div>
+                  <button type="button" class="btn-link-subtle" style="font-size: 10px; margin-top: 3px; padding: 0;" onclick="event.stopPropagation(); document.getElementById('wizardGraphicFileInput').click();">Replace Graphic ↺</button>
+                </div>
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; margin-top: 5px;">
+              <button type="button" class="preset-btn" style="padding: 2px 8px; font-size: 10px; color: var(--accent-cyan);" onclick="useWizardStarterGraphic()">
+                ⚡ Start with Category Template Graphic
+              </button>
+            </div>
+          </div>
+
+          <!-- Wizard Set Overview Summary Card -->
+          <div class="wizard-summary-card" id="wizardSummaryCard" style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(0, 168, 255, 0.35); border-radius: 8px; padding: 10px 12px; margin-top: 10px;">
+            <div style="font-size: 11px; font-weight: 700; color: var(--accent-cyan); display: flex; align-items: center; justify-content: space-between;">
+              <span id="wizardSummarySetTitle">📁 UK Road Markings</span>
+              <span id="wizardSummaryBand">53,000 – 53,990 (+10 step)</span>
+            </div>
+            <div style="font-size: 10.5px; color: var(--text-muted); margin-top: 4px; display: flex; flex-wrap: wrap; gap: 8px;">
+              <span id="wizardSummaryCategory">Category: RoadMarkings</span>
+              <span>•</span>
+              <span id="wizardSummaryDims">Size: 2.0 × 2.0m</span>
+              <span>•</span>
+              <span id="wizardSummaryPrio">Asset #1 Priority: 53,010</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Wizard Navigation Footer -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+          <button type="button" class="btn-secondary" style="padding: 7px 14px; font-size: 12px;" onclick="closeCreateNewSetWizard()">
+            Cancel
+          </button>
+          
+          <div style="display: flex; gap: 8px;">
+            <button type="button" class="btn-secondary" id="btnWizardBack" style="display: none; padding: 7px 14px; font-size: 12px;" onclick="wizardGoBack()">
+              ← Back
+            </button>
+            <button type="button" class="btn-primary" id="btnWizardNext" style="padding: 7px 18px; font-size: 12px; font-weight: 700; background: linear-gradient(135deg, #0284c7 0%, #06b6d4 100%);" onclick="wizardGoNext()">
+              Next: Shared Defaults →
+            </button>
+            <button type="button" class="btn-primary" id="btnWizardFinish" style="display: none; padding: 7px 20px; font-size: 12px; font-weight: 700; background: linear-gradient(135deg, #059669 0%, #10b981 100%); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);" onclick="confirmCreateNewSet()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              Create Set &amp; Launch Workspace
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Standalone New Asset Setup Wizard Modal -->
+  <div class="modal-overlay" id="newAssetWizardModal" onclick="closeNewStandaloneAssetWizardOnBackdrop(event)">
+    <div class="modal-card create-standalone-asset-wizard-card">
+      <div class="modal-header" style="background: linear-gradient(135deg, #091a2e 0%, #10263f 100%); border-bottom: 1px solid rgba(0, 229, 255, 0.35);">
+        <div class="modal-title" style="display: flex; align-items: center; gap: 8px; color: #ffffff;">
+          <div style="width: 26px; height: 26px; border-radius: 6px; background: rgba(0, 229, 255, 0.2); border: 1px solid rgba(0, 229, 255, 0.4); display: flex; align-items: center; justify-content: center; color: var(--accent-cyan);">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          </div>
+          <div>
+            <span style="font-weight: 700; font-size: 14px;">New Asset Setup Wizard</span>
+            <div style="font-size: 10.5px; color: var(--text-dim); font-weight: normal;">Configure any Decal, Surface, or NetLane asset with guided dimensions &amp; materials</div>
+          </div>
+        </div>
+        <button class="preset-btn" style="padding: 4px 8px;" onclick="closeNewStandaloneAssetWizard()">✕</button>
+      </div>
+
+      <!-- Step Navigation Indicator -->
+      <div class="wizard-steps-nav">
+        <button type="button" class="wizard-step-tab active" id="standTab1" onclick="setStandWizardStep(1)">
+          <span class="step-num">1</span>
+          <span class="step-label">Asset Identity &amp; Mode</span>
+        </button>
+        <div class="wizard-step-sep">›</div>
+        <button type="button" class="wizard-step-tab" id="standTab2" onclick="setStandWizardStep(2)">
+          <span class="step-num">2</span>
+          <span class="step-label">Dimensions &amp; Materials</span>
+        </button>
+        <div class="wizard-step-sep">›</div>
+        <button type="button" class="wizard-step-tab" id="standTab3" onclick="setStandWizardStep(3)">
+          <span class="step-num">3</span>
+          <span class="step-label">Graphic &amp; Launch</span>
+        </button>
+      </div>
+
+      <div class="modal-body" style="padding: 16px 20px; gap: 14px;">
+        
+        <!-- STEP 1: Asset Identity, Mode & Set Membership -->
+        <div class="wizard-step-panel active" id="standStepPanel1">
+          <!-- Mode Choice (Decal / Surface / NetLane) -->
+          <div class="form-group" style="margin: 0;">
+            <label style="font-size: 11.5px; font-weight: 700; color: #f1f5f9; display: flex; justify-content: space-between; margin-bottom: 6px;">
+              <span>Select Asset Type (Mode):</span>
+              <span id="standModeSummaryLabel" style="font-size: 10.5px; font-weight: normal; color: var(--accent-cyan);">Decal (Projected Ground Marking)</span>
+            </label>
+            <div class="mode-choice-grid">
+              <button type="button" class="mode-choice-btn active" id="standModeDecal" onclick="selectStandWizardMode('decal')">
+                <span class="mode-icon">🎯</span>
+                <span class="mode-title">Decal Mode</span>
+                <span class="mode-desc">Projected onto roads, ground, or walls with 3D depth</span>
+              </button>
+              <button type="button" class="mode-choice-btn" id="standModeSurface" onclick="selectStandWizardMode('surface')">
+                <span class="mode-icon">🧱</span>
+                <span class="mode-title">Surface Mode</span>
+                <span class="mode-desc">Infinite seamless tiling for plazas, grass, and ground</span>
+              </button>
+              <button type="button" class="mode-choice-btn" id="standModeNetlane" onclick="selectStandWizardMode('netlane')">
+                <span class="mode-icon">🛣️</span>
+                <span class="mode-title">Net Lane Mode</span>
+                <span class="mode-desc">Curbs, line markings, and road network extrusions</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Asset Name -->
+          <div class="form-group" style="margin: 0;">
+            <label for="standAssetName" style="font-size: 12px; font-weight: 700; color: #f1f5f9; display: flex; justify-content: space-between;">
+              <span>Asset Name:</span>
+              <span style="font-size: 10px; color: var(--text-dim); font-weight: normal;">Unique filename in ExtraAssetsImporter</span>
+            </label>
+            <input type="text" id="standAssetName" value="CustomRoadMarking_01" placeholder="e.g. StopMarking_01, DrainGrate_01, PlazaCobbles..." spellcheck="false" oninput="updateStandWizardSummary()" style="width: 100%; padding: 7px 10px; font-size: 13px; font-weight: 600; color: var(--accent-cyan); background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px;">
+            
+            <!-- Quick Name Presets -->
+            <div style="display: flex; gap: 4px; margin-top: 5px; flex-wrap: wrap; align-items: center;">
+              <span style="font-size: 10px; color: var(--text-dim);">Suggestions:</span>
+              <button type="button" class="preset-btn" style="padding: 2px 6px; font-size: 10px;" onclick="applyStandWizardNamePreset('Manhole_CastIron_01', 'Utilities', 'decal')">🕳️ Manhole</button>
+              <button type="button" class="preset-btn" style="padding: 2px 6px; font-size: 10px;" onclick="applyStandWizardNamePreset('RoadArrow_Straight_01', 'RoadMarkings', 'decal')">↗️ Turn Arrow</button>
+              <button type="button" class="preset-btn" style="padding: 2px 6px; font-size: 10px;" onclick="applyStandWizardNamePreset('AsphaltCrack_Fissure_01', 'Cracks', 'decal')">⚡ Fissure Crack</button>
+              <button type="button" class="preset-btn" style="padding: 2px 6px; font-size: 10px;" onclick="applyStandWizardNamePreset('Plaza_Cobblestones_01', 'Pavement', 'surface')">🧱 Cobblestones</button>
+              <button type="button" class="preset-btn" style="padding: 2px 6px; font-size: 10px;" onclick="applyStandWizardNamePreset('Curb_WhiteRed_Striped', 'RoadMarkings', 'netlane')">🛣️ Curb Stripe</button>
+            </div>
+            <div style="display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap; align-items: center;">
+              <span style="font-size: 10px; color: var(--text-dim);">Suffix:</span>
+              <button type="button" class="preset-btn" style="padding: 1px 6px; font-size: 10px;" onclick="applyStandWizardSuffix('_01')">_01</button>
+              <button type="button" class="preset-btn" style="padding: 1px 6px; font-size: 10px;" onclick="applyStandWizardSuffix('_02')">_02</button>
+              <button type="button" class="preset-btn" style="padding: 1px 6px; font-size: 10px;" onclick="applyStandWizardSuffix('_Clean')">_Clean</button>
+              <button type="button" class="preset-btn" style="padding: 1px 6px; font-size: 10px;" onclick="applyStandWizardSuffix('_Worn')">_Worn</button>
+              <button type="button" class="preset-btn" style="padding: 1px 6px; font-size: 10px;" onclick="applyStandWizardSuffix('_Variant')">_Variant</button>
+            </div>
+          </div>
+
+          <!-- Category & Set Membership -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+            <div class="form-group" style="margin: 0;">
+              <label for="standCategory" style="font-size: 11.5px; font-weight: 700; color: #f1f5f9; display: block; margin-bottom: 4px;">
+                Category (Subfolder):
+              </label>
+              <div style="display: flex; gap: 4px;">
+                <input type="text" id="standCategory" value="RoadMarkings" placeholder="Subfolder" spellcheck="false" oninput="updateStandWizardSummary()" style="flex: 1; padding: 6px 8px; font-size: 12px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; color: #f1f5f9;">
+                <select id="standCategorySelect" onchange="document.getElementById('standCategory').value=this.value; updateStandWizardSummary();" style="width: 95px; font-size: 11px;">
+                  <option value="RoadMarkings" selected>RoadMarkings</option>
+                  <option value="Utilities">Utilities</option>
+                  <option value="Cracks">Cracks</option>
+                  <option value="Signs">Signs</option>
+                  <option value="Pavement">Pavement</option>
+                  <option value="Ground">Ground</option>
+                  <option value="Surfaces">Surfaces</option>
+                  <option value="NetLanes">NetLanes</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Set Membership: Standalone vs Assigned to Set -->
+            <div class="form-group" style="margin: 0;">
+              <label for="standSetMembership" style="font-size: 11.5px; font-weight: 700; color: #f1f5f9; display: block; margin-bottom: 4px;">
+                Set / Series Assignment:
+              </label>
+              <select id="standSetMembership" onchange="onStandWizardSetOptionChange()" style="width: 100%; padding: 6px 8px; font-size: 12px;">
+                <option value="standalone" selected>⚡ Standalone Asset (No Set)</option>
+                <option value="existing">📁 Assign to Existing Set...</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- If Assign to Existing Set selected, show selector -->
+          <div id="standExistingSetRow" style="display: none; background: rgba(0, 168, 255, 0.08); border: 1px solid rgba(0, 168, 255, 0.25); border-radius: 6px; padding: 8px 10px; margin-top: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <span style="font-size: 11px; font-weight: 700; color: var(--accent-cyan);">Select Target Set:</span>
+              <span id="standExistingSetRangeBadge" style="font-size: 10px; font-family: monospace; color: var(--accent-emerald);">Auto-priority ready</span>
+            </div>
+            <select id="standExistingSetSelect" onchange="onStandWizardExistingSetSelected()" style="width: 100%; padding: 5px 8px; font-size: 11.5px;">
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+
+          <!-- Draw Order Priority & Overlap Guard -->
+          <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 12px; margin-top: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 11.5px; font-weight: 700; color: #f1f5f9;">
+                Render Draw Order Priority:
+              </span>
+              <div style="display: flex; gap: 4px;">
+                <button type="button" class="preset-btn" style="padding: 1px 6px; font-size: 10px;" onclick="setStandWizardPriority(50)">Decal (50)</button>
+                <button type="button" class="preset-btn" style="padding: 1px 6px; font-size: 10px;" onclick="setStandWizardPriority(-50)">Surface (-50)</button>
+                <button type="button" class="preset-btn" style="padding: 1px 6px; font-size: 10px;" onclick="setStandWizardPriority(60)">NetLane (60)</button>
+                <button type="button" class="preset-btn" style="padding: 1px 6px; font-size: 10px;" onclick="setStandWizardPriority(100)">Top (100)</button>
+              </div>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <input type="number" id="standPriority" value="50" min="-200" max="99999000" step="1" oninput="onStandWizardPriorityInput()" style="width: 110px; padding: 5px 8px; font-size: 12px; font-family: monospace; font-weight: 700; color: var(--accent-cyan); background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px;">
+              <div id="standPriorityStatusText" style="flex: 1; font-size: 10.5px; color: var(--accent-emerald);">
+                <span>✓</span> Safe standalone priority. Clear of reserved set ranges.
+              </div>
+            </div>
+          </div>
+
+          <!-- Author -->
+          <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <div style="flex: 1;">
+              <label for="standAuthor" style="font-size: 11px; color: var(--text-dim); display: block; margin-bottom: 2px;">Author / Modder Name:</label>
+              <input type="text" id="standAuthor" value="CS2 Creator" placeholder="Your name or handle" style="width: 100%; padding: 5px 8px; font-size: 11.5px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; color: #f1f5f9;">
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2: Dimensions & Materials -->
+        <div class="wizard-step-panel" id="standStepPanel2" style="display: none;">
+          <!-- Decal Dimensions Panel -->
+          <div id="standDecalDimsBox" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px;">
+            <div style="font-size: 11.5px; font-weight: 700; color: #f1f5f9; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span>Physical Decal Dimensions:</span>
+              <span id="standDimBadge" style="font-size: 10.5px; font-family: monospace; color: var(--accent-cyan);">2.0m × 2.0m × 0.5m</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+              <div>
+                <label for="standDimW" style="font-size: 10.5px; color: var(--text-dim);">Width (m):</label>
+                <input type="number" id="standDimW" value="2.0" step="0.1" min="0.1" max="50" oninput="updateStandWizardDimSummary()" style="width: 100%; padding: 4px 6px; font-size: 12px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 4px; color: #f1f5f9;">
+              </div>
+              <div>
+                <label for="standDimH" style="font-size: 10.5px; color: var(--text-dim);">Height (m):</label>
+                <input type="number" id="standDimH" value="2.0" step="0.1" min="0.1" max="50" oninput="updateStandWizardDimSummary()" style="width: 100%; padding: 4px 6px; font-size: 12px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 4px; color: #f1f5f9;">
+              </div>
+              <div>
+                <label for="standDimD" style="font-size: 10.5px; color: var(--text-dim);">Depth (m):</label>
+                <input type="number" id="standDimD" value="0.5" step="0.1" min="0.1" max="10" oninput="updateStandWizardDimSummary()" style="width: 100%; padding: 4px 6px; font-size: 12px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 4px; color: #f1f5f9;">
+              </div>
+            </div>
+            <div style="display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap;">
+              <span style="font-size: 10px; color: var(--text-dim); align-self: center;">Presets:</span>
+              <button type="button" class="preset-btn" style="padding: 2px 6px; font-size: 10px;" onclick="setStandWizardDims(1.8, 1.8, 0.5)">1.8×1.8m (Utility)</button>
+              <button type="button" class="preset-btn" style="padding: 2px 6px; font-size: 10px;" onclick="setStandWizardDims(3.0, 6.0, 0.5)">3×6m (Road Arrow)</button>
+              <button type="button" class="preset-btn" style="padding: 2px 6px; font-size: 10px;" onclick="setStandWizardDims(4.0, 4.0, 0.8)">4×4m (Fissure)</button>
+              <button type="button" class="preset-btn" style="padding: 2px 6px; font-size: 10px;" onclick="setStandWizardDims(2.0, 2.0, 0.5)">2×2m (Standard)</button>
+            </div>
+          </div>
+
+          <!-- Surface Dimensions Panel (visible if surface mode) -->
+          <div id="standSurfaceDimsBox" style="display: none; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px;">
+            <div style="font-size: 11.5px; font-weight: 700; color: #f1f5f9; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span>Surface Texture UV Scale:</span>
+              <span id="standSurfaceUvBadge" style="font-size: 10.5px; font-family: monospace; color: var(--accent-cyan);">1.00</span>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <input type="range" id="standUvScale" min="0.1" max="10.0" step="0.1" value="1.0" oninput="document.getElementById('standSurfaceUvBadge').textContent=parseFloat(this.value).toFixed(2); updateStandWizardSummary();" style="flex: 1;">
+              <span style="font-size: 11px; font-family: monospace; color: #f1f5f9;">Tiling Density</span>
+            </div>
+            <div style="display: flex; gap: 4px; margin-top: 6px;">
+              <button type="button" class="preset-btn" style="padding: 2px 6px; font-size: 10px;" onclick="setStandWizardUv(0.5)">0.5× (Dense Pavement)</button>
+              <button type="button" class="preset-btn" style="padding: 2px 6px; font-size: 10px;" onclick="setStandWizardUv(1.0)">1.0× (Standard)</button>
+              <button type="button" class="preset-btn" style="padding: 2px 6px; font-size: 10px;" onclick="setStandWizardUv(2.0)">2.0× (Broad Plaza)</button>
+            </div>
+          </div>
+
+          <!-- NetLane Dimensions Panel (visible if netlane mode) -->
+          <div id="standNetlaneDimsBox" style="display: none; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px;">
+            <div style="font-size: 11.5px; font-weight: 700; color: #f1f5f9; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span>Net Lane Spline Dimensions:</span>
+              <span id="standNetlaneBadge" style="font-size: 10.5px; font-family: monospace; color: var(--accent-cyan);">0.2m width × 5.0m stretch</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              <div>
+                <label for="standNetlaneWidth" style="font-size: 10.5px; color: var(--text-dim);">Lane / Curb Width (m):</label>
+                <input type="number" id="standNetlaneWidth" value="0.2" step="0.05" min="0.05" max="15" oninput="updateStandWizardDimSummary()" style="width: 100%; padding: 4px 6px; font-size: 12px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 4px; color: #f1f5f9;">
+              </div>
+              <div>
+                <label for="standNetlaneLength" style="font-size: 10.5px; color: var(--text-dim);">Texture Segment Length (m):</label>
+                <input type="number" id="standNetlaneLength" value="5.0" step="0.5" min="0.5" max="50" oninput="updateStandWizardDimSummary()" style="width: 100%; padding: 4px 6px; font-size: 12px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 4px; color: #f1f5f9;">
+              </div>
+            </div>
+          </div>
+
+          <!-- Projection Surfaces (Decal mode only) -->
+          <div id="standProjectionLayersBox" style="margin-top: 10px;">
+            <div style="font-size: 11.5px; font-weight: 700; color: #f1f5f9; margin-bottom: 5px;">
+              Decal Surface Projection Targets:
+            </div>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap; background: rgba(0,0,0,0.25); padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border-color);">
+              <label style="font-size: 11px; display: flex; align-items: center; gap: 5px; cursor: pointer; color: #e2e8f0;">
+                <input type="checkbox" id="standLayerRoads" checked> Roads (+2)
+              </label>
+              <label style="font-size: 11px; display: flex; align-items: center; gap: 5px; cursor: pointer; color: #e2e8f0;">
+                <input type="checkbox" id="standLayerTerrain" checked> Terrain (+1)
+              </label>
+              <label style="font-size: 11px; display: flex; align-items: center; gap: 5px; cursor: pointer; color: #e2e8f0;">
+                <input type="checkbox" id="standLayerBuildings"> Buildings (+4)
+              </label>
+              <label style="font-size: 11px; display: flex; align-items: center; gap: 5px; cursor: pointer; color: #e2e8f0;">
+                <input type="checkbox" id="standLayerVehicles"> Vehicles (+8)
+              </label>
+              <label style="font-size: 11px; display: flex; align-items: center; gap: 5px; cursor: pointer; color: #e2e8f0;">
+                <input type="checkbox" id="standLayerProps"> Props (+32)
+              </label>
+            </div>
+          </div>
+
+          <!-- PBR Material Looks -->
+          <div style="margin-top: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+              <span style="font-size: 11.5px; font-weight: 700; color: #f1f5f9;">PBR Material Characteristics:</span>
+              <span style="font-size: 10px; color: var(--text-dim);">Pick a look to auto-configure channels</span>
+            </div>
+            <div style="display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px;">
+              <button type="button" class="preset-btn" style="padding: 3px 8px; font-size: 10.5px;" onclick="applyStandWizardMaterial('paint')">🖌️ Road Paint</button>
+              <button type="button" class="preset-btn" style="padding: 3px 8px; font-size: 10.5px;" onclick="applyStandWizardMaterial('iron')">⚙️ Cast Iron</button>
+              <button type="button" class="preset-btn" style="padding: 3px 8px; font-size: 10.5px;" onclick="applyStandWizardMaterial('asphalt')">🌑 Worn Asphalt</button>
+              <button type="button" class="preset-btn" style="padding: 3px 8px; font-size: 10.5px;" onclick="applyStandWizardMaterial('wet')">💧 Wet / Glossy</button>
+              <button type="button" class="preset-btn" style="padding: 3px 8px; font-size: 10.5px;" onclick="applyStandWizardMaterial('metal')">✨ Chrome Metal</button>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; background: rgba(0,0,0,0.25); padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border-color);">
+              <div>
+                <label for="standBump" style="font-size: 10.5px; color: var(--text-dim); display: block;">Bump (Height):</label>
+                <select id="standBump" onchange="updateStandWizardSummary()" style="width: 100%; font-size: 11.5px; padding: 4px;">
+                  <option value="1.0">1.0× (Subtle)</option>
+                  <option value="2.2" selected>2.2× (Road Paint)</option>
+                  <option value="3.5">3.5× (Cast Iron Relief)</option>
+                  <option value="4.5">4.5× (Deep Fissure)</option>
+                </select>
+              </div>
+              <div>
+                <label for="standMetal" style="font-size: 10.5px; color: var(--text-dim); display: block;">Metallic (R):</label>
+                <select id="standMetal" onchange="updateStandWizardSummary()" style="width: 100%; font-size: 11.5px; padding: 4px;">
+                  <option value="0" selected>0 (Non-metallic)</option>
+                  <option value="128">128 (Half Metallic)</option>
+                  <option value="180">180 (Cast Iron)</option>
+                  <option value="255">255 (Full Metal)</option>
+                </select>
+              </div>
+              <div>
+                <label for="standSmooth" style="font-size: 10.5px; color: var(--text-dim); display: block;">Smoothness (A):</label>
+                <select id="standSmooth" onchange="updateStandWizardSummary()" style="width: 100%; font-size: 11.5px; padding: 4px;">
+                  <option value="10">10 (Rough Asphalt)</option>
+                  <option value="25" selected>25 (Semi-Matte Paint)</option>
+                  <option value="80">80 (Slightly Shiny)</option>
+                  <option value="180">180 (Wet Specular)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Creator Icon Watermark -->
+          <div style="margin-top: 10px; background: rgba(56, 189, 248, 0.06); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 6px; padding: 8px 10px;">
+            <label style="font-size: 11.5px; font-weight: 700; color: #bae6fd; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+              <input type="checkbox" id="standEnableBadge" checked>
+              <span>Enable Creator Icon Watermark on In-Game Menu Icon</span>
+            </label>
+            <div style="margin-left: 20px; margin-top: 4px; display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 10.5px; color: var(--text-dim);">Badge Style:</span>
+              <select id="standBadgeTheme" style="font-size: 11px; padding: 3px 6px;">
+                <option value="cyan" selected>Cyan Brand Banner</option>
+                <option value="purple">Purple Series</option>
+                <option value="emerald">Emerald</option>
+                <option value="gold">Gold</option>
+                <option value="red">Red</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 3: Graphic & Launch -->
+        <div class="wizard-step-panel" id="standStepPanel3" style="display: none;">
+          <!-- Graphic Import Area -->
+          <div class="form-group" style="margin: 0;">
+            <label style="font-size: 12px; font-weight: 700; color: #f1f5f9; display: flex; justify-content: space-between; margin-bottom: 6px;">
+              <span>Asset Source Graphic:</span>
+              <span style="font-size: 10.5px; color: var(--text-dim); font-weight: normal;">Square PNG or JPG</span>
+            </label>
+            <input type="file" id="standGraphicFileInput" accept="image/png,image/jpeg,image/webp" style="display: none;" onchange="handleStandWizardGraphicFileSelect(event)">
+
+            <div class="new-asset-dropzone" id="standGraphicDropzone" onclick="document.getElementById('standGraphicFileInput').click()" ondragover="handleStandWizardGraphicDragOver(event)" ondragleave="handleStandWizardGraphicDragLeave(event)" ondrop="handleStandWizardGraphicDrop(event)">
+              <div id="standDropEmptyView" style="display: flex; flex-direction: column; align-items: center; gap: 5px; text-align: center; padding: 16px;">
+                <div style="font-size: 26px;">📥</div>
+                <div style="font-size: 12px; font-weight: 700; color: #ffffff;">Drop Graphic here, or <span style="color: var(--primary); text-decoration: underline;">Browse File</span></div>
+                <div style="font-size: 10px; color: var(--text-dim);">Transparent PNG recommended for decals • Tileable square for surfaces</div>
+              </div>
+
+              <div id="standDropSelectedView" style="display: none; align-items: center; gap: 12px; width: 100%; padding: 8px 12px;">
+                <div class="dropzone-thumb-preview checkerboard">
+                  <img id="standSelectedImgPreview" src="" alt="Selected graphic" style="width: 100%; height: 100%; object-fit: contain;">
+                </div>
+                <div style="flex: 1; min-width: 0; text-align: left;">
+                  <div id="standSelectedFileName" style="font-size: 12px; font-weight: 700; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">graphic.png</div>
+                  <div id="standSelectedFileDims" style="font-size: 10.5px; color: var(--accent-cyan); font-family: monospace;">1024 × 1024 px</div>
+                  <button type="button" class="btn-link-subtle" style="font-size: 10px; margin-top: 3px; padding: 0;" onclick="event.stopPropagation(); document.getElementById('standGraphicFileInput').click();">Replace Graphic ↺</button>
+                </div>
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; margin-top: 5px;">
+              <button type="button" class="preset-btn" style="padding: 2px 8px; font-size: 10px; color: var(--accent-cyan);" onclick="useStandWizardStarterGraphic()">
+                ⚡ Start with Procedural Category Template Graphic
+              </button>
+            </div>
+          </div>
+
+          <!-- Comprehensive Asset Summary Overview Card -->
+          <div class="wizard-summary-card" id="standSummaryCard" style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(0, 229, 255, 0.35); border-radius: 8px; padding: 10px 14px; margin-top: 12px;">
+            <div style="font-size: 11.5px; font-weight: 700; color: var(--accent-cyan); display: flex; align-items: center; justify-content: space-between;">
+              <span id="standSummaryTitle">⚡ CustomRoadMarking_01</span>
+              <span id="standSummaryModeBadge" style="font-size: 10px; font-family: monospace; background: rgba(0, 229, 255, 0.15); border: 1px solid rgba(0, 229, 255, 0.3); padding: 1px 6px; border-radius: 4px;">DECAL MODE</span>
+            </div>
+            <div style="font-size: 10.5px; color: var(--text-muted); margin-top: 6px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+              <div>📂 <strong>Category:</strong> <span id="standSummaryCategoryText">RoadMarkings</span></div>
+              <div>📐 <strong>Dimensions:</strong> <span id="standSummaryDimsText">2.0 × 2.0 × 0.5m</span></div>
+              <div>🛡️ <strong>Priority:</strong> <span id="standSummaryPrioText">50</span></div>
+              <div>🎨 <strong>Material:</strong> <span id="standSummaryMatText">Road Paint (Bump 2.2×)</span></div>
+              <div style="grid-column: span 2;">📦 <strong>Set Membership:</strong> <span id="standSummarySetText">Standalone (Independent Asset)</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Wizard Navigation Footer -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+          <button type="button" class="btn-secondary" style="padding: 7px 14px; font-size: 12px;" onclick="closeNewStandaloneAssetWizard()">
+            Cancel
+          </button>
+          
+          <div style="display: flex; gap: 8px;">
+            <button type="button" class="btn-secondary" id="btnStandWizardBack" style="display: none; padding: 7px 14px; font-size: 12px;" onclick="standWizardGoBack()">
+              ← Back
+            </button>
+            <button type="button" class="btn-primary" id="btnStandWizardNext" style="padding: 7px 18px; font-size: 12px; font-weight: 700; background: linear-gradient(135deg, #0284c7 0%, #06b6d4 100%);" onclick="standWizardGoNext()">
+              Next: Dimensions &amp; Materials →
+            </button>
+            <button type="button" class="btn-primary" id="btnStandWizardFinish" style="display: none; padding: 7px 20px; font-size: 12px; font-weight: 700; background: linear-gradient(135deg, #0284c7 0%, #06b6d4 100%); box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4);" onclick="confirmNewStandaloneAsset()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              Create Asset &amp; Open Workspace
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>

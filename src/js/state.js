@@ -469,6 +469,8 @@ export function toggleFlipVertical() {
 }
 
 // Collapsible Left-Hand Tool Sections Handlers
+const SIDEBAR_SECTIONS_STORAGE_KEY = 'cs2_sidebar_sections_state_v2';
+
 export function toggleSection(sectionId) {
   const sec = document.getElementById(sectionId);
   if (!sec) return;
@@ -478,9 +480,9 @@ export function toggleSection(sectionId) {
     header.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
   }
   try {
-    const s = JSON.parse(localStorage.getItem('cs2_sidebar_sections_state') || '{}');
+    const s = JSON.parse(localStorage.getItem(SIDEBAR_SECTIONS_STORAGE_KEY) || '{}');
     s[sectionId] = isCollapsed ? 'collapsed' : 'open';
-    localStorage.setItem('cs2_sidebar_sections_state', JSON.stringify(s));
+    localStorage.setItem(SIDEBAR_SECTIONS_STORAGE_KEY, JSON.stringify(s));
   } catch (e) {}
 }
 
@@ -491,7 +493,11 @@ export function expandAllSections() {
     if (header) header.setAttribute('aria-expanded', 'true');
   });
   try {
-    localStorage.removeItem('cs2_sidebar_sections_state');
+    const s = {};
+    document.querySelectorAll('.collapsible-section').forEach(sec => {
+      s[sec.id] = 'open';
+    });
+    localStorage.setItem(SIDEBAR_SECTIONS_STORAGE_KEY, JSON.stringify(s));
   } catch (e) {}
   showToast('All tool sections expanded');
 }
@@ -507,23 +513,36 @@ export function collapseAllSections() {
     document.querySelectorAll('.collapsible-section').forEach(sec => {
       s[sec.id] = 'collapsed';
     });
-    localStorage.setItem('cs2_sidebar_sections_state', JSON.stringify(s));
+    localStorage.setItem(SIDEBAR_SECTIONS_STORAGE_KEY, JSON.stringify(s));
   } catch (e) {}
   showToast('All tool sections collapsed');
 }
 
 export function restoreSidebarSectionsState() {
   try {
-    const saved = localStorage.getItem('cs2_sidebar_sections_state');
-    if (!saved) return;
-    const s = JSON.parse(saved);
-    Object.keys(s).forEach(id => {
-      const sec = document.getElementById(id);
-      if (sec && s[id] === 'collapsed') {
+    // Clean up legacy key if present so it doesn't interfere
+    localStorage.removeItem('cs2_sidebar_sections_state');
+
+    const saved = localStorage.getItem(SIDEBAR_SECTIONS_STORAGE_KEY);
+    if (!saved) {
+      // Default: ensure all tool sections start collapsed
+      document.querySelectorAll('.collapsible-section').forEach(sec => {
         sec.classList.add('collapsed');
         const header = sec.querySelector('.collapsible-header');
         if (header) header.setAttribute('aria-expanded', 'false');
+      });
+      return;
+    }
+    const s = JSON.parse(saved);
+    document.querySelectorAll('.collapsible-section').forEach(sec => {
+      const isCollapsed = s[sec.id] !== 'open';
+      if (isCollapsed) {
+        sec.classList.add('collapsed');
+      } else {
+        sec.classList.remove('collapsed');
       }
+      const header = sec.querySelector('.collapsible-header');
+      if (header) header.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
     });
   } catch (e) {}
 }

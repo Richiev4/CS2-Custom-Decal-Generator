@@ -1,5 +1,5 @@
-      <div class="collapsible-section" id="secToolsAsset">
-        <div class="section-title collapsible-header" onclick="toggleSection('secToolsAsset')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleSection('secToolsAsset');}" tabindex="0" role="button" aria-expanded="true">
+      <div class="collapsible-section collapsed" id="secToolsAsset">
+        <div class="section-title collapsible-header" onclick="toggleSection('secToolsAsset')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleSection('secToolsAsset');}" tabindex="0" role="button" aria-expanded="false">
           <div class="section-header-left">
             <svg class="section-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
             <span id="sec1Title">2. Decal Settings & Geometry</span>
@@ -15,6 +15,10 @@
               <div class="form-label-left">
                 <span id="assetNameLabel">Asset Name</span>
                 <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'assetName', event)" onmouseenter="showFieldHelp(this, 'assetName', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Asset Name" title="Help for Asset Name">?</button>
+                <button type="button" class="btn-link-subtle" onclick="openNewStandaloneAssetWizard()" style="font-size: 10px; color: var(--accent-cyan); display: inline-flex; align-items: center; gap: 3px; margin-left: 6px; padding: 1px 6px; background: rgba(0,229,255,0.08); border: 1px solid rgba(0,229,255,0.25); border-radius: 4px; cursor: pointer;" title="Open guided wizard to configure a new asset">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                  <span>⚡ New Asset Wizard</span>
+                </button>
                 <span id="rotationNameFlag" class="transform-flag-badge" style="display: none;" onclick="focusAndHighlightAssetName()" title="Orientation changed! Click to edit and rename this variant.">
                   <span class="flag-pulse-dot"></span>
                   <span id="rotationNameFlagText">Variant Active</span>
@@ -73,6 +77,48 @@
             <div style="font-size: 10px; color: var(--text-dim); margin-top: 3px; display: flex; justify-content: space-between; align-items: center;">
               <span>Themed collection tag for project organization &amp; icon badges.</span>
               <button type="button" style="color: var(--accent-cyan); background: none; border: none; font-size: 10px; cursor: pointer; text-decoration: underline; padding: 0;" onclick="syncWithSeriesBadge()">Sync with Icon Badge</button>
+            </div>
+          </div>
+
+          <!-- Set / Series Asset Thumbnail View & Fast In-Set Creator -->
+          <div class="set-assets-card" id="setAssetsCard">
+            <div class="set-assets-header">
+              <div class="set-assets-title-wrap">
+                <span class="set-assets-icon">📁</span>
+                <div class="set-assets-meta">
+                  <div class="set-assets-name-row">
+                    <span class="set-assets-name" id="setAssetsActiveTitle">City Utilities</span>
+                    <span class="set-assets-count-badge" id="setAssetsCountBadge">1 asset</span>
+                  </div>
+                  <div class="set-assets-range-text" id="setAssetsRangeFootnote">
+                    Band: 52,000 – 52,990 • Step: +10 • Next: 52,020
+                  </div>
+                </div>
+              </div>
+              <div class="set-assets-actions" style="display: flex; gap: 6px; align-items: center;">
+                <button type="button" class="btn-create-new-set" id="btnCreateNewSet" onclick="initiateCreateNewSetFlow()" title="Clear current set and launch the wizard to configure a brand new asset set with guaranteed non-overlapping priority band">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+                  <span>Create New Set</span>
+                </button>
+                <button type="button" class="btn-create-set-asset" id="btnCreateSetAsset" onclick="openCreateSetAssetModal()" title="Create new asset within this set (preserves dimensions, PBR settings, layers & badges, just asks for new graphic & name)">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  <span>+ Asset in Set</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Horizontal Scrollable Miniature Thumbnail View -->
+            <div class="set-thumbnails-scroll" id="setThumbnailsScroll">
+              <!-- Dynamically populated with asset thumbnail cards -->
+            </div>
+
+            <!-- Set Card Quick Utilities -->
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 10px 6px; font-size: 10px; color: var(--text-dim); border-top: 1px solid rgba(255, 255, 255, 0.04); margin-top: 4px;">
+              <span>Click thumbnail to load • Stored in browser</span>
+              <div style="display: flex; gap: 8px;">
+                <button type="button" style="background: none; border: none; color: var(--accent-cyan); font-size: 10px; cursor: pointer; text-decoration: underline; padding: 0;" onclick="openSetRegistryModal()">Sets Registry ↗</button>
+                <button type="button" style="background: none; border: none; color: var(--accent-emerald); font-size: 10px; cursor: pointer; text-decoration: underline; padding: 0;" onclick="exportAllSetsAndStorageBackup()" title="Download a JSON backup of all your sets, priority sequences, and assets">💾 Backup Sets (.json)</button>
+              </div>
             </div>
           </div>
 
