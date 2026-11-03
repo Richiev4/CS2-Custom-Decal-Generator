@@ -10,6 +10,9 @@ import { renderIconMap } from './badges.js';
 let standWizardStep = 1;
 let standWizardMode = 'decal';
 let standWizardLoadedImage = null;
+let standWizardNormalMode = 'auto'; // 'auto' | 'custom'
+let standWizardLoadedNormal = null;
+let standWizardNormalFileName = '';
 
 /**
  * Open the standalone asset setup wizard
@@ -90,6 +93,20 @@ export function openNewStandaloneAssetWizard() {
   const fileInput = document.getElementById('standGraphicFileInput');
   if (fileInput) fileInput.value = '';
 
+  // Reset normal map options to Auto-Generated
+  standWizardNormalMode = 'auto';
+  standWizardLoadedNormal = null;
+  standWizardNormalFileName = '';
+  setStandWizardNormalMode('auto');
+  const normalEmptyView = document.getElementById('standNormalDropEmptyView');
+  const normalSelView = document.getElementById('standNormalDropSelectedView');
+  if (normalEmptyView) normalEmptyView.style.display = 'flex';
+  if (normalSelView) normalSelView.style.display = 'none';
+  const normalFileInput = document.getElementById('standNormalFileInput');
+  if (normalFileInput) normalFileInput.value = '';
+  const invertY = document.getElementById('standInvertNormalY');
+  if (invertY) invertY.checked = false;
+
   // Go to step 1
   setStandWizardStep(1);
 
@@ -153,7 +170,7 @@ export function setStandWizardStep(step) {
   } else {
     if (btnNext) {
       btnNext.style.display = 'inline-flex';
-      btnNext.textContent = step === 1 ? 'Next: Dimensions & Materials →' : 'Next: Graphic & Launch →';
+      btnNext.textContent = step === 1 ? 'Next: Asset Identity →' : 'Next: Dimensions & Materials →';
     }
     if (btnFinish) btnFinish.style.display = 'none';
   }
@@ -164,14 +181,18 @@ window.setStandWizardStep = setStandWizardStep;
 
 export function standWizardGoNext() {
   if (standWizardStep === 1) {
-    const name = document.getElementById('standAssetName')?.value?.trim();
-    if (!name) {
-      showToast('Please enter an Asset Name');
-      document.getElementById('standAssetName')?.focus();
-      return;
+    // Step 1: Graphic
+    if (!standWizardLoadedImage) {
+      useStandWizardStarterGraphic();
     }
     setStandWizardStep(2);
   } else if (standWizardStep === 2) {
+    // Step 2: Identity
+    const assetName = document.getElementById('standAssetName')?.value?.trim();
+    if (!assetName) {
+      showToast('Please enter an Asset Name before proceeding');
+      return;
+    }
     setStandWizardStep(3);
   }
 }
@@ -540,12 +561,149 @@ function processStandWizardGraphicFile(file) {
       if (emptyView) emptyView.style.display = 'none';
       if (selView) selView.style.display = 'flex';
 
+      // Auto-suggest asset name based on graphic file name
+      const rawName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+      const cleanName = rawName.replace(/[^a-zA-Z0-9_-]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+      const nameInput = document.getElementById('standAssetName');
+      if (cleanName && nameInput) {
+        nameInput.value = cleanName;
+        updateStandWizardSummary();
+      }
+
       showToast(`Loaded ${file.name} (${img.naturalWidth}×${img.naturalHeight})`);
     };
     img.src = event.target.result;
   };
   reader.readAsDataURL(file);
 }
+
+/**
+ * Switch normal map mode (auto procedural vs custom upload)
+ */
+export function setStandWizardNormalMode(mode) {
+  standWizardNormalMode = mode;
+  const btnAuto = document.getElementById('standNormBtnAuto');
+  const btnCustom = document.getElementById('standNormBtnCustom');
+  const autoInfo = document.getElementById('standNormAutoInfo');
+  const customBox = document.getElementById('standNormCustomBox');
+  const badge = document.getElementById('standNormStatusBadge');
+
+  if (btnAuto) btnAuto.classList.toggle('active', mode === 'auto');
+  if (btnCustom) btnCustom.classList.toggle('active', mode === 'custom');
+
+  if (mode === 'custom') {
+    if (autoInfo) autoInfo.style.display = 'none';
+    if (customBox) customBox.style.display = 'block';
+    if (badge) {
+      if (standWizardLoadedNormal) {
+        badge.textContent = `Custom (${standWizardLoadedNormal.naturalWidth}×${standWizardLoadedNormal.naturalHeight})`;
+        badge.style.color = 'var(--accent-emerald)';
+        badge.style.background = 'rgba(16, 185, 129, 0.15)';
+      } else {
+        badge.textContent = 'Custom (Awaiting File)';
+        badge.style.color = '#38bdf8';
+        badge.style.background = 'rgba(56, 189, 248, 0.15)';
+      }
+    }
+  } else {
+    if (autoInfo) autoInfo.style.display = 'flex';
+    if (customBox) customBox.style.display = 'none';
+    if (badge) {
+      badge.textContent = 'Auto-Generated';
+      badge.style.color = 'var(--accent-cyan)';
+      badge.style.background = 'rgba(0, 229, 255, 0.12)';
+    }
+  }
+
+  updateStandWizardSummary();
+}
+window.setStandWizardNormalMode = setStandWizardNormalMode;
+
+export function handleStandWizardNormalFileSelect(e) {
+  const file = e.target.files?.[0];
+  if (file) processStandWizardNormalFile(file);
+}
+window.handleStandWizardNormalFileSelect = handleStandWizardNormalFileSelect;
+
+export function handleStandWizardNormalDragOver(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  document.getElementById('standNormalDropzone')?.classList.add('dragover');
+}
+window.handleStandWizardNormalDragOver = handleStandWizardNormalDragOver;
+
+export function handleStandWizardNormalDragLeave(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  document.getElementById('standNormalDropzone')?.classList.remove('dragover');
+}
+window.handleStandWizardNormalDragLeave = handleStandWizardNormalDragLeave;
+
+export function handleStandWizardNormalDrop(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  document.getElementById('standNormalDropzone')?.classList.remove('dragover');
+  const file = e.dataTransfer?.files?.[0];
+  if (file) processStandWizardNormalFile(file);
+}
+window.handleStandWizardNormalDrop = handleStandWizardNormalDrop;
+
+function processStandWizardNormalFile(file) {
+  if (!file.type.match('image.*')) {
+    showToast('Please select a valid normal map image file (PNG, JPG, WebP)');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    const img = new Image();
+    img.onload = () => {
+      standWizardLoadedNormal = img;
+      standWizardNormalFileName = file.name;
+
+      const previewImg = document.getElementById('standSelectedNormalImgPreview');
+      if (previewImg) previewImg.src = event.target.result;
+      const fn = document.getElementById('standSelectedNormalFileName');
+      if (fn) fn.textContent = file.name;
+      const dims = document.getElementById('standSelectedNormalFileDims');
+      if (dims) dims.textContent = `${img.naturalWidth} × ${img.naturalHeight} px (Tangent Space)`;
+
+      const emptyView = document.getElementById('standNormalDropEmptyView');
+      const selView = document.getElementById('standNormalDropSelectedView');
+      if (emptyView) emptyView.style.display = 'none';
+      if (selView) selView.style.display = 'flex';
+
+      const badge = document.getElementById('standNormStatusBadge');
+      if (badge) {
+        badge.textContent = `Custom (${img.naturalWidth}×${img.naturalHeight})`;
+        badge.style.color = 'var(--accent-emerald)';
+        badge.style.background = 'rgba(16, 185, 129, 0.15)';
+      }
+
+      updateStandWizardSummary();
+      showToast(`Loaded Normal Map: ${file.name}`);
+    };
+    img.src = event.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+export function clearStandWizardCustomNormal() {
+  standWizardLoadedNormal = null;
+  standWizardNormalFileName = '';
+
+  const emptyView = document.getElementById('standNormalDropEmptyView');
+  const selView = document.getElementById('standNormalDropSelectedView');
+  if (emptyView) emptyView.style.display = 'flex';
+  if (selView) selView.style.display = 'none';
+
+  const fileInput = document.getElementById('standNormalFileInput');
+  if (fileInput) fileInput.value = '';
+
+  setStandWizardNormalMode('auto');
+  showToast('Switched to Auto-Generated normal map');
+}
+window.clearStandWizardCustomNormal = clearStandWizardCustomNormal;
 
 /**
  * Generate Procedural Starter Graphic based on Category & Mode
@@ -689,6 +847,21 @@ export function updateStandWizardSummary() {
   const matEl = document.getElementById('standSummaryMatText');
   if (matEl) matEl.textContent = `Bump: ${bump}×`;
 
+  const normSummary = document.getElementById('standSummaryNormalText');
+  if (normSummary) {
+    if (standWizardNormalMode === 'custom' && standWizardLoadedNormal) {
+      const inv = document.getElementById('standInvertNormalY')?.checked ? ' (DirectX -Y Inverted)' : ' (OpenGL +Y)';
+      normSummary.textContent = `Custom: ${standWizardNormalFileName}${inv}`;
+      normSummary.style.color = 'var(--accent-emerald)';
+    } else if (standWizardNormalMode === 'custom') {
+      normSummary.textContent = 'Custom Normal (Awaiting Upload)';
+      normSummary.style.color = '#38bdf8';
+    } else {
+      normSummary.textContent = 'Auto-Generated (+X, +Y Relief)';
+      normSummary.style.color = 'var(--accent-cyan)';
+    }
+  }
+
   const setEl = document.getElementById('standSummarySetText');
   if (setEl) {
     if (membership === 'existing') {
@@ -709,7 +882,7 @@ export async function confirmNewStandaloneAsset() {
   const assetName = document.getElementById('standAssetName')?.value?.trim();
   if (!assetName) {
     showToast('Please enter an Asset Name');
-    setStandWizardStep(1);
+    setStandWizardStep(2);
     return;
   }
 
@@ -826,6 +999,29 @@ export async function confirmNewStandaloneAsset() {
     const sourceBadge = document.getElementById('sourceImageStatusBadge');
     if (sourceBadge) {
       sourceBadge.textContent = `${standWizardLoadedImage.naturalWidth || 1024}×${standWizardLoadedImage.naturalHeight || 1024} (Custom)`;
+    }
+  }
+
+  // 4b. Configure Normal Map: Custom vs Auto-Generated
+  if (standWizardNormalMode === 'custom' && standWizardLoadedNormal) {
+    state.customNormalImg = standWizardLoadedNormal;
+    state.customNormalFileName = standWizardNormalFileName || 'custom_normal.png';
+
+    const standFlipY = document.getElementById('standInvertNormalY');
+    const mainFlipY = document.getElementById('flipNormalY');
+    if (mainFlipY && standFlipY) {
+      mainFlipY.checked = standFlipY.checked;
+    }
+    if (typeof window.updateCustomNormalUI === 'function') {
+      window.updateCustomNormalUI();
+    }
+  } else {
+    state.customNormalImg = null;
+    state.customNormalFileName = '';
+    const customNormalInput = document.getElementById('customNormalInput');
+    if (customNormalInput) customNormalInput.value = '';
+    if (typeof window.updateCustomNormalUI === 'function') {
+      window.updateCustomNormalUI();
     }
   }
 

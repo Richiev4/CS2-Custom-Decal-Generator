@@ -1089,24 +1089,136 @@
       <div class="wizard-steps-nav">
         <button type="button" class="wizard-step-tab active" id="standTab1" onclick="setStandWizardStep(1)">
           <span class="step-num">1</span>
-          <span class="step-label">Asset Identity &amp; Mode</span>
+          <span class="step-label">Source Graphic</span>
         </button>
         <div class="wizard-step-sep">›</div>
         <button type="button" class="wizard-step-tab" id="standTab2" onclick="setStandWizardStep(2)">
           <span class="step-num">2</span>
-          <span class="step-label">Dimensions &amp; Materials</span>
+          <span class="step-label">Asset Identity</span>
         </button>
         <div class="wizard-step-sep">›</div>
         <button type="button" class="wizard-step-tab" id="standTab3" onclick="setStandWizardStep(3)">
           <span class="step-num">3</span>
-          <span class="step-label">Graphic &amp; Launch</span>
+          <span class="step-label">Dimensions &amp; Materials</span>
         </button>
       </div>
 
       <div class="modal-body" style="padding: 16px 20px; gap: 14px;">
         
-        <!-- STEP 1: Asset Identity, Mode & Set Membership -->
+        <!-- STEP 1: Source Graphic -->
         <div class="wizard-step-panel active" id="standStepPanel1">
+          <!-- Graphic Import Area -->
+          <div class="form-group" style="margin: 0;">
+            <label style="font-size: 12px; font-weight: 700; color: #f1f5f9; display: flex; justify-content: space-between; margin-bottom: 6px;">
+              <span>1. Import Asset Source Graphic:</span>
+              <span style="font-size: 10.5px; color: var(--text-dim); font-weight: normal;">Square PNG or JPG</span>
+            </label>
+            <input type="file" id="standGraphicFileInput" accept="image/png,image/jpeg,image/webp" style="display: none;" onchange="handleStandWizardGraphicFileSelect(event)">
+
+            <div class="new-asset-dropzone" id="standGraphicDropzone" onclick="document.getElementById('standGraphicFileInput').click()" ondragover="handleStandWizardGraphicDragOver(event)" ondragleave="handleStandWizardGraphicDragLeave(event)" ondrop="handleStandWizardGraphicDrop(event)">
+              <div id="standDropEmptyView" style="display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; padding: 22px 16px;">
+                <div style="font-size: 32px;">📥</div>
+                <div style="font-size: 13px; font-weight: 700; color: #ffffff;">Drop Graphic here, or <span style="color: var(--primary); text-decoration: underline;">Browse File</span></div>
+                <div style="font-size: 11px; color: var(--text-dim);">Transparent PNG recommended for decals • Tileable square for surfaces</div>
+                <div style="font-size: 10px; color: var(--accent-cyan); margin-top: 4px;">⚡ File name will automatically suggest your asset name in Step 2</div>
+              </div>
+
+              <div id="standDropSelectedView" style="display: none; align-items: center; gap: 14px; width: 100%; padding: 12px 14px;">
+                <div class="dropzone-thumb-preview checkerboard">
+                  <img id="standSelectedImgPreview" src="" alt="Selected graphic" style="width: 100%; height: 100%; object-fit: contain;">
+                </div>
+                <div style="flex: 1; min-width: 0; text-align: left;">
+                  <div id="standSelectedFileName" style="font-size: 12.5px; font-weight: 700; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">graphic.png</div>
+                  <div id="standSelectedFileDims" style="font-size: 11px; color: var(--accent-cyan); font-family: monospace; margin-top: 2px;">1024 × 1024 px</div>
+                  <button type="button" class="btn-link-subtle" style="font-size: 10.5px; margin-top: 5px; padding: 0;" onclick="event.stopPropagation(); document.getElementById('standGraphicFileInput').click();">Replace Graphic ↺</button>
+                </div>
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+              <span style="font-size: 10.5px; color: var(--text-dim);">Don't have a graphic yet?</span>
+              <button type="button" class="preset-btn" style="padding: 3px 10px; font-size: 10.5px; color: var(--accent-cyan);" onclick="useStandWizardStarterGraphic()">
+                ⚡ Start with Procedural Starter Graphic
+              </button>
+            </div>
+          </div>
+
+          <!-- Normal Map Source Selection: Auto-Generated vs Custom Upload -->
+          <div class="form-group" style="margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <label style="font-size: 12px; font-weight: 700; color: #f1f5f9; display: flex; align-items: center; gap: 6px; margin: 0;">
+                <span>2. Normal Map (Groove Relief &amp; Bumps):</span>
+              </label>
+              <span id="standNormStatusBadge" style="font-size: 10px; font-weight: 700; color: var(--accent-cyan); background: rgba(0, 229, 255, 0.12); padding: 1px 7px; border-radius: 4px;">Auto-Generated</span>
+            </div>
+
+            <!-- Segmented Selection Buttons -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+              <button type="button" class="mode-choice-btn active" id="standNormBtnAuto" onclick="setStandWizardNormalMode('auto')" style="padding: 8px 10px; flex-direction: row; justify-content: flex-start; text-align: left; gap: 8px;">
+                <span style="font-size: 18px;">⚡</span>
+                <div>
+                  <div style="font-size: 11.5px; font-weight: 700; color: #fff;">Auto-Generated (Recommended)</div>
+                  <div style="font-size: 10px; color: var(--text-dim);">Calculates tangent normal from graphic relief</div>
+                </div>
+              </button>
+
+              <button type="button" class="mode-choice-btn" id="standNormBtnCustom" onclick="setStandWizardNormalMode('custom')" style="padding: 8px 10px; flex-direction: row; justify-content: flex-start; text-align: left; gap: 8px;">
+                <span style="font-size: 18px;">📥</span>
+                <div>
+                  <div style="font-size: 11.5px; font-weight: 700; color: #fff;">Import Custom _NormalMap.png</div>
+                  <div style="font-size: 10px; color: var(--text-dim);">Baked normal from 3D software or Photoshop</div>
+                </div>
+              </button>
+            </div>
+
+            <!-- Auto-Generated Normal Info View -->
+            <div id="standNormAutoInfo" style="background: rgba(0, 168, 255, 0.06); border: 1px solid rgba(0, 168, 255, 0.22); border-radius: 6px; padding: 10px 12px; font-size: 11px; color: #cbd5e1; display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 16px; color: var(--accent-cyan);">💡</span>
+              <div style="line-height: 1.4;">
+                <strong style="color: #fff;">Procedural Tangent Normal will be calculated automatically.</strong> You can fine-tune bump height, smoothness, and material look in <strong>Step 3</strong>.
+              </div>
+            </div>
+
+            <!-- Custom Normal Dropzone (hidden by default) -->
+            <div id="standNormCustomBox" style="display: none;">
+              <input type="file" id="standNormalFileInput" accept="image/png,image/jpeg,image/webp" style="display: none;" onchange="handleStandWizardNormalFileSelect(event)">
+
+              <div class="new-asset-dropzone" id="standNormalDropzone" onclick="document.getElementById('standNormalFileInput').click()" ondragover="handleStandWizardNormalDragOver(event)" ondragleave="handleStandWizardNormalDragLeave(event)" ondrop="handleStandWizardNormalDrop(event)" style="border-style: dashed; padding: 10px;">
+                <div id="standNormalDropEmptyView" style="display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; padding: 14px 10px;">
+                  <div style="font-size: 24px;">🎨</div>
+                  <div style="font-size: 12px; font-weight: 700; color: #ffffff;">Drop Custom Tangent _NormalMap.png here, or <span style="color: var(--primary); text-decoration: underline;">Browse File</span></div>
+                  <div style="font-size: 10px; color: var(--text-dim);">Cities: Skylines II standard: Tangent Space, OpenGL format (+Y Up)</div>
+                </div>
+
+                <div id="standNormalDropSelectedView" style="display: none; align-items: center; gap: 12px; width: 100%; padding: 6px 10px;">
+                  <div class="dropzone-thumb-preview checkerboard" style="width: 52px; height: 52px;">
+                    <img id="standSelectedNormalImgPreview" src="" alt="Selected normal map" style="width: 100%; height: 100%; object-fit: contain;">
+                  </div>
+                  <div style="flex: 1; min-width: 0; text-align: left;">
+                    <div id="standSelectedNormalFileName" style="font-size: 12px; font-weight: 700; color: var(--accent-emerald); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">custom_normal.png</div>
+                    <div id="standSelectedNormalFileDims" style="font-size: 10.5px; color: var(--accent-cyan); font-family: monospace;">1024 × 1024 px</div>
+                    <div style="display: flex; gap: 10px; margin-top: 3px;">
+                      <button type="button" class="btn-link-subtle" style="font-size: 10px; padding: 0;" onclick="event.stopPropagation(); document.getElementById('standNormalFileInput').click();">Replace Normal ↺</button>
+                      <button type="button" class="btn-link-subtle" style="font-size: 10px; padding: 0; color: #f87171;" onclick="event.stopPropagation(); clearStandWizardCustomNormal();">Remove &amp; Use Generated ✕</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Flip Y (OpenGL vs DirectX) Switch -->
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 6px; padding: 6px 10px; background: rgba(0,0,0,0.25); border-radius: 4px; border: 1px solid var(--border-color);">
+                <label style="font-size: 11px; color: #cbd5e1; display: flex; align-items: center; gap: 6px; cursor: pointer; margin: 0;">
+                  <input type="checkbox" id="standInvertNormalY" onchange="updateStandWizardSummary()">
+                  <span>Invert Green Channel (Flip Y)</span>
+                </label>
+                <span style="font-size: 10px; color: var(--text-dim);">Enable if your normal was baked in DirectX format (-Y)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2: Asset Identity -->
+        <div class="wizard-step-panel" id="standStepPanel2" style="display: none;">
           <!-- Mode Choice (Decal / Surface / NetLane) -->
           <div class="form-group" style="margin: 0;">
             <label style="font-size: 11.5px; font-weight: 700; color: #f1f5f9; display: flex; justify-content: space-between; margin-bottom: 6px;">
@@ -1233,8 +1345,8 @@
           </div>
         </div>
 
-        <!-- STEP 2: Dimensions & Materials -->
-        <div class="wizard-step-panel" id="standStepPanel2" style="display: none;">
+        <!-- STEP 3: Dimensions, Materials & Launch -->
+        <div class="wizard-step-panel" id="standStepPanel3" style="display: none;">
           <!-- Decal Dimensions Panel -->
           <div id="standDecalDimsBox" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px;">
             <div style="font-size: 11.5px; font-weight: 700; color: #f1f5f9; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
@@ -1384,43 +1496,6 @@
               </select>
             </div>
           </div>
-        </div>
-
-        <!-- STEP 3: Graphic & Launch -->
-        <div class="wizard-step-panel" id="standStepPanel3" style="display: none;">
-          <!-- Graphic Import Area -->
-          <div class="form-group" style="margin: 0;">
-            <label style="font-size: 12px; font-weight: 700; color: #f1f5f9; display: flex; justify-content: space-between; margin-bottom: 6px;">
-              <span>Asset Source Graphic:</span>
-              <span style="font-size: 10.5px; color: var(--text-dim); font-weight: normal;">Square PNG or JPG</span>
-            </label>
-            <input type="file" id="standGraphicFileInput" accept="image/png,image/jpeg,image/webp" style="display: none;" onchange="handleStandWizardGraphicFileSelect(event)">
-
-            <div class="new-asset-dropzone" id="standGraphicDropzone" onclick="document.getElementById('standGraphicFileInput').click()" ondragover="handleStandWizardGraphicDragOver(event)" ondragleave="handleStandWizardGraphicDragLeave(event)" ondrop="handleStandWizardGraphicDrop(event)">
-              <div id="standDropEmptyView" style="display: flex; flex-direction: column; align-items: center; gap: 5px; text-align: center; padding: 16px;">
-                <div style="font-size: 26px;">📥</div>
-                <div style="font-size: 12px; font-weight: 700; color: #ffffff;">Drop Graphic here, or <span style="color: var(--primary); text-decoration: underline;">Browse File</span></div>
-                <div style="font-size: 10px; color: var(--text-dim);">Transparent PNG recommended for decals • Tileable square for surfaces</div>
-              </div>
-
-              <div id="standDropSelectedView" style="display: none; align-items: center; gap: 12px; width: 100%; padding: 8px 12px;">
-                <div class="dropzone-thumb-preview checkerboard">
-                  <img id="standSelectedImgPreview" src="" alt="Selected graphic" style="width: 100%; height: 100%; object-fit: contain;">
-                </div>
-                <div style="flex: 1; min-width: 0; text-align: left;">
-                  <div id="standSelectedFileName" style="font-size: 12px; font-weight: 700; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">graphic.png</div>
-                  <div id="standSelectedFileDims" style="font-size: 10.5px; color: var(--accent-cyan); font-family: monospace;">1024 × 1024 px</div>
-                  <button type="button" class="btn-link-subtle" style="font-size: 10px; margin-top: 3px; padding: 0;" onclick="event.stopPropagation(); document.getElementById('standGraphicFileInput').click();">Replace Graphic ↺</button>
-                </div>
-              </div>
-            </div>
-
-            <div style="display: flex; justify-content: flex-end; margin-top: 5px;">
-              <button type="button" class="preset-btn" style="padding: 2px 8px; font-size: 10px; color: var(--accent-cyan);" onclick="useStandWizardStarterGraphic()">
-                ⚡ Start with Procedural Category Template Graphic
-              </button>
-            </div>
-          </div>
 
           <!-- Comprehensive Asset Summary Overview Card -->
           <div class="wizard-summary-card" id="standSummaryCard" style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(0, 229, 255, 0.35); border-radius: 8px; padding: 10px 14px; margin-top: 12px;">
@@ -1433,6 +1508,7 @@
               <div>📐 <strong>Dimensions:</strong> <span id="standSummaryDimsText">2.0 × 2.0 × 0.5m</span></div>
               <div>🛡️ <strong>Priority:</strong> <span id="standSummaryPrioText">50</span></div>
               <div>🎨 <strong>Material:</strong> <span id="standSummaryMatText">Road Paint (Bump 2.2×)</span></div>
+              <div style="grid-column: span 2;">🧭 <strong>Normal Map:</strong> <span id="standSummaryNormalText" style="color: var(--accent-emerald);">Auto-Generated (+X, +Y)</span></div>
               <div style="grid-column: span 2;">📦 <strong>Set Membership:</strong> <span id="standSummarySetText">Standalone (Independent Asset)</span></div>
             </div>
           </div>
@@ -1449,7 +1525,7 @@
               ← Back
             </button>
             <button type="button" class="btn-primary" id="btnStandWizardNext" style="padding: 7px 18px; font-size: 12px; font-weight: 700; background: linear-gradient(135deg, #0284c7 0%, #06b6d4 100%);" onclick="standWizardGoNext()">
-              Next: Dimensions &amp; Materials →
+              Next: Asset Identity →
             </button>
             <button type="button" class="btn-primary" id="btnStandWizardFinish" style="display: none; padding: 7px 20px; font-size: 12px; font-weight: 700; background: linear-gradient(135deg, #0284c7 0%, #06b6d4 100%); box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4);" onclick="confirmNewStandaloneAsset()">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>

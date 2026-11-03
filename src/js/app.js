@@ -309,6 +309,12 @@ import {
   handleStandWizardGraphicDragLeave,
   handleStandWizardGraphicDrop,
   useStandWizardStarterGraphic,
+  setStandWizardNormalMode,
+  handleStandWizardNormalFileSelect,
+  handleStandWizardNormalDragOver,
+  handleStandWizardNormalDragLeave,
+  handleStandWizardNormalDrop,
+  clearStandWizardCustomNormal,
   updateStandWizardSummary,
   confirmNewStandaloneAsset
 } from './assetWizard.js';
@@ -1119,6 +1125,12 @@ Object.assign(window, {
   handleStandWizardGraphicDragLeave,
   handleStandWizardGraphicDrop,
   useStandWizardStarterGraphic,
+  setStandWizardNormalMode,
+  handleStandWizardNormalFileSelect,
+  handleStandWizardNormalDragOver,
+  handleStandWizardNormalDragLeave,
+  handleStandWizardNormalDrop,
+  clearStandWizardCustomNormal,
   updateStandWizardSummary,
   confirmNewStandaloneAsset
 });
