@@ -1,0 +1,98 @@
+      <div class="collapsible-section collapsed" id="secToolsPriority">
+        <div class="section-title collapsible-header" onclick="toggleSection('secToolsPriority')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleSection('secToolsPriority');}" tabindex="0" role="button" aria-expanded="false">
+          <div class="section-header-left">
+            <svg class="section-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            <div class="form-label-left">
+              <span>UI Priority &amp; Menu Order</span>
+              <button type="button" class="help-q-btn" onclick="event.stopPropagation(); toggleFieldHelp(this, 'uiPriority', event)" onmouseenter="showFieldHelp(this, 'uiPriority', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for UI Priority" title="Help for UI Priority">?</button>
+            </div>
+          </div>
+          <div class="section-header-right">
+            <span class="form-val-badge" id="uiPriorityVal" style="font-family: monospace; font-size: 11px; background: rgba(192, 132, 252, 0.15); color: var(--accent-purple); border: 1px solid rgba(192, 132, 252, 0.35);">41</span>
+          </div>
+        </div>
+        <div class="collapsible-content">
+          <div class="panel-box">
+
+          <!-- Direct Numeric Input & Stepping Controls -->
+          <div class="form-group">
+            <div class="form-label-row">
+              <div class="form-label-left">
+                <span style="font-weight: 600; color: var(--text-main);">In-Game Menu Position (UiPriority)</span>
+                <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'uiPriority', event)" onmouseenter="showFieldHelp(this, 'uiPriority', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for UI Priority" title="Help for UI Priority">?</button>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 6px; align-items: center; margin-top: 6px;">
+              <div style="position: relative; flex: 1;">
+                <input type="number" id="uiPriorityInput" value="41" min="0" max="99999999" step="1" oninput="onUiPriorityInputChange(this.value)" style="width: 100%; padding: 4px 8px; font-size: 12px; font-family: monospace; font-weight: 700; color: var(--accent-cyan); background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 4px;" title="Enter exact priority integer (0 to 99,999,999)">
+              </div>
+              <div style="display: flex; gap: 3px;">
+                <button type="button" class="preset-btn" style="padding: 3px 8px; font-size: 10px;" onclick="stepUiPriority(-10)" title="Step down by 10 (Previous sequence item)">-10</button>
+                <button type="button" class="preset-btn" style="padding: 3px 8px; font-size: 10px;" onclick="stepUiPriority(10)" title="Step up by 10 (Next sequence item)">+10</button>
+                <button type="button" class="preset-btn" style="padding: 3px 8px; font-size: 10px;" onclick="stepUiPriority(1)" title="Step up by 1">+1</button>
+              </div>
+            </div>
+
+            <!-- Priority Slider -->
+            <div class="slider-container" style="margin-top: 8px;">
+              <input type="range" id="uiPrioritySlider" min="0" max="100000" step="1" value="41" oninput="onUiPriorityChange()">
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 9px; color: var(--text-dim); font-family: monospace; margin-top: 2px;">
+              <span>0 (First)</span>
+              <span>10k (Custom)</span>
+              <span>50k (Safe Band)</span>
+              <span>100k+</span>
+            </div>
+
+            <!-- Quick Priority Band Presets -->
+            <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px;">
+              <span style="font-size: 10px; color: var(--text-dim); align-self: center; margin-right: 2px;">Bands:</span>
+              <button type="button" class="preset-btn" style="padding: 2px 6px; font-size: 10px;" onclick="applyUiPriorityPreset(41)" title="Default early priority (near top of menu)">Vanilla (41)</button>
+              <button type="button" class="preset-btn" style="padding: 2px 6px; font-size: 10px;" onclick="applyUiPriorityPreset(10010)" title="Standard high range for custom mods (10,010)">Pack (10k+)</button>
+              <button type="button" class="preset-btn" style="padding: 2px 6px; font-size: 10px;" onclick="applyUiPriorityPreset(50010)" title="Safe isolated band well past base game assets (50,010)">High Safe (50k+)</button>
+              <button type="button" class="preset-btn" style="padding: 2px 6px; font-size: 10px;" onclick="applyUiPriorityPreset(90010)" title="Far end of menu (90,010)">End (90k+)</button>
+            </div>
+          </div>
+
+          <!-- Asset Sequence / Series Calculator Card -->
+          <div style="margin-top: 10px; padding: 8px 10px; background: rgba(0, 168, 255, 0.05); border: 1px dashed rgba(0, 168, 255, 0.25); border-radius: 6px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+              <span style="font-size: 10px; font-weight: 700; color: var(--accent-cyan); text-transform: uppercase; letter-spacing: 0.3px;">Pack Sequence Helper</span>
+              <span id="uiSeqDetectedBadge" style="font-size: 9px; font-family: monospace; color: var(--accent-emerald); background: rgba(16, 185, 129, 0.12); padding: 1px 5px; border-radius: 3px;">Auto-Detect Ready</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+              <div>
+                <label for="uiPriorityBase" style="font-size: 9px; color: var(--text-dim); display: block; margin-bottom: 2px;">Series Base #:</label>
+                <input type="number" id="uiPriorityBase" value="50000" step="1000" min="0" max="99999000" oninput="updateUiPrioritySequenceUI()" style="width: 100%; padding: 2px 6px; font-size: 11px; font-family: monospace; background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px;">
+              </div>
+              <div>
+                <label for="uiPriorityStep" style="font-size: 9px; color: var(--text-dim); display: block; margin-bottom: 2px;">Step Interval:</label>
+                <select id="uiPriorityStep" onchange="updateUiPrioritySequenceUI()" style="width: 100%; padding: 2px 4px; font-size: 11px; height: 23px; background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px;">
+                  <option value="10" selected>+10 (Recommended: leaves room for variants)</option>
+                  <option value="100">+100 (Wide decade gaps)</option>
+                  <option value="1">+1 (Dense sequence)</option>
+                </select>
+              </div>
+            </div>
+            <div style="display: flex; gap: 6px; align-items: center; justify-content: space-between; margin-top: 6px;">
+              <span id="uiSeqFormulaText" style="font-size: 9px; color: var(--text-muted); font-family: monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Base 50000 + (1 × 10) = 50010</span>
+              <button type="button" class="preset-btn" style="padding: 2px 7px; font-size: 10px; color: var(--accent-cyan); border-color: rgba(0, 168, 255, 0.4); white-space: nowrap;" onclick="autoCalculateUiPriorityFromName()" title="Auto-calculate UiPriority from Asset Name suffix (e.g. _01, _02)">⚡ Auto-Sequence</button>
+            </div>
+          </div>
+
+          <!-- Live Range Overlap / Conflict Alert Banner -->
+          <div id="setOverlapAlertBanner" class="set-overlap-banner safe" style="display: none; margin-top: 8px;">
+            <div id="setOverlapAlertText" style="display: flex; align-items: center; gap: 5px; flex: 1; min-width: 0;">
+              ✓ Safe Range: No collision with other registered sets.
+            </div>
+            <button type="button" id="btnJumpSafeRange" class="preset-btn" style="display: none; padding: 1px 6px; font-size: 9px; color: #f87171; white-space: nowrap;" onclick="applySuggestedSafeRange()">⚡ Fix Overlap</button>
+          </div>
+
+          <div style="font-size: 10px; color: var(--text-dim); margin-top: 8px; line-height: 1.35;">
+            💡 <strong>CS2 Wiki:</strong> Values range <code>0</code> to <code>99,999,999</code>. High numbers (10,000+) place assets after vanilla items. Step by <code>10</code> between assets to preserve in-game ordering with room for future sub-variants.
+          </div>
+
+        </div>
+      </div>
+    </div>
