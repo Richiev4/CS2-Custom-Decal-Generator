@@ -37,11 +37,11 @@ export const FIELD_HELP = {
     wikiTopic: 'resolution'
   },
   aspectRatioStrategy: {
-    title: 'Aspect Ratio Strategy',
+    title: 'Aspect Ratio Strategy & Poster Mode',
     badge: 'Image Fit',
     badgeClass: 'pill-purple',
-    desc: 'Controls how non-square uploaded graphics are fit onto the 1:1 square canvas.',
-    details: '<ul><li><strong>Square Crop &amp; Center (Cover):</strong> Zooms and cleanly crops outer edges to fill the square without stretching.</li><li><strong>Fit &amp; Pad Transparent Borders (Contain):</strong> Centers the entire original graphic without cropping, padding edges with transparency.</li></ul>',
+    desc: 'Controls how rectangular graphics and posters are handled on square GPU textures.',
+    details: '<ul><li><strong>Fit &amp; Pad Transparent Borders (Contain):</strong> Centers the entire original graphic without cropping, padding edges with transparent alpha. Perfect for posters, framed artwork, and signs on 1:1 square decals.</li><li><strong>Fill Texture (Full UV) (Stretch):</strong> Fills 100% of the square texture without transparent padding. Proportions are accurately restored in Cities: Skylines 2 by setting matching Decal Dimensions (e.g. 1.2m × 1.8m for a 2:3 poster). Offers the sharpest visual resolution!</li><li><strong>Square Crop &amp; Center (Cover):</strong> Zooms and cleanly crops outer edges to fill the square without stretching (ideal for seamless square tiles, but will crop poster borders).</li><li><strong>Auto-Sync on Import:</strong> Automatically detects graphic aspect ratio, updates decal Width &amp; Height, and locks proportions.</li></ul>',
     wikiTopic: 'resolution'
   },
   textureRotation: {
@@ -57,7 +57,7 @@ export const FIELD_HELP = {
     badge: '3D Box (Meters)',
     badgeClass: 'pill-blue',
     desc: 'Physical 3D oriented bounding box in real-world meters.',
-    details: 'Defines the width, height, and projection depth in meters on the terrain/road in CS2.<br>• <strong>Defaults:</strong> 2.0m width, 2.0m height, 1.0m projection depth.<br>• <strong>🔒 Lock Ratio:</strong> Locks proportional scaling between Width and Height so editing either automatically scales the other.<br>• <strong>↺ Reset Aspect Ratio:</strong> Instantly matches the natural proportions of your source texture, or resets to 1:1 square.<br>• Increase depth if your decal clips on curbs or uneven sloping hillsides.',
+    details: 'Defines the width, height, and projection depth in meters on the terrain/road/building in CS2.<br>• <strong>📐 In-Game Scale Preview:</strong> Switch to the <strong>In-Game Scale</strong> tab to preview your decal projected inside real-world environments: an asphalt road lane next to a 4.5m passenger car and 1.8m citizen, on a building wall next to a standard 2.1m doorway, or on the official Cities: Skylines II 8m × 8m zoning grid!<br>• <strong>Poster &amp; Billboard Presets:</strong> 1-click sizes for 2:3 Movie / Kiosk posters (1.2×1.8m), 3:4 Wall posters (1.2×1.6m), DIN A-Series (1.0×1.41m), Banner ads (1.0×2.0m), and 16:9 Billboards (4×2.25m).<br>• <strong>🔒 Lock Ratio:</strong> Locks proportional scaling between Width and Height so editing either automatically scales the other.<br>• <strong>⚡ Match Graphic Ratio:</strong> Instantly matches the natural proportions of your loaded source graphic.<br>• Increase depth if your decal clips on curbs or uneven sloping hillsides; decrease depth (0.1–0.2m) for flush wall posters.',
     wikiTopic: 'wiki'
   },
   uvScale: {

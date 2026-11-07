@@ -4,6 +4,7 @@
 
 export const state = {
   appMode: 'decal', // 'decal' | 'surface' | 'netlane'
+  netlaneJsonTab: 'decal', // 'decal' | 'surface' | 'netlane'
   currentImage: null,
   currentResolution: 1024,
   lightPos: { x: 0.35, y: -0.6, z: 0.7 },
@@ -34,11 +35,30 @@ export const state = {
   // Decal Dimensions & Aspect Ratio Lock
   decalAspectLocked: false,
   decalLockedRatio: 1.0,
+  autoSyncAspectOnImport: true,
+
+  // In-Game Scale & Aspect Ratio Preview Settings
+  scaleScene: 'road', // 'road' | 'wall' | 'grid'
+  scaleZoom: 1.0,
+  scaleShowCar: true,
+  scaleShowPerson: true,
+  scaleShowGrid: true,
+  scaleShowRulers: true,
+  scaleShowUvBox: false,
+  scaleDecalPos: { x: 0, y: 0 },
+  scaleDecalHovered: false,
+  scaleGraphicFit: 'fill', // 'fill' (scale graphic 100% to decal mesh) | 'contain' (preserve graphic aspect)
+
+  // 3D Lit & Texture Aspect Ratio Preview Settings
+  simAspectMode: 'mesh', // 'mesh' (matches 3D decal dimensions) | 'square' (1:1 UV texture)
+  showSimDimensions: true,
+  showSingleAspectFrame: true,
 
   // Unsaved changes guard
   isCustomImageLoaded: false,
   hasUnsavedChanges: false,
   pendingGuardAction: null,
+  askWhereToSave: (typeof localStorage !== 'undefined' ? localStorage.getItem('cs2_ask_where_to_save') !== 'false' : true),
 
   // Library & Series state
   currentLoadedAssetName: 'CityUtility_Manhole_01',
@@ -202,6 +222,7 @@ export function getCanvases() {
   const canvasSim = document.getElementById('canvasSim');
   const canvasSingle = document.getElementById('canvasSingle');
   const canvasTiled = document.getElementById('canvasTiled');
+  const canvasScale = document.getElementById('canvasScale');
 
   return {
     canvasBase,
@@ -211,13 +232,15 @@ export function getCanvases() {
     canvasSim,
     canvasSingle,
     canvasTiled,
+    canvasScale,
     ctxBase: canvasBase?.getContext('2d', { willReadFrequently: true }),
     ctxNormal: canvasNormal?.getContext('2d', { willReadFrequently: true }),
     ctxMask: canvasMask?.getContext('2d', { willReadFrequently: true }),
     ctxIcon: canvasIcon?.getContext('2d'),
     ctxSim: canvasSim?.getContext('2d', { willReadFrequently: true }),
     ctxSingle: canvasSingle?.getContext('2d'),
-    ctxTiled: canvasTiled?.getContext('2d')
+    ctxTiled: canvasTiled?.getContext('2d'),
+    ctxScale: canvasScale?.getContext('2d')
   };
 }
 
@@ -260,11 +283,17 @@ export function drawImageSquare(ctx, img, size, strategy) {
   const imgH = img.height;
   let nw, nh;
 
-  if (strategy === 'contain') {
+  if (strategy === 'stretch' || strategy === 'fill') {
+    // Fill full power-of-2 canvas; in-game 3D decal dimensions (width & height) restore true aspect ratio
+    nw = size;
+    nh = size;
+  } else if (strategy === 'contain') {
+    // Fit within canvas and pad borders with transparent alpha
     const scale = Math.min(size / imgW, size / imgH);
     nw = imgW * scale;
     nh = imgH * scale;
   } else {
+    // Cover: crop outer edges to fill 1:1 square
     const scale = Math.max(size / imgW, size / imgH);
     nw = imgW * scale;
     nh = imgH * scale;
@@ -617,4 +646,14 @@ export function cancelGuardAction() {
   const filesInput = document.getElementById('filesInput');
   if (filesInput) filesInput.value = '';
   showToast('Action cancelled — current asset kept');
+}
+
+export function toggleAlwaysAskWhereToSave(enabled) {
+  state.askWhereToSave = !!enabled;
+  try {
+    localStorage.setItem('cs2_ask_where_to_save', state.askWhereToSave ? 'true' : 'false');
+  } catch (_) {}
+  showToast(state.askWhereToSave 
+    ? 'Save prompt: Native "Save As" file dialog active' 
+    : 'Save prompt: Direct browser downloads active');
 }

@@ -13,7 +13,7 @@
         </div>
         <div class="collapsible-content">
           <div style="display: flex; flex-direction: column; gap: 8px;">
-            <button class="btn-primary" id="btnExportZip" onclick="exportZipPackage()">
+            <button class="btn-primary" id="btnExportZip" onclick="exportZipPackage()" title="Asks where to save the .zip mod package on your computer">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                 <polyline points="7 10 12 15 17 10"/>
@@ -22,12 +22,36 @@
               <span id="exportZipLabel">Export Asset Package (.zip)</span>
             </button>
 
+            <!-- Direct Game Folder Export -->
+            <button class="btn-secondary" id="btnExportFolder" onclick="exportAssetDirectToFolder()" title="Select your Cities: Skylines 2 ExtraAssetsImporter directory to write files directly without zipping" style="display: flex; align-items: center; justify-content: center; gap: 7px; background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.4); color: #c084fc; font-weight: 600; padding: 9px 12px; border-radius: 6px; cursor: pointer;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><polyline points="9 14 12 11 15 14"/></svg>
+              <span>Export Directly to CS2 Folder...</span>
+            </button>
+
+            <!-- Save Destination Options Modal Trigger -->
+            <button class="btn-secondary" id="btnOpenSaveModalFromExport" onclick="openSaveModal()" title="Choose where you want to save your project, zip, or files" style="display: flex; align-items: center; justify-content: center; gap: 7px; background: rgba(0, 168, 255, 0.08); border: 1px solid rgba(0, 168, 255, 0.3); color: var(--primary); font-size: 11.5px; padding: 7px 10px; border-radius: 6px; cursor: pointer;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              <span>Where to Save? (Save &amp; Export Options)</span>
+            </button>
+
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
-              <button class="btn-secondary" onclick="downloadTexture('base')">Download _BaseColorMap</button>
-              <button class="btn-secondary" onclick="downloadTexture('normal')">Download _NormalMap</button>
-              <button class="btn-secondary" onclick="downloadTexture('mask')">Download _MaskMap</button>
-              <button class="btn-secondary" onclick="downloadTexture('icon')">Download icon.png</button>
-              <button class="btn-secondary" id="btnDownloadJson" style="grid-column: span 2;" onclick="downloadConfigFile()">Download JSON</button>
+              <button class="btn-secondary" onclick="downloadTexture('base')" title="Asks where to save _BaseColorMap.png">Download _BaseColorMap</button>
+              <button class="btn-secondary" onclick="downloadTexture('normal')" title="Asks where to save _NormalMap.png">Download _NormalMap</button>
+              <button class="btn-secondary" onclick="downloadTexture('mask')" title="Asks where to save _MaskMap.png">Download _MaskMap</button>
+              <button class="btn-secondary" onclick="downloadTexture('icon')" title="Asks where to save icon.png">Download icon.png</button>
+              <button class="btn-secondary" id="btnDownloadJson" style="grid-column: span 2;" onclick="downloadConfigJson()" title="Asks where to save JSON configuration file">Download JSON</button>
+              <div id="netlaneJsonQuickDownloadRow" style="display: none; grid-column: span 2; gap: 6px;">
+                <button class="btn-secondary" style="flex: 1; font-size: 11px; padding: 6px 8px;" onclick="downloadConfigJson('decal')" title="Download decal.json for Net Lane">Download decal.json</button>
+                <button class="btn-secondary" style="flex: 1; font-size: 11px; padding: 6px 8px;" onclick="downloadConfigJson('surface')" title="Download surface.json for Net Lane">Download surface.json</button>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; justify-content: space-between; font-size: 10px; color: var(--text-dim); background: rgba(0, 0, 0, 0.25); padding: 6px 10px; border-radius: 5px; border: 1px solid rgba(255, 255, 255, 0.05); margin-top: 2px;">
+              <span style="display: flex; align-items: center; gap: 6px;">
+                <span style="width: 7px; height: 7px; border-radius: 50%; background: var(--accent-emerald); display: inline-block;"></span>
+                <span>Save Prompt: Native "Save As" file dialog active</span>
+              </span>
+              <a href="javascript:void(0)" onclick="openSaveModal()" style="color: var(--primary); text-decoration: none; font-weight: 600;">Options</a>
             </div>
           </div>
         </div>

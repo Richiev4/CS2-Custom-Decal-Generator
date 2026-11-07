@@ -141,6 +141,151 @@ export function loadSample(type, force = false) {
       ctx.fillRect(rx, ry, Math.random() * 6 + 2, Math.random() * 6 + 2);
     }
 
+  } else if (type === 'poster') {
+    document.getElementById('assetName').value = 'CityPoster_MetroTransit_01';
+    setAssetCategory('Posters');
+    setAssetSeriesName('City Posters');
+    document.getElementById('dimWidth').value = '1.2';
+    document.getElementById('dimHeight').value = '1.8';
+    document.getElementById('dimDepth').value = '0.2';
+    document.getElementById('bumpIntensity').value = '1.8';
+    document.getElementById('metallic').value = '0';
+    document.getElementById('smoothness').value = '35';
+    document.getElementById('invertBump').checked = false;
+    document.getElementById('maskWithDecalAlpha').checked = true;
+
+    state.decalAspectLocked = true;
+    state.decalLockedRatio = 1.2 / 1.8;
+
+    const fitSelect = document.getElementById('fitStrategy');
+    if (fitSelect) fitSelect.value = 'contain';
+
+    onBumpChange();
+    onMetalChange();
+    onSmoothChange();
+    updateConfigJson();
+
+    // Draw high-detail 2:3 vertical retro-modern transit poster (640x960 inside 1024x1024)
+    const pw = 640;
+    const ph = 960;
+    const px = Math.round((1024 - pw) / 2);
+    const py = Math.round((1024 - ph) / 2);
+
+    // Outer vintage cream paper margin
+    ctx.fillStyle = '#f5f0e8';
+    ctx.beginPath();
+    ctx.roundRect(px, py, pw, ph, 6);
+    ctx.fill();
+
+    // Dark vintage border line
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 4;
+    ctx.stroke();
+
+    // Inner poster artwork area
+    const m = 22;
+    const ax = px + m;
+    const ay = py + m;
+    const aw = pw - m * 2;
+    const ah = ph - m * 2;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(ax, ay, aw, ah);
+    ctx.clip();
+
+    // Gradient background: deep midnight navy to cobalt glow
+    const bgGrad = ctx.createLinearGradient(ax, ay, ax, ay + ah);
+    bgGrad.addColorStop(0, '#0a1128');
+    bgGrad.addColorStop(0.5, '#001f54');
+    bgGrad.addColorStop(0.85, '#034078');
+    bgGrad.addColorStop(1, '#1282a2');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(ax, ay, aw, ah);
+
+    // Stylized sun/geometric circle
+    const sunGrad = ctx.createRadialGradient(ax + aw / 2, ay + ah * 0.42, 10, ax + aw / 2, ay + ah * 0.42, 180);
+    sunGrad.addColorStop(0, '#fef08a');
+    sunGrad.addColorStop(0.5, '#f59e0b');
+    sunGrad.addColorStop(1, 'rgba(239, 68, 68, 0)');
+    ctx.fillStyle = sunGrad;
+    ctx.beginPath();
+    ctx.arc(ax + aw / 2, ay + ah * 0.42, 180, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Stylized mountain / city silhouette
+    ctx.fillStyle = '#061325';
+    ctx.beginPath();
+    ctx.moveTo(ax, ay + ah * 0.65);
+    ctx.lineTo(ax + aw * 0.25, ay + ah * 0.48);
+    ctx.lineTo(ax + aw * 0.5, ay + ah * 0.58);
+    ctx.lineTo(ax + aw * 0.75, ay + ah * 0.45);
+    ctx.lineTo(ax + aw, ay + ah * 0.62);
+    ctx.lineTo(ax + aw, ay + ah);
+    ctx.lineTo(ax, ay + ah);
+    ctx.closePath();
+    ctx.fill();
+
+    // Modern glowing transit lines
+    const lineColors = ['#00e5ff', '#10b981', '#f59e0b'];
+    lineColors.forEach((col, idx) => {
+      ctx.strokeStyle = col;
+      ctx.lineWidth = 8;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      const yOffset = ay + ah * (0.68 + idx * 0.05);
+      ctx.moveTo(ax + 20, yOffset + 30);
+      ctx.bezierCurveTo(
+        ax + aw * 0.3, yOffset - 30,
+        ax + aw * 0.7, yOffset + 40,
+        ax + aw - 20, yOffset - 10
+      );
+      ctx.stroke();
+
+      // Station dots
+      [0.25, 0.5, 0.75].forEach(t => {
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        const dotX = ax + 20 + (aw - 40) * t;
+        const dotY = yOffset + (idx === 1 ? 5 : (idx === 0 ? -10 : 15));
+        ctx.arc(dotX, dotY, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#0a1128';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+      });
+    });
+
+    // Top Typography Banner
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '900 42px "Montserrat", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.letterSpacing = '3px';
+    ctx.fillText('METRO TRANSIT', ax + aw / 2, ay + 65);
+
+    ctx.fillStyle = '#38bdf8';
+    ctx.font = '700 16px "Montserrat", sans-serif';
+    ctx.fillText('CITY OF TOMORROW • RAPID RAILWAY', ax + aw / 2, ay + 95);
+
+    // Decorative divider line
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(ax + aw * 0.2, ay + 115);
+    ctx.lineTo(ax + aw * 0.8, ay + 115);
+    ctx.stroke();
+
+    // Bottom Typography Block
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '800 24px "Montserrat", sans-serif';
+    ctx.fillText('CONNECTING EVERY DISTRICT', ax + aw / 2, ay + ah - 60);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '600 13px monospace';
+    ctx.fillText('CITIES: SKYLINES II • LINE 01 TO 08', ax + aw / 2, ay + ah - 32);
+
+    ctx.restore();
+
   } else if (type === 'crack') {
     document.getElementById('assetName').value = 'RoadDamage_AsphaltFissure_01';
     setAssetCategory('Cracks');

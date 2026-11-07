@@ -66,11 +66,13 @@
               <input type="hidden" id="surfaceCategory" value="RoadMarkings">
               <select id="categoryQuickPicker" onchange="applyCategoryQuickPick()" style="width: 130px;">
                 <option value="RoadMarkings" selected>RoadMarkings</option>
+                <option value="Posters">Posters / Adverts</option>
+                <option value="Billboards">Billboards</option>
+                <option value="Signage">Signage</option>
                 <option value="Utilities">Utilities</option>
                 <option value="Manholes">Manholes</option>
                 <option value="Earth">Earth / Terrain</option>
                 <option value="Graffiti">Graffiti</option>
-                <option value="Signage">Signage</option>
                 <option value="Cracks">Cracks / Wear</option>
                 <option value="Stains">Stains &amp; Spills</option>
               </select>
@@ -103,9 +105,14 @@
               </div>
             </div>
             <select id="fitStrategy" onchange="renderAllMaps()">
-              <option value="cover" selected>Square Crop & Center (Cover)</option>
-              <option value="contain">Fit & Pad Transparent Borders (Contain)</option>
+              <option value="contain" selected>Fit &amp; Pad Transparent Borders (Contain) — Maintains graphic aspect ratio</option>
+              <option value="stretch">Fill Texture (Full UV) — Match Decal Dimensions in 3D Mesh (Sharpest for Posters)</option>
+              <option value="cover">Square Crop &amp; Center (Cover) — Crops edges to fill 1:1 square</option>
             </select>
+            <label class="checkbox-row" style="margin-top: 6px; font-size: 11px; color: var(--accent-cyan); cursor: pointer;" title="Automatically sync in-game decal dimensions and lock aspect ratio when a graphic or poster is imported">
+              <input type="checkbox" id="autoSyncAspectOnImport" checked onchange="toggleAutoSyncAspect(this.checked)">
+              <span>⚡ Auto-sync decal dimensions &amp; lock ratio on import</span>
+            </label>
           </div>
 
           <!-- Texture Rotation Utilities -->
@@ -177,7 +184,7 @@
 
               <!-- Aspect Ratio Lock & Reset Control Bar -->
               <div class="decal-aspect-row" id="decalAspectRow">
-                <button type="button" id="btnToggleAspectLock" class="btn-aspect-lock" onclick="toggleDecalAspectLock()" title="Click to lock or unlock the proportional aspect ratio between Width and Height" aria-pressed="false">
+                <button type="button" id="btnToggleAspectLock" class="btn-aspect-lock" onclick="toggleDecalAspectLock()" title="Click to lock or unlock proportional aspect ratio between Width and Height" aria-pressed="false">
                   <span class="aspect-lock-icon" id="aspectLockIcon">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
                   </span>
@@ -186,9 +193,9 @@
                 </button>
 
                 <div class="aspect-reset-btn-group">
-                  <button type="button" id="btnResetAspect" class="btn-aspect-reset" onclick="resetDecalAspectRatio()" title="Reset aspect ratio to match source image or 1:1">
+                  <button type="button" id="btnResetAspect" class="btn-aspect-reset" onclick="resetDecalAspectRatio('graphic')" title="Match aspect ratio of currently imported graphic">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-                    <span id="btnResetAspectLabel">Reset Aspect Ratio</span>
+                    <span id="btnResetAspectLabel">Match Graphic Ratio</span>
                   </button>
                   <button type="button" id="btnResetSquare" class="btn-aspect-reset-square" onclick="resetDecalAspectRatio('square')" title="Quick reset to 1:1 Square (Height = Width)">
                     1:1
@@ -241,8 +248,28 @@
               </div>
             </div>
 
+            <!-- Poster & Advertising Presets -->
+            <div style="margin-top: 10px; padding: 8px 10px; background: rgba(0, 168, 255, 0.04); border: 1px solid rgba(0, 168, 255, 0.18); border-radius: 6px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                <div style="display: flex; align-items: center; gap: 5px;">
+                  <span style="font-size: 12px;">🖼️</span>
+                  <span style="font-size: 10.5px; font-weight: 700; color: var(--accent-cyan); text-transform: uppercase; letter-spacing: 0.3px;">Poster &amp; Billboard Presets:</span>
+                </div>
+                <span style="font-size: 9px; color: var(--text-dim); font-family: monospace;">Locks aspect ratio</span>
+              </div>
+              <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                <button type="button" class="preset-btn" style="padding: 2px 7px; font-size: 10px;" onclick="applyPosterPreset('Movie / Kiosk', 1.2, 1.8)" title="Standard 2:3 Movie / Transit Ad / Kiosk Poster (1.2m × 1.8m)">Movie / Kiosk (2:3 • 1.2×1.8m)</button>
+                <button type="button" class="preset-btn" style="padding: 2px 7px; font-size: 10px;" onclick="applyPosterPreset('Wall Poster', 1.2, 1.6)" title="Standard 3:4 Wall Art / Print Poster (1.2m × 1.6m)">Wall Poster (3:4 • 1.2×1.6m)</button>
+                <button type="button" class="preset-btn" style="padding: 2px 7px; font-size: 10px;" onclick="applyPosterPreset('DIN A-Series', 1.0, 1.41)" title="International ISO DIN A0/A1 Paper Poster (1.0m × 1.41m)">DIN A-Series (1.0×1.41m)</button>
+                <button type="button" class="preset-btn" style="padding: 2px 7px; font-size: 10px;" onclick="applyPosterPreset('Banner Ad', 1.0, 2.0)" title="Vertical Lamp Post Banner / Column Advert (1.0m × 2.0m)">Banner Ad (1:2 • 1.0×2.0m)</button>
+                <button type="button" class="preset-btn" style="padding: 2px 7px; font-size: 10px;" onclick="applyPosterPreset('Billboard', 4.0, 2.25)" title="Widescreen Billboard / Transit Sign (4.0m × 2.25m)">Billboard (16:9 • 4×2.25m)</button>
+                <button type="button" class="preset-btn" style="padding: 2px 7px; font-size: 10px;" onclick="applyPosterPreset('Sign', 2.4, 1.8)" title="Landscape Sign / Horizontal Advert (2.4m × 1.8m)">Sign (4:3 • 2.4×1.8m)</button>
+                <button type="button" class="preset-btn" style="padding: 2px 7px; font-size: 10px; color: var(--accent-emerald); border-color: rgba(16, 185, 129, 0.4); font-weight: 600;" onclick="applySyncGraphicRatio()" title="Fit decal dimensions directly to the loaded graphic's exact proportions">⚡ Fit Graphic Ratio</button>
+              </div>
+            </div>
+
             <!-- Quick Scale Presets -->
-            <div style="margin-top: 10px;">
+            <div style="margin-top: 8px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                 <span style="font-size: 10px; font-weight: 700; color: var(--text-dim); text-transform: uppercase;">CS2 Common Presets:</span>
                 <span style="font-size: 10px; color: var(--text-dim);">1 unit = 1 meter</span>
@@ -309,6 +336,11 @@
                   <div style="font-size: 9px; color: var(--text-dim); margin-top: 6px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 5px;">
                     Cities: Skylines II meshes use 1:1 metric scale. Decals project through their 3D bounding box volume (depth: 1.0m).
                   </div>
+
+                  <button type="button" class="btn-primary" onclick="switchTab('scale')" style="width: 100%; margin-top: 8px; font-size: 11px; padding: 6px 10px; display: flex; align-items: center; justify-content: center; gap: 6px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border-color: #38bdf8;" title="Open full interactive In-Game Scale & Environment Preview (Road Lane, Wall & CS2 8m Zoning Grid)">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.3 15.3l-8.6-8.6a1 1 0 0 0-1.4 0l-8.6 8.6a1 1 0 0 0 0 1.4l2.8 2.8a1 1 0 0 0 1.4 0l8.6-8.6 4.4 4.4a1 1 0 0 0 1.4 0l2-2a1 1 0 0 0 0-1.4z"/><path d="m14.5 12.5 2-2"/><path d="m11.5 9.5 2-2"/></svg>
+                    <span>🔍 Open In-Game Scale Preview Tab →</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -514,7 +546,7 @@
           </details>
 
 
-          <!-- JSON Output Preview (decal.json or surface.json) -->
+          <!-- JSON Output Preview (decal.json, surface.json, or netlane.json) -->
           <div class="form-group" style="margin-top: 12px;">
             <div class="form-label-row" style="align-items: center; justify-content: space-between;">
               <div class="form-label-left">
@@ -529,6 +561,16 @@
                 </select>
               </div>
             </div>
+
+            <!-- Netlane JSON tab switcher (shown only when in netlane mode) -->
+            <div id="netlaneJsonTabStrip" style="display: none; margin-top: 7px; margin-bottom: 7px; gap: 5px; align-items: center; flex-wrap: wrap;">
+              <span style="font-size: 10px; color: var(--text-dim); margin-right: 2px;">Inspect:</span>
+              <button type="button" class="json-tab-btn" id="tabNetlaneDecal" onclick="setNetlaneJsonPreviewTab('decal')" style="padding: 3px 8px; font-size: 10.5px; border-radius: 4px; border: 1px solid var(--primary); background: rgba(0, 168, 255, 0.2); color: var(--primary); cursor: pointer; font-weight: 600;">decal.json</button>
+              <button type="button" class="json-tab-btn" id="tabNetlaneSurface" onclick="setNetlaneJsonPreviewTab('surface')" style="padding: 3px 8px; font-size: 10.5px; border-radius: 4px; border: 1px solid var(--border-color); background: rgba(255, 255, 255, 0.05); color: var(--text-dim); cursor: pointer;">surface.json</button>
+              <button type="button" class="json-tab-btn" id="tabNetlaneNetlane" onclick="setNetlaneJsonPreviewTab('netlane')" style="padding: 3px 8px; font-size: 10.5px; border-radius: 4px; border: 1px solid var(--border-color); background: rgba(255, 255, 255, 0.05); color: var(--text-dim); cursor: pointer;">netlane.json</button>
+              <span style="font-size: 9.5px; color: var(--accent-emerald); margin-left: auto; display: flex; align-items: center; gap: 4px;" title="Net Lane export includes both decal.json and surface.json">✓ Export includes both</span>
+            </div>
+
             <div class="json-code" id="jsonPreview">
               <button class="copy-json-btn" onclick="copyConfigJson()">Copy</button>
               <span id="jsonCodeText">{ "width": 4.0, "height": 4.0, "depth": 1.0 }</span>

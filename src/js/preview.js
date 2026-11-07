@@ -2,6 +2,8 @@
 // Preview Area, 3D Simulation & Tiled Views
 // ==========================================
 import { state, getCanvases } from './state.js';
+import { renderScaleView, initScaleViewInteractions, updateScaleHUD } from './scalePreview.js';
+import { getAspectFormatName } from './exporter.js';
 
 export function switchTab(tab) {
   state.activeTab = tab;
@@ -9,6 +11,7 @@ export function switchTab(tab) {
   const tabButtonMap = {
     grid: 'tabGrid',
     '3d': 'tab3d',
+    scale: 'tabScale',
     tiled: 'tabTiled',
     base: 'tabBase',
     normal: 'tabNormal',
@@ -30,6 +33,7 @@ export function switchTab(tab) {
   const vSingle = document.getElementById('viewSingle');
   const v3d = document.getElementById('view3D') || document.getElementById('view3d');
   const vTiled = document.getElementById('viewTiled');
+  const vScale = document.getElementById('viewScale');
 
   const isSingleMode = ['base', 'normal', 'mask', 'icon', 'single'].includes(tab);
 
@@ -37,6 +41,7 @@ export function switchTab(tab) {
   if (vSingle) vSingle.style.display = isSingleMode ? 'flex' : 'none';
   if (v3d) v3d.style.display = tab === '3d' ? 'flex' : 'none';
   if (vTiled) vTiled.style.display = tab === 'tiled' ? 'flex' : 'none';
+  if (vScale) vScale.style.display = tab === 'scale' ? 'flex' : 'none';
 
   if (isSingleMode) {
     state.activeSingleMap = tab === 'single' ? 'base' : tab;
@@ -45,6 +50,9 @@ export function switchTab(tab) {
     renderSimulation();
   } else if (tab === 'tiled') {
     renderTiledView();
+  } else if (tab === 'scale') {
+    initScaleViewInteractions();
+    renderScaleView();
   }
 }
 
@@ -106,25 +114,208 @@ export function updateSingleView() {
     ctxSingle.drawImage(srcCanvas, 0, 0);
   }
 
-  const overlayBar = document.getElementById('iconOverlayToggleBar');
-  if (overlayBar) {
-    if (state.activeSingleMap === 'icon') {
-      overlayBar.style.display = 'flex';
+  // Overlays: Icon Badges vs Decal Aspect Ratio Footprint
+  const iconBar = document.getElementById('iconOverlayToggleBar');
+  const aspectBar = document.getElementById('singleAspectOverlayBar');
+
+  if (state.activeSingleMap === 'icon') {
+    if (iconBar) {
+      iconBar.style.display = 'flex';
       if (typeof window.syncAllBadgeCheckboxes === 'function') {
         window.syncAllBadgeCheckboxes();
       }
-    } else {
-      overlayBar.style.display = 'none';
     }
-  }
+    if (aspectBar) aspectBar.style.display = 'none';
 
-  if (state.activeSingleMap === 'icon') {
     if (window.initBadgeCanvasInteractions) {
       window.initBadgeCanvasInteractions();
     }
   } else {
+    if (iconBar) iconBar.style.display = 'none';
     canvasSingle.style.cursor = 'default';
+
+    if (state.appMode === 'decal') {
+      if (aspectBar) aspectBar.style.display = 'flex';
+
+      const { width: decalW, height: decalH } = getDecalDimensions();
+      const ratio = decalH > 0 ? (decalW / decalH) : 1.0;
+      const format = getAspectFormatName(ratio);
+      const area = (decalW * decalH).toFixed(2);
+
+      const sizeEl = document.getElementById('singleAspectDecalSize');
+      if (sizeEl) sizeEl.textContent = `${decalW.toFixed(1)}m × ${decalH.toFixed(1)}m (${area} m²)`;
+
+      const chipEl = document.getElementById('singleAspectFormatChip');
+      if (chipEl) chipEl.textContent = `${ratio.toFixed(2)} : 1 (${format.split(' ')[0]})`;
+
+      const chk = document.getElementById('toggleSingleAspectFrame');
+      if (chk) chk.checked = (state.showSingleAspectFrame !== false);
+
+      if (state.showSingleAspectFrame !== false && canvasSingle.width > 0) {
+        drawSingleAspectFrame(ctxSingle, canvasSingle.width, canvasSingle.height, decalW, decalH, ratio);
+      }
+    } else {
+      if (aspectBar) aspectBar.style.display = 'none';
+    }
   }
+}
+
+function getDecalDimensions() {
+  const wInput = document.getElementById('dimWidth');
+  const hInput = document.getElementById('dimHeight');
+  const dInput = document.getElementById('dimDepth');
+  const width = wInput ? (parseFloat(wInput.value) || 2.0) : 2.0;
+  const height = hInput ? (parseFloat(hInput.value) || 2.0) : 2.0;
+  const depth = dInput ? (parseFloat(dInput.value) || 1.0) : 1.0;
+  return { width, height, depth };
+}
+
+function drawSingleAspectFrame(ctx, width, height, decalW, decalH, ratio) {
+  ctx.save();
+
+  const isSquare = Math.abs(decalW - decalH) < 0.02;
+  const fitStrategy = document.getElementById('fitStrategy')?.value || 'contain';
+
+  let frameW = width;
+  let frameH = height;
+  let frameX = 0;
+  let frameY = 0;
+
+  if (!isSquare && fitStrategy === 'contain') {
+    if (ratio <= 1.0) {
+      frameH = height * 0.90;
+      frameW = frameH * ratio;
+    } else {
+      frameW = width * 0.90;
+      frameH = frameW / ratio;
+    }
+    frameX = (width - frameW) / 2;
+    frameY = (height - frameH) / 2;
+
+    // Darker tint outside 3D mesh footprint
+    ctx.fillStyle = 'rgba(5, 10, 20, 0.42)';
+    ctx.fillRect(0, 0, width, frameY);
+    ctx.fillRect(0, frameY + frameH, width, height - (frameY + frameH));
+    ctx.fillRect(0, frameY, frameX, frameH);
+    ctx.fillRect(frameX + frameW, frameY, width - (frameX + frameW), frameH);
+  } else {
+    const margin = 24;
+    frameX = margin;
+    frameY = margin;
+    frameW = width - (margin * 2);
+    frameH = height - (margin * 2);
+  }
+
+  // 1. Mesh Bounding Box (dashed cyan)
+  ctx.strokeStyle = '#00e5ff';
+  ctx.lineWidth = 2.0;
+  ctx.setLineDash([8, 6]);
+  ctx.strokeRect(frameX, frameY, frameW, frameH);
+  ctx.setLineDash([]);
+
+  // 2. Corner Brackets
+  const bracketSize = Math.min(32, Math.min(frameW, frameH) * 0.15);
+  ctx.lineWidth = 3.5;
+  ctx.strokeStyle = '#38bdf8';
+
+  // Top-left
+  ctx.beginPath();
+  ctx.moveTo(frameX, frameY + bracketSize); ctx.lineTo(frameX, frameY); ctx.lineTo(frameX + bracketSize, frameY);
+  ctx.stroke();
+  // Top-right
+  ctx.beginPath();
+  ctx.moveTo(frameX + frameW - bracketSize, frameY); ctx.lineTo(frameX + frameW, frameY); ctx.lineTo(frameX + frameW, frameY + bracketSize);
+  ctx.stroke();
+  // Bottom-left
+  ctx.beginPath();
+  ctx.moveTo(frameX, frameY + frameH - bracketSize); ctx.lineTo(frameX, frameY + frameH); ctx.lineTo(frameX + bracketSize, frameY + frameH);
+  ctx.stroke();
+  // Bottom-right
+  ctx.beginPath();
+  ctx.moveTo(frameX + frameW - bracketSize, frameY + frameH); ctx.lineTo(frameX + frameW, frameY + frameH); ctx.lineTo(frameX + frameW, frameY + frameH - bracketSize);
+  ctx.stroke();
+
+  // 3. Center Crosshair
+  const cx = frameX + frameW / 2;
+  const cy = frameY + frameH / 2;
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = 'rgba(0, 229, 255, 0.45)';
+  ctx.beginPath();
+  ctx.moveTo(cx - 12, cy); ctx.lineTo(cx + 12, cy);
+  ctx.moveTo(cx, cy - 12); ctx.lineTo(cx, cy + 12);
+  ctx.stroke();
+
+  // 4. Width Tag at Top
+  const wText = `↔ Width: ${decalW.toFixed(2)}m`;
+  ctx.font = 'bold 12px Inter, monospace';
+  const wMetrics = ctx.measureText(wText);
+  const wTagW = wMetrics.width + 16;
+  const wTagH = 22;
+  const wTagX = cx - (wTagW / 2);
+  const wTagY = Math.max(8, frameY - wTagH - 5);
+
+  ctx.fillStyle = 'rgba(9, 14, 23, 0.94)';
+  ctx.beginPath();
+  ctx.roundRect(wTagX, wTagY, wTagW, wTagH, 4);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(0, 229, 255, 0.6)';
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+
+  ctx.fillStyle = '#00e5ff';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(wText, cx, wTagY + (wTagH / 2));
+
+  // 5. Height Tag at Left
+  const hText = `↕ Height: ${decalH.toFixed(2)}m`;
+  ctx.font = 'bold 12px Inter, monospace';
+  const hMetrics = ctx.measureText(hText);
+  const hTagW = hMetrics.width + 16;
+  const hTagH = 22;
+  const hTagX = Math.max(8, frameX - hTagW - 6);
+  const hTagY = cy - (hTagH / 2);
+
+  ctx.fillStyle = 'rgba(9, 14, 23, 0.94)';
+  ctx.beginPath();
+  ctx.roundRect(hTagX, hTagY, hTagW, hTagH, 4);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(0, 229, 255, 0.6)';
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+
+  ctx.fillStyle = '#00e5ff';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(hText, hTagX + (hTagW / 2), cy);
+
+  // 6. Aspect Ratio & Footprint Summary Tag at Bottom
+  const formatName = getAspectFormatName(ratio);
+  const sumText = isSquare 
+    ? `📐 3D Mesh Footprint: ${decalW.toFixed(1)}m × ${decalH.toFixed(1)}m (1:1 Square • ${(decalW * decalH).toFixed(2)} m²)`
+    : `📐 3D Mesh Footprint: ${decalW.toFixed(1)}m × ${decalH.toFixed(1)}m • ${formatName} (${ratio.toFixed(2)}:1 • ${(decalW * decalH).toFixed(2)} m²)`;
+
+  ctx.font = 'bold 11px Inter, sans-serif';
+  const sumMetrics = ctx.measureText(sumText);
+  const sumTagW = sumMetrics.width + 18;
+  const sumTagH = 24;
+  const sumTagX = cx - (sumTagW / 2);
+  const sumTagY = Math.min(height - sumTagH - 10, frameY + frameH + 8);
+
+  ctx.fillStyle = 'rgba(9, 14, 23, 0.94)';
+  ctx.beginPath();
+  ctx.roundRect(sumTagX, sumTagY, sumTagW, sumTagH, 4);
+  ctx.fill();
+  ctx.strokeStyle = isSquare ? 'rgba(56, 189, 248, 0.5)' : 'rgba(0, 229, 255, 0.7)';
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+
+  ctx.fillStyle = isSquare ? '#38bdf8' : '#00e5ff';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(sumText, cx, sumTagY + (sumTagH / 2));
+
+  ctx.restore();
 }
 
 export function updateSimulationText() {
@@ -139,9 +330,96 @@ export function updateSimulationText() {
   }
 }
 
+export function setSimAspectMode(mode) {
+  state.simAspectMode = mode;
+  const btnMesh = document.getElementById('btnSimAspectMesh');
+  const btnSquare = document.getElementById('btnSimAspectSquare');
+  if (btnMesh) btnMesh.classList.toggle('active', mode === 'mesh');
+  if (btnSquare) btnSquare.classList.toggle('active', mode === 'square');
+  if (state.activeTab === '3d') {
+    renderSimulation();
+  }
+}
+
+export function toggleSimDimensions(show) {
+  state.showSimDimensions = typeof show === 'boolean' ? show : !state.showSimDimensions;
+  const chk = document.getElementById('toggleSimDimensions');
+  if (chk) chk.checked = state.showSimDimensions;
+  if (state.activeTab === '3d') {
+    renderSimulation();
+  }
+}
+
+export function toggleGlobalAspectOverlay() {
+  const current = (state.showSimDimensions !== false || state.showSingleAspectFrame !== false);
+  const next = !current;
+  state.showSimDimensions = next;
+  state.showSingleAspectFrame = next;
+
+  const chkSim = document.getElementById('toggleSimDimensions');
+  if (chkSim) chkSim.checked = next;
+  const chkSingle = document.getElementById('toggleSingleAspectFrame');
+  if (chkSingle) chkSingle.checked = next;
+
+  const btn = document.getElementById('btnToggleAspectBadge');
+  if (btn) btn.classList.toggle('active', next);
+
+  if (state.activeTab === '3d') {
+    renderSimulation();
+  } else if (['base', 'normal', 'mask', 'single'].includes(state.activeTab)) {
+    updateSingleView();
+  }
+}
+
 export function renderSimulation() {
   const { canvasBase, canvasNormal, canvasMask, canvasSim, ctxBase, ctxNormal, ctxMask, ctxSim } = getCanvases();
   if (!canvasSim || !ctxSim || !canvasBase || !canvasNormal || !canvasMask) return;
+
+  const { width: decalW, height: decalH } = getDecalDimensions();
+  const ratio = decalH > 0 ? (decalW / decalH) : 1.0;
+  const isDecal = (state.appMode === 'decal');
+  const isMeshMode = isDecal && (state.simAspectMode !== 'square');
+
+  let targetW = 512;
+  let targetH = 512;
+
+  if (isMeshMode) {
+    if (ratio >= 1.0) {
+      targetW = 512;
+      targetH = Math.max(128, Math.min(512, Math.round(512 / ratio)));
+    } else {
+      targetH = 512;
+      targetW = Math.max(128, Math.min(512, Math.round(512 * ratio)));
+    }
+  }
+
+  if (canvasSim.width !== targetW || canvasSim.height !== targetH) {
+    canvasSim.width = targetW;
+    canvasSim.height = targetH;
+  }
+
+  const simContainer = document.getElementById('simContainer');
+  if (simContainer) {
+    simContainer.style.aspectRatio = `${targetW} / ${targetH}`;
+  }
+
+  // Sync aspect control buttons & badges
+  const btnMesh = document.getElementById('btnSimAspectMesh');
+  const btnSquare = document.getElementById('btnSimAspectSquare');
+  if (btnMesh) btnMesh.classList.toggle('active', isMeshMode);
+  if (btnSquare) btnSquare.classList.toggle('active', !isMeshMode);
+
+  const simDimBadge = document.getElementById('simAspectDimensionsBadge');
+  if (simDimBadge) simDimBadge.textContent = `${decalW.toFixed(1)}×${decalH.toFixed(1)}m`;
+
+  const simRatioBadge = document.getElementById('simRatioBadge');
+  if (simRatioBadge) {
+    const format = getAspectFormatName(ratio);
+    simRatioBadge.textContent = `${ratio.toFixed(2)} : 1 ${format.split(' ')[0]}`;
+  }
+
+  const chkSimDim = document.getElementById('toggleSimDimensions');
+  if (chkSimDim) chkSimDim.checked = (state.showSimDimensions !== false);
 
   const w = canvasSim.width;
   const h = canvasSim.height;
@@ -236,6 +514,169 @@ export function renderSimulation() {
     }
   }
   ctxSim.putImageData(simData, 0, 0);
+
+  // Overlay dimension lines & aspect ratio callouts on 3D lit surface
+  if (isDecal && state.showSimDimensions !== false) {
+    drawSimDimensionOverlay(ctxSim, w, h, decalW, decalH, ratio, !isMeshMode);
+  }
+}
+
+function drawSimDimensionOverlay(ctx, w, h, decalW, decalH, ratio, isSquareMode) {
+  ctx.save();
+
+  const isNonSquare = Math.abs(decalW - decalH) > 0.05;
+  const format = getAspectFormatName(ratio);
+
+  if (isSquareMode && isNonSquare) {
+    // In Square UV mode, show dashed box of how the 3D decal mesh projects
+    let meshW = w;
+    let meshH = h;
+    if (ratio <= 1.0) {
+      meshH = h;
+      meshW = Math.max(30, Math.round(h * ratio));
+    } else {
+      meshW = w;
+      meshH = Math.max(30, Math.round(w / ratio));
+    }
+    const meshX = (w - meshW) / 2;
+    const meshY = (h - meshH) / 2;
+
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([5, 4]);
+    ctx.strokeRect(meshX, meshY, meshW, meshH);
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = '#f59e0b';
+    ctx.font = 'bold 9.5px Inter, monospace';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'top';
+    ctx.fillText(`📐 3D Mesh (${decalW.toFixed(1)}m × ${decalH.toFixed(1)}m)`, meshX + meshW - 6, meshY + 6);
+  }
+
+  // 1. Top Width Dimension Line (↔ W.Wm)
+  const topY = 16;
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 1.5;
+
+  ctx.beginPath();
+  ctx.moveTo(10, topY);
+  ctx.lineTo(w - 10, topY);
+  ctx.stroke();
+
+  // End ticks
+  ctx.beginPath();
+  ctx.moveTo(10, topY - 4); ctx.lineTo(10, topY + 4);
+  ctx.moveTo(w - 10, topY - 4); ctx.lineTo(w - 10, topY + 4);
+  ctx.stroke();
+
+  drawArrowHeadSim(ctx, 10, topY, 'left');
+  drawArrowHeadSim(ctx, w - 10, topY, 'right');
+
+  // Width badge
+  const wText = `↔ ${decalW.toFixed(2)}m Width`;
+  ctx.font = 'bold 10px Inter, monospace';
+  const wM = ctx.measureText(wText);
+  const wBadgeW = wM.width + 12;
+  const wBadgeH = 18;
+  const wBadgeX = (w - wBadgeW) / 2;
+  const wBadgeY = topY - (wBadgeH / 2);
+
+  ctx.fillStyle = 'rgba(9, 14, 23, 0.92)';
+  ctx.beginPath();
+  ctx.roundRect(wBadgeX, wBadgeY, wBadgeW, wBadgeH, 3);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(56, 189, 248, 0.5)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  ctx.fillStyle = '#38bdf8';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(wText, w / 2, topY);
+
+  // 2. Left Height Dimension Line (↕ H.Hm)
+  const leftX = 16;
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 1.5;
+
+  ctx.beginPath();
+  ctx.moveTo(leftX, 28);
+  ctx.lineTo(leftX, h - 28);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(leftX - 4, 28); ctx.lineTo(leftX + 4, 28);
+  ctx.moveTo(leftX - 4, h - 28); ctx.lineTo(leftX + 4, h - 28);
+  ctx.stroke();
+
+  drawArrowHeadSim(ctx, leftX, 28, 'up');
+  drawArrowHeadSim(ctx, leftX, h - 28, 'down');
+
+  // Height badge
+  const hText = `↕ ${decalH.toFixed(2)}m`;
+  ctx.font = 'bold 10px Inter, monospace';
+  const hM = ctx.measureText(hText);
+  const hBadgeW = hM.width + 10;
+  const hBadgeH = 18;
+  const hBadgeX = leftX - (hBadgeW / 2);
+
+  ctx.fillStyle = 'rgba(9, 14, 23, 0.92)';
+  ctx.beginPath();
+  ctx.roundRect(hBadgeX, (h - hBadgeH) / 2, hBadgeW, hBadgeH, 3);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(56, 189, 248, 0.5)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  ctx.fillStyle = '#38bdf8';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(hText, leftX, h / 2);
+
+  // 3. Bottom-Left Aspect Ratio & Area Badge
+  const badgeText = isNonSquare
+    ? `📐 ${decalW.toFixed(1)}m × ${decalH.toFixed(1)}m • ${format} (${ratio.toFixed(2)}:1)`
+    : `📐 ${decalW.toFixed(1)}m × ${decalH.toFixed(1)}m • 1:1 Square (${(decalW * decalH).toFixed(2)} m²)`;
+
+  ctx.font = 'bold 9.5px Inter, sans-serif';
+  const tagM = ctx.measureText(badgeText);
+  const tagW = tagM.width + 14;
+  const tagH = 20;
+  const tagX = 10;
+  const tagY = h - tagH - 10;
+
+  ctx.fillStyle = 'rgba(9, 14, 23, 0.94)';
+  ctx.beginPath();
+  ctx.roundRect(tagX, tagY, tagW, tagH, 3);
+  ctx.fill();
+  ctx.strokeStyle = isNonSquare ? 'rgba(0, 229, 255, 0.65)' : 'rgba(56, 189, 248, 0.4)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  ctx.fillStyle = isNonSquare ? '#00e5ff' : '#38bdf8';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(badgeText, tagX + 7, tagY + (tagH / 2));
+
+  ctx.restore();
+}
+
+function drawArrowHeadSim(ctx, x, y, dir) {
+  const size = 4;
+  ctx.fillStyle = '#38bdf8';
+  ctx.beginPath();
+  if (dir === 'left') {
+    ctx.moveTo(x + size, y - size); ctx.lineTo(x, y); ctx.lineTo(x + size, y + size);
+  } else if (dir === 'right') {
+    ctx.moveTo(x - size, y - size); ctx.lineTo(x, y); ctx.lineTo(x - size, y + size);
+  } else if (dir === 'up') {
+    ctx.moveTo(x - size, y + size); ctx.lineTo(x, y); ctx.lineTo(x + size, y + size);
+  } else if (dir === 'down') {
+    ctx.moveTo(x - size, y - size); ctx.lineTo(x, y); ctx.lineTo(x + size, y - size);
+  }
+  ctx.closePath();
+  ctx.fill();
 }
 
 export function renderTiledView() {
@@ -480,4 +921,10 @@ if (typeof window !== 'undefined') {
   window.initTabsScroll = initTabsScroll;
   window.scrollTabsNav = scrollTabsNav;
   window.checkTabScrollButtons = checkTabScrollButtons;
+  window.renderSimulation = renderSimulation;
+  window.updateSingleView = updateSingleView;
+  window.setSimAspectMode = setSimAspectMode;
+  window.toggleSimDimensions = toggleSimDimensions;
+  window.toggleSingleAspectFrame = toggleSingleAspectFrame;
+  window.toggleGlobalAspectOverlay = toggleGlobalAspectOverlay;
 }

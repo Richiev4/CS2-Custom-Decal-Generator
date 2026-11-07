@@ -22,11 +22,13 @@ export { initIndexedDBStorage };
 export const MODE_CATEGORIES = {
   decal: [
     { value: 'RoadMarkings', label: 'RoadMarkings' },
+    { value: 'Posters', label: 'Posters / Adverts' },
+    { value: 'Billboards', label: 'Billboards' },
+    { value: 'Signage', label: 'Signage' },
     { value: 'Utilities', label: 'Utilities' },
     { value: 'Manholes', label: 'Manholes' },
     { value: 'Earth', label: 'Earth / Terrain' },
     { value: 'Graffiti', label: 'Graffiti' },
-    { value: 'Signage', label: 'Signage' },
     { value: 'Cracks', label: 'Cracks / Wear' },
     { value: 'Stains', label: 'Stains & Spills' }
   ],
@@ -354,8 +356,9 @@ export function updateDecalScaleIndicator(width, height, depth) {
 
   const aspectBadge = document.getElementById('decalScaleAspectBadge');
   if (aspectBadge) {
-    const ratio = height > 0 ? (width / height).toFixed(2) : '1.00';
-    aspectBadge.textContent = `${ratio} : 1`;
+    const ratio = height > 0 ? (width / height) : 1.0;
+    const format = getAspectFormatName(ratio);
+    aspectBadge.textContent = `${ratio.toFixed(2)} : 1 (${format.split(' ')[0]})`;
   }
 
   const cellPctEl = document.getElementById('decalCellPct');
@@ -381,17 +384,26 @@ export function updateDecalScaleIndicator(width, height, depth) {
 
   const comparisonEl = document.getElementById('decalComparisonDesc');
   if (comparisonEl) {
-    const maxDim = Math.max(width, height);
-    if (maxDim <= 1.0) {
-      comparisonEl.textContent = '🕳️ Compact detail (manhole cover, sewer drain, pothole/crack)';
-    } else if (maxDim <= 2.5) {
-      comparisonEl.textContent = '🚗 Standard prop/marking (pedestrian symbol, stop text, utility plate)';
-    } else if (maxDim <= 5.0) {
-      comparisonEl.textContent = '🚙 Vehicle / lane scale (directional road arrow, passenger car footprint, crosswalk)';
-    } else if (maxDim <= 8.5) {
-      comparisonEl.textContent = '🏢 Large surface/marking (entire 8m CS2 zoning cell, junction box)';
+    const ratio = height > 0 ? (width / height) : 1.0;
+    if (Math.abs(ratio - (2 / 3)) < 0.08 || Math.abs(ratio - (3 / 4)) < 0.08) {
+      comparisonEl.textContent = '🖼️ Vertical Poster / Ad Decal (standard kiosk, bus shelter ad, or building wall print)';
+    } else if (Math.abs(ratio - (16 / 9)) < 0.1 || Math.abs(ratio - 2.0) < 0.1) {
+      comparisonEl.textContent = '📺 Widescreen Billboard / Transit Display (roadside & rooftop advertising)';
+    } else if (Math.abs(ratio - 0.5) < 0.08) {
+      comparisonEl.textContent = '🚩 Vertical Banner / Column Ad (street lamp or transit pillar)';
     } else {
-      comparisonEl.textContent = '🗺️ Multi-cell mega decal (spans across multiple 8m zoning blocks)';
+      const maxDim = Math.max(width, height);
+      if (maxDim <= 1.0) {
+        comparisonEl.textContent = '🕳️ Compact detail (manhole cover, sewer drain, pothole/crack)';
+      } else if (maxDim <= 2.5) {
+        comparisonEl.textContent = '🚗 Standard prop/marking (pedestrian symbol, stop text, utility plate)';
+      } else if (maxDim <= 5.0) {
+        comparisonEl.textContent = '🚙 Vehicle / lane scale (directional road arrow, passenger car footprint, crosswalk)';
+      } else if (maxDim <= 8.5) {
+        comparisonEl.textContent = '🏢 Large surface/marking (entire 8m CS2 zoning cell, junction box)';
+      } else {
+        comparisonEl.textContent = '🗺️ Multi-cell mega decal (spans across multiple 8m zoning blocks)';
+      }
     }
   }
 
@@ -409,7 +421,247 @@ export function updateDecalScaleIndicator(width, height, depth) {
       miniBoxEl.style.background = 'rgba(0, 168, 255, 0.35)';
     }
   }
+
+  // Sync All Maps Overview Scale Card
+  const gridThumb = document.getElementById('gridScaleDecalThumb');
+  if (gridThumb) {
+    const boxW = Math.min(100, Math.max(6, (width / 8.0) * 100));
+    const boxH = Math.min(100, Math.max(6, (height / 8.0) * 100));
+    gridThumb.style.width = `${boxW}%`;
+    gridThumb.style.height = `${boxH}%`;
+    if (width > 8.0 || height > 8.0) {
+      gridThumb.style.borderColor = '#f59e0b';
+      gridThumb.style.background = 'rgba(245, 158, 11, 0.4)';
+    } else {
+      gridThumb.style.borderColor = '#38bdf8';
+      gridThumb.style.background = 'rgba(56, 189, 248, 0.4)';
+    }
+  }
+  const gridFootprint = document.getElementById('gridScaleFootprintText');
+  if (gridFootprint) gridFootprint.textContent = `${width.toFixed(1)}m × ${height.toFixed(1)}m`;
+  const gridBadge = document.getElementById('gridScaleBadge');
+  if (gridBadge) gridBadge.textContent = `${width.toFixed(1)}m × ${height.toFixed(1)}m`;
+  const gridLane = document.getElementById('gridScaleLaneText');
+  if (gridLane) {
+    const laneRatio = (width / 3.2).toFixed(1);
+    gridLane.textContent = `~${laneRatio}× road lane`;
+  }
+
+  // Sync Floating Viewport Aspect Ratio Badge
+  const floatingAspectText = document.getElementById('floatingAspectBadgeText');
+  if (floatingAspectText) {
+    const ratio = height > 0 ? (width / height) : 1.0;
+    const format = getAspectFormatName(ratio);
+    floatingAspectText.textContent = `📐 ${width.toFixed(1)}×${height.toFixed(1)}m (${ratio.toFixed(2)}:1 • ${format.split(' ')[0]})`;
+  }
+
+  // Sync In-Game Scale Tab badge
+  const tabScaleBadge = document.getElementById('tabScaleBadge');
+  if (tabScaleBadge) {
+    tabScaleBadge.textContent = `${Math.max(width, height).toFixed(1)}m`;
+  }
+
+  // Sync 3D Lit Surface aspect badges
+  const simDimBadge = document.getElementById('simAspectDimensionsBadge');
+  if (simDimBadge) {
+    simDimBadge.textContent = `${width.toFixed(1)}×${height.toFixed(1)}m`;
+  }
+  const simRatioBadge = document.getElementById('simRatioBadge');
+  if (simRatioBadge) {
+    const ratio = height > 0 ? (width / height) : 1.0;
+    const format = getAspectFormatName(ratio);
+    simRatioBadge.textContent = `${ratio.toFixed(2)} : 1 ${format.split(' ')[0]}`;
+  }
+
+  // Sync Single Map Aspect Ratio Bar
+  const singleAspectSize = document.getElementById('singleAspectDecalSize');
+  if (singleAspectSize) {
+    singleAspectSize.textContent = `${width.toFixed(1)}m × ${height.toFixed(1)}m (${area} m²)`;
+  }
+  const singleAspectChip = document.getElementById('singleAspectFormatChip');
+  if (singleAspectChip) {
+    const ratio = height > 0 ? (width / height) : 1.0;
+    const format = getAspectFormatName(ratio);
+    singleAspectChip.textContent = `${ratio.toFixed(2)} : 1 (${format.split(' ')[0]})`;
+  }
+
+  // Update Scale Tab badge & HUD
+  if (window.updateScaleHUD) {
+    window.updateScaleHUD();
+  }
+  if (state.activeTab === 'scale' && window.renderScaleView) {
+    window.renderScaleView();
+  } else if (state.activeTab === '3d' && window.renderSimulation) {
+    window.renderSimulation();
+  } else if (['base', 'normal', 'mask', 'single'].includes(state.activeTab) && window.updateSingleView) {
+    window.updateSingleView();
+  }
 }
+
+export function getAspectFormatName(ratio) {
+  if (Math.abs(ratio - 1.0) < 0.02) return '1:1 Square';
+  if (Math.abs(ratio - (2 / 3)) < 0.04) return '2:3 Movie/Transit Poster';
+  if (Math.abs(ratio - (3 / 4)) < 0.04) return '3:4 Wall Poster';
+  if (Math.abs(ratio - (1 / Math.SQRT2)) < 0.04) return 'A-Series DIN Poster';
+  if (Math.abs(ratio - 0.5) < 0.04) return '1:2 Banner Poster';
+  if (Math.abs(ratio - (4 / 5)) < 0.04) return '4:5 Print';
+  if (Math.abs(ratio - (16 / 9)) < 0.05) return '16:9 Widescreen Billboard';
+  if (Math.abs(ratio - (4 / 3)) < 0.04) return '4:3 Horizontal Sign';
+  if (Math.abs(ratio - 2.0) < 0.05) return '2:1 Roadside Billboard';
+  if (ratio < 1.0) return `Portrait (${ratio.toFixed(2)}:1)`;
+  return `Landscape (${ratio.toFixed(2)}:1)`;
+}
+window.getAspectFormatName = getAspectFormatName;
+
+export function updateSourceImageBadge(w, h, ratio) {
+  const badge = document.getElementById('sourceImageStatusBadge');
+  if (!badge) return;
+  const formatName = getAspectFormatName(ratio);
+  badge.textContent = `${w}×${h} px (${formatName})`;
+  badge.style.color = 'var(--accent-cyan)';
+  badge.style.fontWeight = 'bold';
+}
+window.updateSourceImageBadge = updateSourceImageBadge;
+
+export function toggleAutoSyncAspect(checked) {
+  state.autoSyncAspectOnImport = !!checked;
+  showToast(state.autoSyncAspectOnImport 
+    ? 'Auto-sync aspect ratio on graphic import: ENABLED' 
+    : 'Auto-sync aspect ratio on graphic import: DISABLED');
+}
+window.toggleAutoSyncAspect = toggleAutoSyncAspect;
+
+export function syncDecalDimensionsToImage(rawW, rawH, nativeRatio, forceToast = false) {
+  const wInput = document.getElementById('dimWidth');
+  const hInput = document.getElementById('dimHeight');
+  if (!wInput || !hInput) return;
+
+  const isSquare = Math.abs(nativeRatio - 1.0) < 0.02;
+
+  // Determine ideal in-game dimensions based on ratio:
+  let newW, newH;
+  if (isSquare) {
+    newW = 2.0;
+    newH = 2.0;
+  } else if (nativeRatio < 1.0) {
+    // Vertical / Portrait Poster
+    newW = 1.2;
+    newH = parseFloat((1.2 / nativeRatio).toFixed(1));
+    if (newH > 8.0) {
+      newH = 8.0;
+      newW = parseFloat((8.0 * nativeRatio).toFixed(1));
+    }
+  } else {
+    // Horizontal / Landscape Billboard or Banner
+    newH = 1.8;
+    newW = parseFloat((1.8 * nativeRatio).toFixed(1));
+    if (newW > 10.0) {
+      newW = 8.0;
+      newH = parseFloat((8.0 / nativeRatio).toFixed(1));
+    }
+  }
+
+  wInput.value = newW.toFixed(1);
+  hInput.value = newH.toFixed(1);
+
+  const wSlider = document.getElementById('dimWidthSlider');
+  const hSlider = document.getElementById('dimHeightSlider');
+  const wMaxLabel = document.getElementById('dimWidthMaxLabel');
+  const hMaxLabel = document.getElementById('dimHeightMaxLabel');
+
+  if (wSlider) {
+    const maxVal = Math.max(10.0, Math.ceil(newW));
+    wSlider.max = maxVal;
+    wSlider.value = newW;
+    if (wMaxLabel) wMaxLabel.textContent = `${maxVal}m`;
+  }
+  if (hSlider) {
+    const maxVal = Math.max(10.0, Math.ceil(newH));
+    hSlider.max = maxVal;
+    hSlider.value = newH;
+    if (hMaxLabel) hMaxLabel.textContent = `${maxVal}m`;
+  }
+
+  // Lock the aspect ratio to preserve exact proportions
+  state.decalAspectLocked = true;
+  state.decalLockedRatio = nativeRatio;
+
+  // Ensure fit strategy doesn't crop the poster
+  const fitSelect = document.getElementById('fitStrategy');
+  if (fitSelect && fitSelect.value === 'cover' && !isSquare) {
+    fitSelect.value = 'contain';
+  }
+
+  updateConfigJson();
+  updateDecalAspectUI();
+
+  const ratioText = getAspectFormatName(nativeRatio);
+  showToast(`Poster graphic loaded (${rawW}×${rawH}) — Decal size synced to ${newW}m × ${newH}m (${ratioText}) with aspect ratio locked!`);
+}
+window.syncDecalDimensionsToImage = syncDecalDimensionsToImage;
+
+export function applyPosterPreset(presetName, width, height, depth = 0.2) {
+  const wInput = document.getElementById('dimWidth');
+  const hInput = document.getElementById('dimHeight');
+  const dInput = document.getElementById('dimDepth');
+  const wSlider = document.getElementById('dimWidthSlider');
+  const hSlider = document.getElementById('dimHeightSlider');
+  const dSlider = document.getElementById('dimDepthSlider');
+  const wMaxLabel = document.getElementById('dimWidthMaxLabel');
+  const hMaxLabel = document.getElementById('dimHeightMaxLabel');
+
+  if (wInput) wInput.value = width.toFixed(2).replace(/\.00$/, '.0');
+  if (hInput) hInput.value = height.toFixed(2).replace(/\.00$/, '.0');
+  if (dInput) dInput.value = depth.toFixed(1);
+
+  if (wSlider) {
+    const maxW = Math.max(10.0, Math.ceil(width));
+    wSlider.max = maxW;
+    wSlider.value = width;
+    if (wMaxLabel) wMaxLabel.textContent = `${maxW}m`;
+  }
+  if (hSlider) {
+    const maxH = Math.max(10.0, Math.ceil(height));
+    hSlider.max = maxH;
+    hSlider.value = height;
+    if (hMaxLabel) hMaxLabel.textContent = `${maxH}m`;
+  }
+  if (dSlider) dSlider.value = depth;
+
+  // Lock aspect ratio
+  state.decalAspectLocked = true;
+  state.decalLockedRatio = width / height;
+
+  // Switch fit strategy away from cover if it was cover
+  const fitSelect = document.getElementById('fitStrategy');
+  if (fitSelect && fitSelect.value === 'cover') {
+    fitSelect.value = 'contain';
+  }
+
+  // Suggest Posters category if currently default
+  const catInput = document.getElementById('assetCategory');
+  if (catInput && (catInput.value === 'RoadMarkings' || !catInput.value)) {
+    setAssetCategory('Posters');
+  }
+
+  updateConfigJson();
+  updateDecalAspectUI();
+  if (window.renderAllMaps) window.renderAllMaps();
+  showToast(`Applied ${presetName} poster preset (${width}m × ${height}m • Ratio locked)`);
+}
+window.applyPosterPreset = applyPosterPreset;
+
+export function applySyncGraphicRatio() {
+  if (!state.currentImage) {
+    showToast('No graphic currently loaded to measure aspect ratio');
+    return;
+  }
+  const rawW = state.currentImage.naturalWidth || state.currentImage.width || 1024;
+  const rawH = state.currentImage.naturalHeight || state.currentImage.height || 1024;
+  const ratio = getSourceImageAspectRatio();
+  syncDecalDimensionsToImage(rawW, rawH, ratio, true);
+}
+window.applySyncGraphicRatio = applySyncGraphicRatio;
 
 export function getSourceImageAspectRatio() {
   if (!state.currentImage) return 1.0;
@@ -435,7 +687,8 @@ export function toggleDecalAspectLock(forceState) {
 
   if (targetState) {
     state.decalLockedRatio = h > 0 ? (w / h) : 1.0;
-    showToast(`Aspect ratio locked (${state.decalLockedRatio.toFixed(2)} : 1)`);
+    const formatName = getAspectFormatName(state.decalLockedRatio);
+    showToast(`Aspect ratio locked (${state.decalLockedRatio.toFixed(2)} : 1 • ${formatName})`);
   } else {
     showToast('Aspect ratio unlocked');
   }
@@ -471,7 +724,7 @@ export function resetDecalAspectRatio(targetMode) {
 
   if (targetMode === 'square') {
     targetRatio = 1.0;
-  } else if (targetMode === 'image') {
+  } else if (targetMode === 'image' || targetMode === 'graphic') {
     targetRatio = imgRatio;
   } else {
     // Smart reset: if current ratio doesn't match the image's native ratio, match image!
@@ -500,17 +753,17 @@ export function resetDecalAspectRatio(targetMode) {
   }
 
   // If locked, update the locked ratio to match the newly reset ratio
-  if (state.decalAspectLocked) {
-    state.decalLockedRatio = targetRatio;
-  }
+  state.decalAspectLocked = true;
+  state.decalLockedRatio = targetRatio;
 
   updateConfigJson();
   updateDecalAspectUI();
 
+  const format = getAspectFormatName(targetRatio);
   if (Math.abs(targetRatio - 1.0) < 0.01) {
-    showToast(`Aspect ratio reset to 1:1 square (${currentW.toFixed(1)}m × ${newH.toFixed(1)}m)`);
+    showToast(`Aspect ratio reset to 1:1 square (${currentW.toFixed(1)}m × ${newH.toFixed(1)}m • Locked)`);
   } else {
-    showToast(`Aspect ratio reset to source image (${targetRatio.toFixed(2)}:1 → ${currentW.toFixed(1)}m × ${newH.toFixed(1)}m)`);
+    showToast(`Aspect ratio reset to graphic (${targetRatio.toFixed(2)}:1 • ${format} • ${currentW.toFixed(1)}m × ${newH.toFixed(1)}m • Locked)`);
   }
 }
 window.resetDecalAspectRatio = resetDecalAspectRatio;
@@ -533,10 +786,12 @@ export function updateDecalAspectUI() {
   const imgRatio = getSourceImageAspectRatio();
 
   const isLocked = !!state.decalAspectLocked;
-  const displayRatio = isLocked ? state.decalLockedRatio : currentRatio;
+  const displayRatio = isLocked ? (state.decalLockedRatio || currentRatio) : currentRatio;
 
   if (chipSpan) {
-    chipSpan.textContent = `${displayRatio.toFixed(2)} : 1`;
+    const formatName = getAspectFormatName(displayRatio);
+    chipSpan.textContent = `${displayRatio.toFixed(2)}:1 (${formatName.split(' ')[0]})`;
+    chipSpan.title = `Current aspect ratio: ${displayRatio.toFixed(2)}:1 (${formatName})`;
   }
 
   if (btnLock) {
@@ -569,11 +824,12 @@ export function updateDecalAspectUI() {
 
   if (resetBtnLabel && resetBtn) {
     if (state.currentImage && Math.abs(imgRatio - 1.0) > 0.02) {
-      resetBtnLabel.textContent = `Reset to Image (${imgRatio.toFixed(2)}:1)`;
-      resetBtn.title = `Reset decal proportions to match loaded image (${imgRatio.toFixed(2)}:1)`;
+      const format = getAspectFormatName(imgRatio);
+      resetBtnLabel.textContent = `Match Graphic (${imgRatio.toFixed(2)}:1)`;
+      resetBtn.title = `Reset decal proportions to match loaded graphic (${imgRatio.toFixed(2)}:1 • ${format})`;
     } else {
-      resetBtnLabel.textContent = 'Reset Aspect Ratio';
-      resetBtn.title = 'Reset decal proportions to 1:1 square';
+      resetBtnLabel.textContent = 'Match Graphic Ratio';
+      resetBtn.title = 'Reset decal proportions to match loaded graphic';
     }
   }
 }
@@ -815,12 +1071,25 @@ export function applyDecalDimPreset(w, h, d = 1.0) {
   const wSlider = document.getElementById('dimWidthSlider');
   const hSlider = document.getElementById('dimHeightSlider');
   const dSlider = document.getElementById('dimDepthSlider');
+  const wMaxLabel = document.getElementById('dimWidthMaxLabel');
+  const hMaxLabel = document.getElementById('dimHeightMaxLabel');
 
   if (wInput) wInput.value = w;
   if (hInput) hInput.value = h;
   if (dInput) dInput.value = d;
-  if (wSlider) wSlider.value = w;
-  if (hSlider) hSlider.value = h;
+
+  if (wSlider) {
+    const maxW = Math.max(10.0, Math.ceil(w));
+    wSlider.max = maxW;
+    wSlider.value = w;
+    if (wMaxLabel) wMaxLabel.textContent = `${maxW}m`;
+  }
+  if (hSlider) {
+    const maxH = Math.max(10.0, Math.ceil(h));
+    hSlider.max = maxH;
+    hSlider.value = h;
+    if (hMaxLabel) hMaxLabel.textContent = `${maxH}m`;
+  }
   if (dSlider) dSlider.value = d;
 
   if (state.decalAspectLocked) {
@@ -872,43 +1141,8 @@ export function updateConfigJson() {
   const globalMetallic = parseFloat(document.getElementById('globalMetallicSlider').value) || 0.0;
   const globalSmoothness = parseFloat(document.getElementById('globalSmoothnessSlider').value) || 0.0;
   const schemaFormat = document.getElementById('jsonSchemaFormat')?.value || 'extended';
-  const uiPriorityInput = document.getElementById('uiPriorityInput');
-  const uiPrioritySlider = document.getElementById('uiPrioritySlider');
-  let uiPriority = 41;
-  if (uiPriorityInput && uiPriorityInput.value !== '') {
-    uiPriority = parseInt(uiPriorityInput.value, 10);
-  } else if (uiPrioritySlider) {
-    uiPriority = parseInt(uiPrioritySlider.value, 10);
-  }
-  if (isNaN(uiPriority)) uiPriority = 41;
-  const uiPriorityBadge = document.getElementById('uiPriorityVal');
-  if (uiPriorityBadge) uiPriorityBadge.textContent = uiPriority.toLocaleString();
 
-  const includeMeta = document.getElementById('includeAssetMetadata')?.checked || false;
-  const metaSetName = document.getElementById('metaSetName')?.value?.trim() || getAssetSeriesName() || '';
-  const metaAuthor = document.getElementById('metaAuthor')?.value?.trim() || '';
-  const metaVersion = document.getElementById('metaVersion')?.value?.trim() || '1.0.0';
-  const metaNotes = document.getElementById('metaNotes')?.value?.trim() || '';
-  const metaAvailableInEditor = document.getElementById('metaAvailableInEditor')?.checked !== false;
-  const metaDualPriority = document.getElementById('metaDualPriority')?.checked !== false;
-
-  const baseProps = {};
-  if (includeMeta) {
-    const metaObj = {};
-    if (metaSetName) metaObj.set_name = metaSetName;
-    if (metaAuthor) metaObj.author = metaAuthor;
-    if (metaVersion) metaObj.version = metaVersion;
-    if (metaNotes) metaObj.notes = metaNotes;
-    baseProps.asset_metadata = metaObj;
-  }
-
-  baseProps.UiPriority = isNaN(uiPriority) ? 41 : uiPriority;
-  if (includeMeta && metaDualPriority) {
-    baseProps.m_UIPriority = isNaN(uiPriority) ? 41 : uiPriority;
-  }
-  if (includeMeta && metaAvailableInEditor) {
-    baseProps.m_availableInEditor = true;
-  }
+  const baseProps = getBaseJsonProps();
   checkLiveOverlapAndAlert();
 
   const normalOpacity = parseFloat(document.getElementById('normalOpacitySlider')?.value) ?? 1.0;
@@ -917,6 +1151,16 @@ export function updateConfigJson() {
 
   let jsonString = '';
   const pathTextEl = document.getElementById('targetPathText');
+
+  // Toggle Net Lane JSON inspection tab strip visibility
+  const netlaneStrip = document.getElementById('netlaneJsonTabStrip');
+  if (netlaneStrip) {
+    netlaneStrip.style.display = (state.appMode === 'netlane') ? 'flex' : 'none';
+  }
+  const netlaneQuickRow = document.getElementById('netlaneJsonQuickDownloadRow');
+  if (netlaneQuickRow) {
+    netlaneQuickRow.style.display = (state.appMode === 'netlane') ? 'flex' : 'none';
+  }
 
   if (state.appMode === 'decal') {
     const width = parseFloat(document.getElementById('dimWidth').value) || 2.0;
@@ -991,6 +1235,9 @@ export function updateConfigJson() {
       }, null, 2);
     }
 
+    const jsonLabel = document.getElementById('jsonLabel');
+    if (jsonLabel) jsonLabel.textContent = 'Generated decal.json';
+
     if (pathTextEl) {
       pathTextEl.textContent = `%AppData%\\..\\LocalLow\\Colossal Order\\Cities Skylines II\\ModsData\\ExtraAssetsImporter\\CustomDecals\\${category}\\${name}\\`;
     }
@@ -1028,49 +1275,47 @@ export function updateConfigJson() {
       }, null, 2);
     }
 
+    const jsonLabel = document.getElementById('jsonLabel');
+    if (jsonLabel) jsonLabel.textContent = 'Generated surface.json';
+
     if (pathTextEl) {
       pathTextEl.textContent = `%AppData%\\..\\LocalLow\\Colossal Order\\Cities Skylines II\\ModsData\\ExtraAssetsImporter\\CustomSurfaces\\${category}\\${name}\\`;
     }
   } else {
-    const laneWidth = parseFloat(document.getElementById('netlaneWidthSlider').value) || 1.0;
-    const texLength = parseFloat(document.getElementById('netlaneLengthSlider').value) || 2.0;
-
-    if (schemaFormat === 'extended') {
-      jsonString = JSON.stringify({
-        ...baseProps,
-        Float: {
-          _DrawOrder: drawOrder,
-          _Metallic: Number(globalMetallic.toFixed(2)),
-          _Smoothness: Number(globalSmoothness.toFixed(2)),
-          _NormalOpacity: Number(normalOpacity.toFixed(2)),
-          _BaseOpacity: Number(baseOpacity.toFixed(2)),
-          _MetallicOpacity: Number(metallicOpacity.toFixed(2))
-        },
-        Vector: {
-          colossal_MeshSize: {
-            x: Number(laneWidth.toFixed(2)),
-            y: 0.2,
-            z: Number(texLength.toFixed(2)),
-            w: 0
-          },
-          colossal_TextureArea: {
-            x: 0,
-            y: 0,
-            z: 1,
-            w: 1
-          }
-        }
-      }, null, 2);
+    // Net Lane Mode: Generate decal.json, surface.json, and netlane.json
+    const activeTab = state.netlaneJsonTab || 'decal';
+    if (activeTab === 'surface') {
+      jsonString = getNetlaneSurfaceJson(schemaFormat);
+    } else if (activeTab === 'netlane') {
+      jsonString = getNetlaneJson(schemaFormat);
     } else {
-      jsonString = JSON.stringify({
-        ...baseProps,
-        width: Number(laneWidth.toFixed(2)),
-        length: Number(texLength.toFixed(2)),
-        "_Draw Order": drawOrder,
-        _Metallic: Number(globalMetallic.toFixed(2)),
-        _Smoothness: Number(globalSmoothness.toFixed(2))
-      }, null, 2);
+      jsonString = getNetlaneDecalJson(schemaFormat);
     }
+
+    const jsonLabel = document.getElementById('jsonLabel');
+    if (jsonLabel) {
+      jsonLabel.textContent = `Generated ${activeTab}.json (Net Lane)`;
+    }
+
+    // Update active tab buttons visual state
+    ['tabNetlaneDecal', 'tabNetlaneSurface', 'tabNetlaneNetlane'].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const isThis = (id === 'tabNetlaneDecal' && activeTab === 'decal') ||
+                     (id === 'tabNetlaneSurface' && activeTab === 'surface') ||
+                     (id === 'tabNetlaneNetlane' && activeTab === 'netlane');
+      if (isThis) {
+        el.style.border = '1px solid var(--primary)';
+        el.style.background = 'rgba(0, 168, 255, 0.2)';
+        el.style.color = 'var(--primary)';
+        el.style.fontWeight = '600';
+      } else {
+        el.style.border = '1px solid var(--border-color)';
+        el.style.background = 'rgba(255, 255, 255, 0.05)';
+        el.style.color = 'var(--text-dim)';
+        el.style.fontWeight = 'normal';
+      }
+    });
 
     if (pathTextEl) {
       pathTextEl.textContent = `%AppData%\\..\\LocalLow\\Colossal Order\\Cities Skylines II\\ModsData\\ExtraAssetsImporter\\CustomNetlanes\\${category}\\${name}\\`;
@@ -1080,10 +1325,275 @@ export function updateConfigJson() {
   document.getElementById('jsonCodeText').textContent = jsonString;
 }
 
+export function getBaseJsonProps() {
+  const uiPriorityInput = document.getElementById('uiPriorityInput');
+  const uiPrioritySlider = document.getElementById('uiPrioritySlider');
+  let uiPriority = 41;
+  if (uiPriorityInput && uiPriorityInput.value !== '') {
+    uiPriority = parseInt(uiPriorityInput.value, 10);
+  } else if (uiPrioritySlider) {
+    uiPriority = parseInt(uiPrioritySlider.value, 10);
+  }
+  if (isNaN(uiPriority)) uiPriority = 41;
+
+  const uiPriorityBadge = document.getElementById('uiPriorityVal');
+  if (uiPriorityBadge) uiPriorityBadge.textContent = uiPriority.toLocaleString();
+
+  const includeMeta = document.getElementById('includeAssetMetadata')?.checked || false;
+  const metaSetName = document.getElementById('metaSetName')?.value?.trim() || getAssetSeriesName() || '';
+  const metaAuthor = document.getElementById('metaAuthor')?.value?.trim() || '';
+  const metaVersion = document.getElementById('metaVersion')?.value?.trim() || '1.0.0';
+  const metaNotes = document.getElementById('metaNotes')?.value?.trim() || '';
+  const metaAvailableInEditor = document.getElementById('metaAvailableInEditor')?.checked !== false;
+  const metaDualPriority = document.getElementById('metaDualPriority')?.checked !== false;
+
+  const baseProps = {};
+  if (includeMeta) {
+    const metaObj = {};
+    if (metaSetName) metaObj.set_name = metaSetName;
+    if (metaAuthor) metaObj.author = metaAuthor;
+    if (metaVersion) metaObj.version = metaVersion;
+    if (metaNotes) metaObj.notes = metaNotes;
+    baseProps.asset_metadata = metaObj;
+  }
+
+  baseProps.UiPriority = isNaN(uiPriority) ? 41 : uiPriority;
+  if (includeMeta && metaDualPriority) {
+    baseProps.m_UIPriority = isNaN(uiPriority) ? 41 : uiPriority;
+  }
+  if (includeMeta && metaAvailableInEditor) {
+    baseProps.m_availableInEditor = true;
+  }
+  return baseProps;
+}
+
+export function getNetlaneDecalJson(schemaFormat = 'extended') {
+  const baseProps = getBaseJsonProps();
+  const laneWidth = parseFloat(document.getElementById('netlaneWidthSlider')?.value || '1.0') || 1.0;
+  const texLength = parseFloat(document.getElementById('netlaneLengthSlider')?.value || '2.0') || 2.0;
+  const defaultDraw = 60;
+  const drawOrder = parseInt(document.getElementById('drawOrderSlider')?.value, 10) || defaultDraw;
+  const globalMetallic = parseFloat(document.getElementById('globalMetallicSlider')?.value || '0.0') || 0.0;
+  const globalSmoothness = parseFloat(document.getElementById('globalSmoothnessSlider')?.value || '0.0') || 0.0;
+  const normalOpacity = parseFloat(document.getElementById('normalOpacitySlider')?.value) ?? 1.0;
+  const baseOpacity = parseFloat(document.getElementById('baseOpacitySlider')?.value) ?? 1.0;
+  const metallicOpacity = parseFloat(document.getElementById('metallicOpacitySlider')?.value) ?? 0.0;
+
+  let maskSum = 0;
+  const tBox = document.getElementById('layerTerrain');
+  const rBox = document.getElementById('layerRoads');
+  const bBox = document.getElementById('layerBuildings');
+  const vBox = document.getElementById('layerVehicles');
+  const cBox = document.getElementById('layerCreatures');
+  const pBox = document.getElementById('layerProps');
+  if (tBox && tBox.checked) maskSum += 1;
+  if (rBox && rBox.checked) maskSum += 2;
+  if (bBox && bBox.checked) maskSum += 4;
+  if (vBox && vBox.checked) maskSum += 8;
+  if (cBox && cBox.checked) maskSum += 16;
+  if (pBox && pBox.checked) maskSum += 32;
+  const decalMask = maskSum > 0 ? maskSum : 3;
+
+  if (schemaFormat === 'extended') {
+    return JSON.stringify({
+      ...baseProps,
+      Float: {
+        _DrawOrder: drawOrder,
+        _Metallic: Number(globalMetallic.toFixed(2)),
+        _Smoothness: Number(globalSmoothness.toFixed(2)),
+        colossal_DecalLayerMask: decalMask,
+        _NormalOpacity: Number(normalOpacity.toFixed(2)),
+        _BaseOpacity: Number(baseOpacity.toFixed(2)),
+        _MetallicOpacity: Number(metallicOpacity.toFixed(2)),
+        colossal_UVScale: 1.0
+      },
+      Vector: {
+        colossal_MeshSize: {
+          x: Number(laneWidth.toFixed(2)),
+          y: 0.2,
+          z: Number(texLength.toFixed(2)),
+          w: 0
+        },
+        colossal_TextureArea: {
+          x: 0,
+          y: 0,
+          z: 1,
+          w: 1
+        }
+      }
+    }, null, 2);
+  } else {
+    return JSON.stringify({
+      ...baseProps,
+      width: Number(laneWidth.toFixed(2)),
+      length: Number(texLength.toFixed(2)),
+      depth: 0.2,
+      _colossal_DecalLayerMask: decalMask,
+      "_Draw Order": drawOrder,
+      _Metallic: Number(globalMetallic.toFixed(2)),
+      _Smoothness: Number(globalSmoothness.toFixed(2))
+    }, null, 2);
+  }
+}
+
+export function getNetlaneSurfaceJson(schemaFormat = 'extended') {
+  const baseProps = getBaseJsonProps();
+  const laneWidth = parseFloat(document.getElementById('netlaneWidthSlider')?.value || '1.0') || 1.0;
+  const texLength = parseFloat(document.getElementById('netlaneLengthSlider')?.value || '2.0') || 2.0;
+  const defaultDraw = 60;
+  const drawOrder = parseInt(document.getElementById('drawOrderSlider')?.value, 10) || defaultDraw;
+  const globalMetallic = parseFloat(document.getElementById('globalMetallicSlider')?.value || '0.0') || 0.0;
+  const globalSmoothness = parseFloat(document.getElementById('globalSmoothnessSlider')?.value || '0.0') || 0.0;
+  const normalOpacity = parseFloat(document.getElementById('normalOpacitySlider')?.value) ?? 1.0;
+  const baseOpacity = parseFloat(document.getElementById('baseOpacitySlider')?.value) ?? 1.0;
+  const metallicOpacity = parseFloat(document.getElementById('metallicOpacitySlider')?.value) ?? 0.0;
+
+  if (schemaFormat === 'extended') {
+    return JSON.stringify({
+      ...baseProps,
+      Float: {
+        _DrawOrder: drawOrder,
+        _Metallic: Number(globalMetallic.toFixed(2)),
+        _Smoothness: Number(globalSmoothness.toFixed(2)),
+        colossal_UVScale: 1.0,
+        _NormalOpacity: Number(normalOpacity.toFixed(2)),
+        _BaseOpacity: Number(baseOpacity.toFixed(2)),
+        _MetallicOpacity: Number(metallicOpacity.toFixed(2))
+      },
+      Vector: {
+        colossal_MeshSize: {
+          x: Number(laneWidth.toFixed(2)),
+          y: 0.2,
+          z: Number(texLength.toFixed(2)),
+          w: 0
+        },
+        colossal_TextureArea: {
+          x: 0,
+          y: 0,
+          z: 1,
+          w: 1
+        }
+      }
+    }, null, 2);
+  } else {
+    return JSON.stringify({
+      ...baseProps,
+      uvScale: 1.0,
+      width: Number(laneWidth.toFixed(2)),
+      length: Number(texLength.toFixed(2)),
+      "_Draw Order": drawOrder,
+      _Metallic: Number(globalMetallic.toFixed(2)),
+      _Smoothness: Number(globalSmoothness.toFixed(2))
+    }, null, 2);
+  }
+}
+
+export function getNetlaneJson(schemaFormat = 'extended') {
+  const baseProps = getBaseJsonProps();
+  const laneWidth = parseFloat(document.getElementById('netlaneWidthSlider')?.value || '1.0') || 1.0;
+  const texLength = parseFloat(document.getElementById('netlaneLengthSlider')?.value || '2.0') || 2.0;
+  const defaultDraw = 60;
+  const drawOrder = parseInt(document.getElementById('drawOrderSlider')?.value, 10) || defaultDraw;
+  const globalMetallic = parseFloat(document.getElementById('globalMetallicSlider')?.value || '0.0') || 0.0;
+  const globalSmoothness = parseFloat(document.getElementById('globalSmoothnessSlider')?.value || '0.0') || 0.0;
+  const normalOpacity = parseFloat(document.getElementById('normalOpacitySlider')?.value) ?? 1.0;
+  const baseOpacity = parseFloat(document.getElementById('baseOpacitySlider')?.value) ?? 1.0;
+  const metallicOpacity = parseFloat(document.getElementById('metallicOpacitySlider')?.value) ?? 0.0;
+
+  let maskSum = 0;
+  const tBox = document.getElementById('layerTerrain');
+  const rBox = document.getElementById('layerRoads');
+  const bBox = document.getElementById('layerBuildings');
+  const vBox = document.getElementById('layerVehicles');
+  const cBox = document.getElementById('layerCreatures');
+  const pBox = document.getElementById('layerProps');
+  if (tBox && tBox.checked) maskSum += 1;
+  if (rBox && rBox.checked) maskSum += 2;
+  if (bBox && bBox.checked) maskSum += 4;
+  if (vBox && vBox.checked) maskSum += 8;
+  if (cBox && cBox.checked) maskSum += 16;
+  if (pBox && pBox.checked) maskSum += 32;
+  const decalMask = maskSum > 0 ? maskSum : 3;
+
+  if (schemaFormat === 'extended') {
+    return JSON.stringify({
+      ...baseProps,
+      Float: {
+        _DrawOrder: drawOrder,
+        _Metallic: Number(globalMetallic.toFixed(2)),
+        _Smoothness: Number(globalSmoothness.toFixed(2)),
+        colossal_DecalLayerMask: decalMask,
+        _NormalOpacity: Number(normalOpacity.toFixed(2)),
+        _BaseOpacity: Number(baseOpacity.toFixed(2)),
+        _MetallicOpacity: Number(metallicOpacity.toFixed(2))
+      },
+      Vector: {
+        colossal_MeshSize: {
+          x: Number(laneWidth.toFixed(2)),
+          y: 0.2,
+          z: Number(texLength.toFixed(2)),
+          w: 0
+        },
+        colossal_TextureArea: {
+          x: 0,
+          y: 0,
+          z: 1,
+          w: 1
+        }
+      }
+    }, null, 2);
+  } else {
+    return JSON.stringify({
+      ...baseProps,
+      width: Number(laneWidth.toFixed(2)),
+      length: Number(texLength.toFixed(2)),
+      "_Draw Order": drawOrder,
+      _Metallic: Number(globalMetallic.toFixed(2)),
+      _Smoothness: Number(globalSmoothness.toFixed(2))
+    }, null, 2);
+  }
+}
+
+export function setNetlaneJsonPreviewTab(tab) {
+  state.netlaneJsonTab = tab;
+  ['tabNetlaneDecal', 'tabNetlaneSurface', 'tabNetlaneNetlane'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const isThis = (id === 'tabNetlaneDecal' && tab === 'decal') ||
+                   (id === 'tabNetlaneSurface' && tab === 'surface') ||
+                   (id === 'tabNetlaneNetlane' && tab === 'netlane');
+    if (isThis) {
+      el.style.border = '1px solid var(--primary)';
+      el.style.background = 'rgba(0, 168, 255, 0.2)';
+      el.style.color = 'var(--primary)';
+      el.style.fontWeight = '600';
+    } else {
+      el.style.border = '1px solid var(--border-color)';
+      el.style.background = 'rgba(255, 255, 255, 0.05)';
+      el.style.color = 'var(--text-dim)';
+      el.style.fontWeight = 'normal';
+    }
+  });
+
+  const jsonLabel = document.getElementById('jsonLabel');
+  if (jsonLabel && state.appMode === 'netlane') {
+    jsonLabel.textContent = `Generated ${tab}.json (Net Lane)`;
+  }
+
+  updateConfigJson();
+  showToast(`Previewing ${tab}.json`);
+}
+window.setNetlaneJsonPreviewTab = setNetlaneJsonPreviewTab;
+
 export function copyConfigJson() {
   const text = document.getElementById('jsonCodeText').textContent;
   navigator.clipboard.writeText(text).then(() => {
-    const file = state.appMode === 'decal' ? 'decal.json' : (state.appMode === 'netlane' ? 'netlane.json' : 'surface.json');
+    let file = 'decal.json';
+    if (state.appMode === 'surface') {
+      file = 'surface.json';
+    } else if (state.appMode === 'netlane') {
+      file = `${state.netlaneJsonTab || 'decal'}.json`;
+    }
     showToast(`${file} copied!`);
   });
 }
@@ -1098,23 +1608,86 @@ export function copyDecalPath() {
   }
 }
 
-export function downloadConfigJson() {
-  const defaultName = state.appMode === 'decal' ? 'CustomDecal' : (state.appMode === 'surface' ? 'CustomSurface' : 'CustomNetLane');
-  const assetName = document.getElementById('assetName').value.trim() || defaultName;
-  const jsonText = document.getElementById('jsonCodeText').textContent;
-  const blob = new Blob([jsonText], { type: 'application/json' });
+/**
+ * Prompts the user where to save the file using the native OS Save As dialog (File System Access API).
+ * If the user's browser does not support showSaveFilePicker, or if permission fails,
+ * it seamlessly falls back to the standard browser download mechanism.
+ */
+export async function saveFileWithPicker(blob, defaultFilename, options = {}) {
+  // If askWhereToSave is enabled and showSaveFilePicker is available
+  if (state.askWhereToSave !== false && typeof window.showSaveFilePicker === 'function') {
+    try {
+      const pickerOptions = {
+        suggestedName: defaultFilename,
+        ...options
+      };
+      const handle = await window.showSaveFilePicker(pickerOptions);
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      return { success: true, method: 'picker', filename: handle.name || defaultFilename };
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        // User clicked Cancel in the OS file picker dialog
+        return { success: false, cancelled: true };
+      }
+      console.warn('Native showSaveFilePicker error, falling back to download:', err);
+    }
+  }
+
+  // Fallback: standard browser download
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = state.appMode === 'decal' ? 'decal.json' : (state.appMode === 'netlane' ? 'netlane.json' : 'surface.json');
+  a.download = defaultFilename;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  showToast(`Downloaded ${a.download}`);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  return { success: true, method: 'download', filename: defaultFilename };
 }
 
-export function downloadSingleMap(type) {
+export async function downloadConfigJson(targetType) {
+  const defaultName = state.appMode === 'decal' ? 'CustomDecal' : (state.appMode === 'surface' ? 'CustomSurface' : 'CustomNetLane');
+  const assetName = document.getElementById('assetName')?.value?.trim() || defaultName;
+  const schemaFormat = document.getElementById('jsonSchemaFormat')?.value || 'extended';
+
+  let jsonText = document.getElementById('jsonCodeText')?.textContent || '{}';
+  let filename = state.appMode === 'decal' ? 'decal.json' : (state.appMode === 'netlane' ? 'netlane.json' : 'surface.json');
+
+  if (state.appMode === 'netlane') {
+    const type = targetType || state.netlaneJsonTab || 'decal';
+    if (type === 'surface') {
+      jsonText = getNetlaneSurfaceJson(schemaFormat);
+      filename = 'surface.json';
+    } else if (type === 'netlane') {
+      jsonText = getNetlaneJson(schemaFormat);
+      filename = 'netlane.json';
+    } else {
+      jsonText = getNetlaneDecalJson(schemaFormat);
+      filename = 'decal.json';
+    }
+  }
+
+  const blob = new Blob([jsonText], { type: 'application/json' });
+
+  const result = await saveFileWithPicker(blob, filename, {
+    types: [
+      {
+        description: 'Cities: Skylines 2 JSON Config (*.json)',
+        accept: { 'application/json': ['.json'] }
+      }
+    ]
+  });
+
+  if (result.cancelled) {
+    showToast('Save cancelled');
+    return;
+  }
+  showToast(`Saved ${result.filename || filename}`);
+}
+
+export async function downloadSingleMap(type) {
   const { canvasBase, canvasNormal, canvasMask, canvasIcon } = getCanvases();
   let canvas = canvasBase;
   let filename = '_BaseColorMap.png';
@@ -1130,16 +1703,21 @@ export function downloadSingleMap(type) {
     filename = 'icon.png';
   }
 
-  canvas.toBlob(blob => {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    showToast(`Downloaded ${filename}`);
+  canvas.toBlob(async blob => {
+    if (!blob) return;
+    const result = await saveFileWithPicker(blob, filename, {
+      types: [
+        {
+          description: 'PNG Image (*.png)',
+          accept: { 'image/png': ['.png'] }
+        }
+      ]
+    });
+    if (result.cancelled) {
+      showToast('Save cancelled');
+      return;
+    }
+    showToast(`Saved ${result.filename || filename}`);
   }, 'image/png');
 }
 
@@ -1150,6 +1728,7 @@ export function downloadAllMaps() {
   setTimeout(() => downloadSingleMap('icon'), 750);
   setTimeout(() => downloadConfigJson(), 1000);
 }
+
 
 export async function exportZipPackage() {
   if (typeof JSZip === 'undefined') {
@@ -1187,7 +1766,11 @@ export async function exportZipPackage() {
   } else if (state.appMode === 'surface') {
     folder.file('surface.json', jsonString);
   } else {
-    folder.file('netlane.json', jsonString);
+    // Net Lane mode: generate decal.json, surface.json AND netlane.json for dual pipeline & EAI sub-importer compatibility
+    const schemaFormat = document.getElementById('jsonSchemaFormat')?.value || 'extended';
+    folder.file('decal.json', getNetlaneDecalJson(schemaFormat));
+    folder.file('surface.json', getNetlaneSurfaceJson(schemaFormat));
+    folder.file('netlane.json', getNetlaneJson(schemaFormat));
   }
 
   const getCanvasBlob = (canvas) => new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
@@ -1224,7 +1807,9 @@ export async function exportZipPackage() {
         : `%AppData%\\..\\LocalLow\\Colossal Order\\Cities Skylines II\\ModsData\\ExtraAssetsImporter\\CustomNetlanes\\${category}\\${assetName}\\`);
 
     const assetTypeTitle = state.appMode === 'decal' ? 'Decal' : (state.appMode === 'netlane' ? 'Net Lane' : 'Surface');
-    const configFilename = state.appMode === 'decal' ? 'decal.json' : (state.appMode === 'netlane' ? 'netlane.json' : 'surface.json');
+    const configFileListStr = state.appMode === 'netlane'
+      ? '- decal.json, surface.json & netlane.json (Multi-pipeline asset configuration metadata)'
+      : `- ${state.appMode === 'decal' ? 'decal.json' : 'surface.json'} (Asset configuration metadata)`;
 
     const readme = `Cities: Skylines 2 Custom ${assetTypeTitle} Asset: ${assetName}
 Generated for ExtraAssetsImporter & Native CS2 Asset Pipelines
@@ -1237,7 +1822,7 @@ INCLUDED FILES:
 - _NormalMap.png (OpenGL Tangent +X, +Y normal bump)
 - _MaskMap.png (R: Metallic, G: 0, B: 0, Alpha: Smoothness/Glossiness)
 ${iconBlob ? `- icon.png (CS2 UI Menu Thumbnail)` : ''}
-- ${configFilename} (Asset configuration metadata)
+${configFileListStr}
 ${state.appMode === 'decal' ? '- settings.json (Official Colossal Order SurfacePostProcessor with DefaultDecal template)' : ''}
 
 INSTRUCTIONS:
@@ -1249,14 +1834,22 @@ INSTRUCTIONS:
 
     showToast('Generating zip package...');
     const content = await zip.generateAsync({ type: 'blob' });
-    const url = URL.createObjectURL(content);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${assetName}_${state.appMode === 'decal' ? 'Decal' : (state.appMode === 'netlane' ? 'NetLane' : 'Surface')}Package.zip`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const defaultZipName = `${assetName}_${state.appMode === 'decal' ? 'Decal' : (state.appMode === 'netlane' ? 'NetLane' : 'Surface')}Package.zip`;
+
+    const result = await saveFileWithPicker(content, defaultZipName, {
+      types: [
+        {
+          description: 'Cities: Skylines 2 Mod Package (*.zip)',
+          accept: { 'application/zip': ['.zip'] }
+        }
+      ]
+    });
+
+    if (result.cancelled) {
+      showToast('Export cancelled');
+      return;
+    }
+
     state.lastExportedName = assetName;
     state.lastExportedTransform = { rot: state.textureRotation, flipH: state.flipH, flipV: state.flipV };
     state.originalNameBeforeTransform = assetName;
@@ -1265,7 +1858,7 @@ INSTRUCTIONS:
     const prioInput = document.getElementById('uiPriorityInput');
     const prioVal = parseInt(prioInput ? prioInput.value : '41', 10) || 41;
     registerAssetExportToSet(assetName, prioVal);
-    showToast(`Exported ${assetName}_${state.appMode === 'decal' ? 'Decal' : (state.appMode === 'netlane' ? 'NetLane' : 'Surface')}Package.zip!`);
+    showToast(`Exported ${result.filename || defaultZipName}!`);
   } catch (err) {
     console.error(err);
     showToast('Error generating zip package');
@@ -1951,24 +2544,208 @@ export function deserializeAndLoadProject(proj) {
   }
 }
 
-export function saveProjectToFile() {
+export async function saveProjectToFile() {
   const proj = serializeCurrentProject();
   if (typeof saveAssetToIndexedDB === 'function') {
     saveAssetToIndexedDB(proj);
   }
   const jsonStr = JSON.stringify(proj, null, 2);
   const blob = new Blob([jsonStr], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${proj.assetName}.cs2asset`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  const filename = `${proj.assetName}.cs2asset`;
+
+  const result = await saveFileWithPicker(blob, filename, {
+    types: [
+      {
+        description: 'Cities: Skylines 2 Asset Project (*.cs2asset)',
+        accept: { 'application/json': ['.cs2asset', '.json'] }
+      }
+    ]
+  });
+
+  if (result.cancelled) {
+    showToast('Save cancelled');
+    return;
+  }
+
   state.hasUnsavedChanges = false;
-  showToast(`Saved ${proj.assetName}.cs2asset`);
+  showToast(`Saved ${result.filename || filename}`);
 }
+
+/**
+ * Directly exports the asset files to a user-chosen folder on their computer (e.g. Cities: Skylines 2 ModsData folder)
+ * using the File System Access directory picker. No zip extraction needed!
+ */
+export async function exportAssetDirectToFolder() {
+  if (typeof window.showDirectoryPicker !== 'function') {
+    showToast('Direct folder access is not supported by this browser. Use "Export Asset Package (.zip)" instead.');
+    return;
+  }
+
+  try {
+    showToast('Select destination folder (e.g. your ExtraAssetsImporter directory)...');
+    const rootHandle = await window.showDirectoryPicker({
+      mode: 'readwrite',
+      startIn: 'documents'
+    });
+
+    const defaultName = state.appMode === 'decal' ? 'CustomDecal' : (state.appMode === 'surface' ? 'CustomSurface' : 'CustomNetLane');
+    const assetName = document.getElementById('assetName')?.value?.trim() || defaultName;
+    const category = getAssetCategory();
+    const jsonString = document.getElementById('jsonCodeText')?.textContent || '{}';
+
+    // Create the asset subfolder inside the selected directory
+    const targetDirHandle = await rootHandle.getDirectoryHandle(assetName, { create: true });
+
+    showToast(`Writing asset files into ${assetName}/...`);
+    const { canvasBase, canvasNormal, canvasMask, canvasIcon } = getCanvases();
+    const getCanvasBlob = (canvas) => new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+
+    const [baseBlob, normalBlob, maskBlob, iconBlob] = await Promise.all([
+      getCanvasBlob(canvasBase),
+      getCanvasBlob(canvasNormal),
+      getCanvasBlob(canvasMask),
+      getCanvasBlob(canvasIcon)
+    ]);
+
+    await writeBlobToDirHandle(targetDirHandle, '_BaseColorMap.png', baseBlob);
+    await writeBlobToDirHandle(targetDirHandle, '_NormalMap.png', normalBlob);
+    await writeBlobToDirHandle(targetDirHandle, '_MaskMap.png', maskBlob);
+    if (iconBlob) {
+      await writeBlobToDirHandle(targetDirHandle, 'icon.png', iconBlob);
+    }
+
+    if (state.appMode === 'decal') {
+      await writeBlobToDirHandle(targetDirHandle, 'decal.json', new Blob([jsonString], { type: 'application/json' }));
+      const normalOpacity = parseFloat(document.getElementById('normalOpacitySlider')?.value || '1.0');
+      const baseOpacity = parseFloat(document.getElementById('baseOpacitySlider')?.value || '1.0');
+      const metallicOpacity = parseFloat(document.getElementById('metallicOpacitySlider')?.value || '0.0');
+      const officialSettings = {
+        SurfacePostProcessor: {
+          materialTemplate: "DefaultDecal"
+        },
+        floatProperties: {
+          _NormalOpacity: Number(normalOpacity.toFixed(2)),
+          _BaseOpacity: Number(baseOpacity.toFixed(2)),
+          _MetallicOpacity: Number(metallicOpacity.toFixed(2))
+        }
+      };
+      await writeBlobToDirHandle(targetDirHandle, 'settings.json', new Blob([JSON.stringify(officialSettings, null, 2)], { type: 'application/json' }));
+    } else if (state.appMode === 'surface') {
+      await writeBlobToDirHandle(targetDirHandle, 'surface.json', new Blob([jsonString], { type: 'application/json' }));
+    } else {
+      // Net Lane mode: write decal.json, surface.json AND netlane.json
+      const schemaFormat = document.getElementById('jsonSchemaFormat')?.value || 'extended';
+      await writeBlobToDirHandle(targetDirHandle, 'decal.json', new Blob([getNetlaneDecalJson(schemaFormat)], { type: 'application/json' }));
+      await writeBlobToDirHandle(targetDirHandle, 'surface.json', new Blob([getNetlaneSurfaceJson(schemaFormat)], { type: 'application/json' }));
+      await writeBlobToDirHandle(targetDirHandle, 'netlane.json', new Blob([getNetlaneJson(schemaFormat)], { type: 'application/json' }));
+    }
+
+    const assetTypeTitle = state.appMode === 'decal' ? 'Decal' : (state.appMode === 'netlane' ? 'Net Lane' : 'Surface');
+    const configFileListStr = state.appMode === 'netlane'
+      ? '- decal.json\n- surface.json\n- netlane.json'
+      : `- ${state.appMode === 'decal' ? 'decal.json' : 'surface.json'}`;
+
+    const readme = `Cities: Skylines 2 Custom ${assetTypeTitle} Asset: ${assetName}
+Exported directly to: ${rootHandle.name}/${assetName}/
+Files:
+- _BaseColorMap.png
+- _NormalMap.png
+- _MaskMap.png
+- icon.png
+${configFileListStr}
+${state.appMode === 'decal' ? '- settings.json' : ''}
+Ready for in-game use with ExtraAssetsImporter!`;
+    await writeBlobToDirHandle(targetDirHandle, 'README.txt', new Blob([readme], { type: 'text/plain' }));
+
+    state.lastExportedName = assetName;
+    state.lastExportedTransform = { rot: state.textureRotation, flipH: state.flipH, flipV: state.flipV };
+    state.originalNameBeforeTransform = assetName;
+    state.isReminderDismissed = false;
+    if (window.checkRotationNameReminder) window.checkRotationNameReminder();
+    const prioInput = document.getElementById('uiPriorityInput');
+    const prioVal = parseInt(prioInput ? prioInput.value : '41', 10) || 41;
+    registerAssetExportToSet(assetName, prioVal);
+
+    showToast(`Saved directly to "${rootHandle.name}/${assetName}/"! Ready in-game!`);
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      showToast('Folder selection cancelled');
+      return;
+    }
+    console.error('Directory export error:', err);
+    showToast(`Directory save error: ${err.message || 'Permission denied'}`);
+  }
+}
+
+async function writeBlobToDirHandle(dirHandle, filename, blob) {
+  const fileHandle = await dirHandle.getFileHandle(filename, { create: true });
+  const writable = await fileHandle.createWritable();
+  await writable.write(blob);
+  await writable.close();
+}
+
+// ==========================================
+// Save Destination Modal Controllers
+// ==========================================
+
+export function openSaveModal() {
+  const modal = document.getElementById('saveAssetModal');
+  if (!modal) return;
+  const defaultName = state.appMode === 'decal' ? 'CustomDecal' : (state.appMode === 'surface' ? 'CustomSurface' : 'CustomNetLane');
+  const assetName = document.getElementById('assetName')?.value?.trim() || defaultName;
+  const category = getAssetCategory();
+
+  const nameEl = document.getElementById('saveModalAssetName');
+  if (nameEl) nameEl.textContent = assetName;
+
+  const pathEl = document.getElementById('saveModalTargetPath');
+  if (pathEl) {
+    const subfolder = state.appMode === 'decal' ? 'CustomDecals' : (state.appMode === 'surface' ? 'CustomSurfaces' : 'CustomNetlanes');
+    pathEl.textContent = `%AppData%\\..\\LocalLow\\Colossal Order\\Cities Skylines II\\ModsData\\ExtraAssetsImporter\\${subfolder}\\${category}\\${assetName}\\`;
+  }
+
+  const chk = document.getElementById('chkAlwaysAskWhereToSave');
+  if (chk) chk.checked = state.askWhereToSave !== false;
+
+  modal.style.display = 'flex';
+}
+
+export function closeSaveModal() {
+  const modal = document.getElementById('saveAssetModal');
+  if (modal) modal.style.display = 'none';
+}
+
+export function closeSaveModalOnBackdrop(e) {
+  if (e.target && e.target.id === 'saveAssetModal') {
+    closeSaveModal();
+  }
+}
+
+export function saveProjectWithPrompt() {
+  closeSaveModal();
+  saveProjectToFile();
+}
+
+export function exportZipWithPrompt() {
+  closeSaveModal();
+  exportZipPackage();
+}
+
+export function exportDirectToFolderWithPrompt() {
+  closeSaveModal();
+  exportAssetDirectToFolder();
+}
+
+export function saveToLibraryWithNotice() {
+  const proj = serializeCurrentProject();
+  if (typeof saveAssetToIndexedDB === 'function') {
+    saveAssetToIndexedDB(proj);
+  }
+  state.hasUnsavedChanges = false;
+  closeSaveModal();
+  showToast(`Saved "${proj.assetName}" to local browser library!`);
+}
+
 
 export function handleProjectFileLoad(e) {
   if (!e.target.files.length) return;

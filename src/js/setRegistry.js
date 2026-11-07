@@ -949,6 +949,17 @@ export async function confirmCreateSetAsset() {
   state.isCustomImageLoaded = true;
   state.hasUnsavedChanges = true;
 
+  if (state.mode === 'decal' && state.autoSyncAspectOnImport !== false && typeof window.syncDecalDimensionsToImage === 'function') {
+    const rawW = modalLoadedImage.naturalWidth || 1;
+    const rawH = modalLoadedImage.naturalHeight || 1;
+    window.syncDecalDimensionsToImage(rawW, rawH, rawW / rawH, false);
+  }
+  if (typeof window.updateSourceImageBadge === 'function') {
+    const rawW = modalLoadedImage.naturalWidth || 1;
+    const rawH = modalLoadedImage.naturalHeight || 1;
+    window.updateSourceImageBadge(rawW, rawH, rawW / rawH);
+  }
+
   // 3. Render all maps with preserved parameters
   if (window.renderAllMaps) window.renderAllMaps();
   if (window.updateDecalAspectUI) window.updateDecalAspectUI();
@@ -1857,15 +1868,32 @@ export async function exportAllSetsAndStorageBackup() {
 
   const jsonStr = JSON.stringify(backupPayload, null, 2);
   const blob = new Blob([jsonStr], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
   const dateStr = new Date().toISOString().slice(0, 10);
-  a.download = `cs2_asset_studio_backup_${dateStr}.json`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  const filename = `cs2_asset_studio_backup_${dateStr}.json`;
+
+  if (typeof window.saveFileWithPicker === 'function') {
+    const res = await window.saveFileWithPicker(blob, filename, {
+      types: [
+        {
+          description: 'Cities: Skylines 2 Studio Backup (*.json)',
+          accept: { 'application/json': ['.json'] }
+        }
+      ]
+    });
+    if (res.cancelled) {
+      showToast('Backup save cancelled');
+      return;
+    }
+  } else {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
 
   showToast(`Backup exported (${sets.length} sets, ${library.length} cached assets saved)!`);
 }

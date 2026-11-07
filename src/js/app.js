@@ -28,7 +28,8 @@ import {
   closeUnsavedModalOnBackdrop,
   confirmGuardSaveAndContinue,
   confirmGuardContinueWithoutSaving,
-  cancelGuardAction
+  cancelGuardAction,
+  toggleAlwaysAskWhereToSave
 } from './state.js';
 
 import {
@@ -159,6 +160,17 @@ import {
 } from './preview.js';
 
 import {
+  renderScaleView,
+  initScaleViewInteractions,
+  updateScaleHUD,
+  setScaleScene,
+  setScaleZoom,
+  toggleScaleRef,
+  resetScaleDecalPosition,
+  applyScaleQuickPreset
+} from './scalePreview.js';
+
+import {
   setAssetCategory,
   getAssetCategory,
   applyCategoryQuickPick,
@@ -189,6 +201,15 @@ import {
   serializeCurrentProject,
   deserializeAndLoadProject,
   saveProjectToFile,
+  saveFileWithPicker,
+  exportAssetDirectToFolder,
+  openSaveModal,
+  closeSaveModal,
+  closeSaveModalOnBackdrop,
+  saveProjectWithPrompt,
+  exportZipWithPrompt,
+  exportDirectToFolderWithPrompt,
+  saveToLibraryWithNotice,
   handleProjectFileLoad,
   seedStarterLibraryIfEmpty,
   initIndexedDBStorage,
@@ -230,7 +251,13 @@ import {
   toggleDecalAspectLock,
   setDecalAspectLock,
   resetDecalAspectRatio,
-  updateDecalAspectUI
+  updateDecalAspectUI,
+  applyPosterPreset,
+  applySyncGraphicRatio,
+  toggleAutoSyncAspect,
+  syncDecalDimensionsToImage,
+  getAspectFormatName,
+  updateSourceImageBadge
 } from './exporter.js';
 
 import { getSavedLibraryFromMemory, saveAssetToIndexedDB } from './db.js';
@@ -392,13 +419,14 @@ export function setMode(mode, force = false) {
     if (maskAlphaLabel) maskAlphaLabel.textContent = 'Modulate Mask with Decal Alpha (Recommended for decals)';
 
     if (dropTitleText) dropTitleText.textContent = 'Drop Source Graphic (PNG or JPG)';
-    if (dropHintText) dropHintText.textContent = 'Isolated road mark, manhole, crack, or sign';
+    if (dropHintText) dropHintText.textContent = 'All ratios supported: 2:3 / 3:4 Posters, 16:9 Billboards, or 1:1 Road Marks';
     if (folderTitleText) folderTitleText.textContent = 'Cities: Skylines 2 Custom Decal Destination Folder';
 
     if (presetButtonsGroup) {
       presetButtonsGroup.innerHTML = `
         <button class="preset-btn" onclick="loadSample('manhole')">Manhole Cover</button>
         <button class="preset-btn" onclick="loadSample('arrow')">Turn Arrow</button>
+        <button class="preset-btn" onclick="loadSample('poster')">Poster (2:3)</button>
         <button class="preset-btn" onclick="loadSample('crack')">Asphalt Crack</button>
       `;
     }
@@ -558,11 +586,13 @@ export function renderAllMaps() {
   renderSimulation();
   updateGridSimulationCanvas();
 
-  // 6. UPDATE SINGLE & TILED VIEWS
+  // 6. UPDATE SINGLE, TILED & SCALE VIEWS
   if (['single', 'base', 'normal', 'mask', 'icon'].includes(state.activeTab)) {
     updateSingleView();
   } else if (state.activeTab === 'tiled') {
     renderTiledView();
+  } else if (state.activeTab === 'scale') {
+    renderScaleView();
   }
 }
 
@@ -654,9 +684,30 @@ export function processUploadedFile(file, force = false) {
       state.currentImage = img;
       state.isCustomImageLoaded = true;
       state.hasUnsavedChanges = true;
+
+      const rawW = img.naturalWidth || img.width || 1024;
+      const rawH = img.naturalHeight || img.height || 1024;
+      const nativeRatio = rawW / rawH;
+
+      // Update source image status badge with resolution and ratio name
+      updateSourceImageBadge(rawW, rawH, nativeRatio);
+
+      // If in Decal mode and autoSync is enabled: sync decal dimensions to graphic ratio
+      if (state.appMode === 'decal') {
+        const autoSyncEl = document.getElementById('autoSyncAspectOnImport');
+        const shouldSync = !autoSyncEl || autoSyncEl.checked;
+        if (shouldSync) {
+          syncDecalDimensionsToImage(rawW, rawH, nativeRatio);
+        } else if (state.decalAspectLocked) {
+          state.decalLockedRatio = nativeRatio;
+        }
+      }
+
       renderAllMaps();
       updateDecalAspectUI();
-      showToast('Image loaded successfully');
+      
+      const format = getAspectFormatName(nativeRatio);
+      showToast(`Loaded ${file.name} (${rawW}×${rawH} • ${format})`);
     };
     img.src = event.target.result;
   };
@@ -884,6 +935,17 @@ Object.assign(window, {
   serializeCurrentProject,
   deserializeAndLoadProject,
   saveProjectToFile,
+  saveFileWithPicker,
+  exportAssetDirectToFolder,
+  openSaveModal,
+  closeSaveModal,
+  closeSaveModalOnBackdrop,
+  saveProjectWithPrompt,
+  exportZipWithPrompt,
+  exportDirectToFolderWithPrompt,
+  saveToLibraryWithNotice,
+  toggleAlwaysAskWhereToSave,
+  downloadConfigFile: downloadConfigJson,
   handleProjectFileLoad,
   showFieldHelp,
   toggleFieldHelp,
@@ -1038,6 +1100,12 @@ Object.assign(window, {
   setDecalAspectLock,
   resetDecalAspectRatio,
   updateDecalAspectUI,
+  applyPosterPreset,
+  applySyncGraphicRatio,
+  toggleAutoSyncAspect,
+  syncDecalDimensionsToImage,
+  getAspectFormatName,
+  updateSourceImageBadge,
   onUiPriorityChange,
   onUiPriorityInputChange,
   applyUiPriorityPreset,
@@ -1184,6 +1252,8 @@ window.addEventListener('DOMContentLoaded', async () => {
   renderSeriesChips();
   initSimulationInteraction();
   initGridSimulationInteraction();
+  initScaleViewInteractions();
+  updateScaleHUD();
   updateSetRegistryUI();
   checkLiveOverlapAndAlert();
   renderSetThumbnailsStrip();
@@ -1243,7 +1313,13 @@ window.addEventListener('DOMContentLoaded', async () => {
   });
 
   window.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+      e.preventDefault();
+      openSaveModal();
+      return;
+    }
     if (e.key === 'Escape') {
+      closeSaveModal();
       toggleImportDropdown(false);
       hideFieldHelp(true);
       closeWelcomeSplash();

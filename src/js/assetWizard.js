@@ -549,17 +549,42 @@ function processStandWizardGraphicFile(file) {
     img.onload = () => {
       standWizardLoadedImage = img;
 
-      const previewImg = document.getElementById('standSelectedImgPreview');
-      if (previewImg) previewImg.src = event.target.result;
-      const fn = document.getElementById('standSelectedFileName');
-      if (fn) fn.textContent = file.name;
-      const dims = document.getElementById('standSelectedFileDims');
-      if (dims) dims.textContent = `${img.naturalWidth} × ${img.naturalHeight} px`;
+      const natW = img.naturalWidth || 1;
+      const natH = img.naturalHeight || 1;
+      const ratio = natW / natH;
+      const ratioLabel = ratio >= 1 ? `${ratio.toFixed(2)}:1` : `1:${(1 / ratio).toFixed(2)}`;
 
       const emptyView = document.getElementById('standDropEmptyView');
       const selView = document.getElementById('standDropSelectedView');
       if (emptyView) emptyView.style.display = 'none';
       if (selView) selView.style.display = 'flex';
+
+      const previewImg = document.getElementById('standSelectedImgPreview');
+      if (previewImg) previewImg.src = event.target.result;
+      const fn = document.getElementById('standSelectedFileName');
+      if (fn) fn.textContent = file.name;
+      const dims = document.getElementById('standSelectedFileDims');
+      if (dims) dims.textContent = `${natW} × ${natH} px (${ratioLabel})`;
+
+      // Auto-adapt decal dimensions if non-square (e.g. poster, banner, billboard)
+      if (standWizardMode === 'decal' && Math.abs(ratio - 1.0) > 0.03) {
+        let newW = 2.0;
+        let newH = 2.0;
+        if (ratio < 1) {
+          // Portrait (posters e.g. 2:3, 3:4, A-Series)
+          newW = 1.2;
+          newH = Math.round((1.2 / ratio) * 10) / 10;
+        } else {
+          // Landscape (billboard / wide decal e.g. 16:9, 2:1)
+          newW = Math.round((1.5 * ratio) * 10) / 10;
+          newH = 1.5;
+        }
+        const dimW = document.getElementById('standDimW');
+        const dimH = document.getElementById('standDimH');
+        if (dimW) dimW.value = newW.toFixed(1);
+        if (dimH) dimH.value = newH.toFixed(1);
+        updateStandWizardDimSummary();
+      }
 
       // Auto-suggest asset name based on graphic file name
       const rawName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
@@ -570,7 +595,7 @@ function processStandWizardGraphicFile(file) {
         updateStandWizardSummary();
       }
 
-      showToast(`Loaded ${file.name} (${img.naturalWidth}×${img.naturalHeight})`);
+      showToast(`Loaded ${file.name} (${natW}×${natH}, ${ratioLabel})`);
     };
     img.src = event.target.result;
   };
@@ -938,6 +963,13 @@ export async function confirmNewStandaloneAsset() {
     if (wIn) wIn.value = wVal;
     if (hIn) hIn.value = hVal;
     if (dIn) dIn.value = dVal;
+    state.decalAspectLocked = true;
+    if (typeof window.updateDecalScaleIndicator === 'function') {
+      window.updateDecalScaleIndicator();
+    }
+    if (typeof window.updateDecalAspectUI === 'function') {
+      window.updateDecalAspectUI();
+    }
 
     // Layer masks
     const chkRoads = document.getElementById('layerRoads');
@@ -996,9 +1028,15 @@ export async function confirmNewStandaloneAsset() {
     state.currentImage = standWizardLoadedImage;
     state.isCustomImageLoaded = true;
 
-    const sourceBadge = document.getElementById('sourceImageStatusBadge');
-    if (sourceBadge) {
-      sourceBadge.textContent = `${standWizardLoadedImage.naturalWidth || 1024}×${standWizardLoadedImage.naturalHeight || 1024} (Custom)`;
+    if (typeof window.updateSourceImageBadge === 'function') {
+      const rawW = standWizardLoadedImage.naturalWidth || 1024;
+      const rawH = standWizardLoadedImage.naturalHeight || 1024;
+      window.updateSourceImageBadge(rawW, rawH, rawW / rawH);
+    } else {
+      const sourceBadge = document.getElementById('sourceImageStatusBadge');
+      if (sourceBadge) {
+        sourceBadge.textContent = `${standWizardLoadedImage.naturalWidth || 1024}×${standWizardLoadedImage.naturalHeight || 1024} (Custom)`;
+      }
     }
   }
 
