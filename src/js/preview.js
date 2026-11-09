@@ -354,6 +354,15 @@ export function toggleSimDimensions(show) {
   }
 }
 
+export function toggleSingleAspectFrame(show) {
+  state.showSingleAspectFrame = typeof show === 'boolean' ? show : !state.showSingleAspectFrame;
+  const chk = document.getElementById('toggleSingleAspectFrame');
+  if (chk) chk.checked = state.showSingleAspectFrame;
+  if (['base', 'normal', 'mask', 'single'].includes(state.activeTab)) {
+    updateSingleView();
+  }
+}
+
 export function toggleGlobalAspectOverlay() {
   const current = (state.showSimDimensions !== false || state.showSingleAspectFrame !== false);
   const next = !current;
