@@ -435,27 +435,32 @@
               <span class="help-badge help-badge-blue">Installation</span>
             </summary>
             <div class="help-content">
-              <p>Extract your exported <code>.zip</code> package directly into the corresponding ExtraAssetsImporter mod directory:</p>
+              <p>Modern Cities: Skylines II installs use the <strong>ModsData</strong> folder for ExtraAssetsImporter content (or legacy <code>Mods</code>):</p>
               
               <p><strong>Custom Decals:</strong></p>
               <div class="help-callout" style="font-family: monospace; font-size: 11px;">
-                %AppData%\..\LocalLow\Colossal Order\Cities Skylines II\Mods\ExtraAssetsImporter\CustomDecals\&lt;Asset_Name&gt;\
+                %LocalAppData%\..\LocalLow\Colossal Order\Cities Skylines II\ModsData\ExtraAssetsImporter\CustomDecals\&lt;Asset_Name&gt;\
               </div>
 
               <p><strong>Custom Surfaces:</strong></p>
               <div class="help-callout" style="font-family: monospace; font-size: 11px;">
-                %AppData%\..\LocalLow\Colossal Order\Cities Skylines II\Mods\ExtraAssetsImporter\CustomSurfaces\&lt;Category&gt;\&lt;Asset_Name&gt;\
+                %LocalAppData%\..\LocalLow\Colossal Order\Cities Skylines II\ModsData\ExtraAssetsImporter\CustomSurfaces\&lt;Category&gt;\&lt;Asset_Name&gt;\
               </div>
 
               <p><strong>Custom Net Lanes:</strong></p>
               <div class="help-callout" style="font-family: monospace; font-size: 11px;">
-                %AppData%\..\LocalLow\Colossal Order\Cities Skylines II\Mods\ExtraAssetsImporter\CustomNetlanes\&lt;Category&gt;\&lt;Asset_Name&gt;\
+                %LocalAppData%\..\LocalLow\Colossal Order\Cities Skylines II\ModsData\ExtraAssetsImporter\CustomNetlanes\&lt;Category&gt;\&lt;Asset_Name&gt;\
               </div>
+
+              <p style="margin-top: 10px;"><strong>⚡ Pro Tip — Direct Folder Export:</strong></p>
+              <p style="font-size: 12px; color: #94a3b8;">
+                Instead of extracting ZIP files manually, click <strong>Save / Export</strong> and choose <strong>"Export Directly to CS2 Folder"</strong>. Select your <code>ExtraAssetsImporter</code> folder once, and the app writes the textures and JSON configuration files straight to disk in seconds!
+              </p>
 
               <p style="margin-top: 10px;"><strong>In-Game Access:</strong></p>
               <ol style="margin-left: 18px; margin-bottom: 6px;">
-                <li>Make sure the <strong>ExtraAssetsImporter</strong> mod is installed via Paradox Mods.</li>
-                <li>Launch Cities: Skylines 2.</li>
+                <li>Ensure the <strong>ExtraAssetsImporter</strong> mod is installed and active in Paradox Mods.</li>
+                <li>Launch Cities: Skylines II.</li>
                 <li>Open the ExtraAssetsImporter tool menu in-game to select and place your new custom decal, surface, or net lane!</li>
               </ol>
             </div>
@@ -478,6 +483,92 @@
                 <li><strong>Quick Style Sync:</strong> Use the <em>Quick Style Sync Action</em> dropdown to match colors, fonts, and gradient styling across all badge layers with a single click.</li>
                 <li><strong>Dual-Stop &amp; Text Gradients:</strong> Choose from curated gradient presets (Forest, Neon, Violet, Sunset, Ruby, Stealth, Cyber, Gold), customize dual-stop color pickers, and apply vertical or horizontal text gradients.</li>
                 <li><strong>Save as Default (No Reloading Needed!):</strong> In the <em>Defaults</em> view, click <strong>"Save Current Badges as Default"</strong>. All logos, custom texts, presets, themes, scales, opacities, and positions are saved in browser storage and load automatically every session!</li>
+              </ul>
+            </div>
+          </details>
+
+          <!-- Q12: Direct CS2 Folder Export & Save Options -->
+          <details class="help-card" data-category="install">
+            <summary class="help-summary">
+              <span>How does the 'Save Asset Destination' dialog and Direct CS2 Export work?</span>
+              <span class="help-badge help-badge-blue">Save &amp; Export</span>
+            </summary>
+            <div class="help-content">
+              <p><strong class="help-highlight">When you click Save / Export, a smart destination modal lets you choose exactly where your files go:</strong></p>
+              <ul>
+                <li><strong>1. Save Project File (.cs2asset):</strong> Prompts your computer's native file dialog to save your complete workspace project file (including full-resolution source image, normal/mask maps, custom logos, dimensions, and settings) for future reloading.</li>
+                <li><strong>2. Export Asset Package (.zip):</strong> Prompts where to save the ready-to-extract mod zip containing all uncompressed PBR textures and JSON files.</li>
+                <li><strong>3. Export Directly to CS2 Folder (Direct Install):</strong> Uses the browser's native File System Access API to write game-ready files straight into your <code>ModsData\ExtraAssetsImporter</code> folder on disk—no zips, downloads, or unzipping needed!</li>
+                <li><strong>4. Save to Browser Library:</strong> Fast local save into IndexedDB storage for immediate switching between assets during the same work session.</li>
+                <li><strong>Always Ask Checkbox:</strong> Keep "Always ask where to save" enabled to prompt your operating system's native folder/file picker each time, or toggle off for fast one-click saving.</li>
+              </ul>
+            </div>
+          </details>
+
+          <!-- Q13: In-Game Scale & Environment Preview -->
+          <details class="help-card" data-category="tiling-lit">
+            <summary class="help-summary">
+              <span>How does the 'In-Game Scale' 3D preview tab work?</span>
+              <span class="help-badge help-badge-green">Scale Preview</span>
+            </summary>
+            <div class="help-content">
+              <p><strong class="help-highlight">The In-Game Scale tab allows you to visualize your decals against real-world 1:1 scale references before launching Cities: Skylines II:</strong></p>
+              <ul>
+                <li><strong>Asphalt Road Environment:</strong> Projects your decal onto a real 2-lane road surface alongside a 4.5m passenger sedan and a 1.8m citizen pedestrian, ensuring road markings and manholes aren't disproportionately oversized.</li>
+                <li><strong>Building Wall Environment:</strong> Previews vertical posters, wall decals, and building signage next to a standard 2.1m exterior doorway and brick facade.</li>
+                <li><strong>CS2 Zoning Grid (8m × 8m):</strong> Displays the exact 8m × 8m zoning cell grid used by the Cities: Skylines II game engine to calibrate terrain decals and ground boundaries.</li>
+                <li><strong>Poster &amp; Billboard Presets:</strong> Quickly snap dimensions to standard formats: 2:3 Movie / Kiosk posters (1.2m × 1.8m), 3:4 Wall posters (1.2m × 1.6m), DIN A-Series (1.0m × 1.41m), and 16:9 Billboards (4.0m × 2.25m).</li>
+                <li><strong>Lock Ratio &amp; Match Graphic:</strong> Toggle <em>Lock Ratio</em> to preserve proportions while dragging dimensions, or click <em>Match Graphic Ratio</em> to instantly adapt the bounding box to your image's native aspect ratio.</li>
+              </ul>
+            </div>
+          </details>
+
+          <!-- Q14: Guided 3-Step Asset Wizard -->
+          <details class="help-card" data-category="modes">
+            <summary class="help-summary">
+              <span>How do I use the 3-Step Asset Setup Wizard?</span>
+              <span class="help-badge help-badge-purple">Asset Wizard</span>
+            </summary>
+            <div class="help-content">
+              <p><strong class="help-highlight">The Asset Wizard guides you step-by-step through configuring any asset from scratch:</strong></p>
+              <ul>
+                <li><strong>Step 1: Type &amp; Set Tag:</strong> Choose your asset mode (Decal, Terrain Surface, or Net Lane), specify the asset name, and optionally assign a Series / Pack tag (e.g. "Road Markings", "Posters").</li>
+                <li><strong>Step 2: Dimensions &amp; Scale:</strong> Set real-world physical width, height, and depth in meters. Use one-click presets for common items (Manholes, Turn Arrows, Crosswalks, Posters, Billboards).</li>
+                <li><strong>Step 3: Artwork &amp; PBR Pipeline:</strong> Load your source image, choose your aspect ratio strategy (Contain/Pad vs Full UV Stretch), configure normal map bump depth, and preview the resulting PBR textures.</li>
+                <li><strong>Launch Anytime:</strong> Click <strong>"Asset Setup Wizard"</strong> in the top toolbar or from the welcome splash screen whenever starting a new creation.</li>
+              </ul>
+            </div>
+          </details>
+
+          <!-- Q15: Asset Set Registry & Collision Detection -->
+          <details class="help-card" data-category="wiki">
+            <summary class="help-summary">
+              <span>How does the Asset Set Registry and Priority Overlap Protection work?</span>
+              <span class="help-badge help-badge-green">Set Registry</span>
+            </summary>
+            <div class="help-content">
+              <p><strong class="help-highlight">The Asset Set Registry organizes multi-asset packs and prevents in-game menu collisions:</strong></p>
+              <ul>
+                <li><strong>1,000-Step Priority Bands:</strong> Each asset pack is allocated a reserved block of priority numbers (e.g., Set A: <code>50,000–50,990</code>, Set B: <code>51,000–51,990</code>).</li>
+                <li><strong>Live Collision Alerts:</strong> If an asset's <code>UiPriority</code> falls inside an already-allocated band for another set, an amber collision warning banner appears immediately.</li>
+                <li><strong>⚡ Next Safe Band:</strong> Click <em>Next Safe Band</em> to automatically advance your set base to the next free 1,000-step boundary with zero collisions.</li>
+                <li><strong>Registry Overview:</strong> Open the Set Registry modal to view all registered packs, their priority spans, total assets, and jump directly to any active collection.</li>
+              </ul>
+            </div>
+          </details>
+
+          <!-- Q16: Workspace Backup & Restore -->
+          <details class="help-card" data-category="install">
+            <summary class="help-summary">
+              <span>How do I backup and restore my workspace and saved sets?</span>
+              <span class="help-badge help-badge-blue">Backup &amp; Restore</span>
+            </summary>
+            <div class="help-content">
+              <p><strong class="help-highlight">The Backup &amp; Restore Manager safeguards all your configurations in a single JSON file:</strong></p>
+              <ul>
+                <li><strong>Export Backup (.json):</strong> Click <em>Backup / Restore</em> in the toolbar to download a complete snapshot of all registered asset sets, priority allocations, default badge styles, and saved library items.</li>
+                <li><strong>Restore Snapshot:</strong> Drag and drop a previously exported <code>.json</code> backup to restore your full setup on a new browser, computer, or after clearing browser cache.</li>
+                <li><strong>Merge or Replace:</strong> Choose whether to merge imported sets with your current workspace or perform a clean overwrite.</li>
               </ul>
             </div>
           </details>

@@ -1146,6 +1146,11 @@ window.initiateCreateNewSetFlow = initiateCreateNewSetFlow;
  * Resets the current set workspace to a clean slate and opens the Wizard.
  */
 export function startCreateNewSetWizard() {
+  // Close Pack & Series overview modal if open
+  if (typeof window.closePackPriorityModal === 'function') {
+    window.closePackPriorityModal();
+  }
+
   // 1. Clear current workspace state
   state.currentImage = null;
   state.isCustomImageLoaded = false;

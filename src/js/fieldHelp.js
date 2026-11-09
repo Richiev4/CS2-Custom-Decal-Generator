@@ -297,7 +297,39 @@ export const FIELD_HELP = {
     badge: 'Packaging',
     badgeClass: 'pill-green',
     desc: 'Packages textures, metadata, and JSON configs into an ExtraAssetsImporter bundle.',
-    details: 'Generates a ready-to-extract ZIP folder containing:<br>• <code>_BaseColorMap.png</code> (RGBA albedo)<br>• <code>_NormalMap.png</code> (OpenGL tangent vectors)<br>• <code>_MaskMap.png</code> (R:Metal, A:Smooth)<br>• <code>icon.png</code> (256×256 UI thumbnail with watermarks)<br>• <code>decal.json</code> / <code>surface.json</code> / <code>netlane.json</code> &amp; official <code>settings.json</code>.',
+    details: 'Generates a ready-to-extract ZIP folder containing:<br>• <code>_BaseColorMap.png</code> (RGBA albedo)<br>• <code>_NormalMap.png</code> (OpenGL tangent vectors)<br>• <code>_MaskMap.png</code> (R:Metal, A:Smooth)<br>• <code>icon.png</code> (256×256 UI thumbnail with watermarks)<br>• <code>decal.json</code> / <code>surface.json</code> / <code>netlane.json</code> &amp; official <code>settings.json</code>.<br><br>💡 <strong>Direct Folder Install:</strong> You can also choose <em>Export Directly to CS2 Folder</em> in the Save Destination dialog to write files straight into your game directory without unzipping!',
+    wikiTopic: 'install'
+  },
+  directExport: {
+    title: 'Export Directly to CS2 Folder',
+    badge: 'Direct Install',
+    badgeClass: 'pill-purple',
+    desc: 'Writes game-ready textures and JSON directly into your Cities: Skylines II mod folder.',
+    details: 'Uses the browser\'s secure native File System Access API to stream <code>_BaseColorMap.png</code>, <code>_NormalMap.png</code>, <code>_MaskMap.png</code>, <code>icon.png</code>, and configuration JSON directly into your <code>ModsData\\ExtraAssetsImporter</code> folder. Eliminates manual downloading and unzipping.',
+    wikiTopic: 'install'
+  },
+  scalePreview: {
+    title: 'In-Game Scale & Environment Preview',
+    badge: 'Scale Verification',
+    badgeClass: 'pill-cyan',
+    desc: 'Interactive 3D preview of decals and markings against real-world references.',
+    details: 'Inspect your decal in three real-world environments:<br>• <strong>Asphalt Road:</strong> Compare size against a 4.5m passenger sedan and 1.8m citizen pedestrian.<br>• <strong>Building Wall:</strong> Test vertical wall posters and signage next to a standard 2.1m exterior doorway.<br>• <strong>CS2 Zoning Grid:</strong> Gauge size against the official Cities: Skylines II 8m × 8m zoning cell grid.',
+    wikiTopic: 'wiki'
+  },
+  assetWizard: {
+    title: '3-Step Asset Setup Wizard',
+    badge: 'Guided Setup',
+    badgeClass: 'pill-green',
+    desc: 'Step-by-step walkthrough for configuring decals, surfaces, and net lanes.',
+    details: 'Guides you through:<br>• <strong>Step 1 (Type & Mode):</strong> Choose Decal, Terrain Surface, or Net Lane, plus naming and series tag.<br>• <strong>Step 2 (Dimensions & Ratio):</strong> Set physical width, height, and depth in meters with real-world presets.<br>• <strong>Step 3 (Graphics & PBR):</strong> Load source artwork, auto-generate OpenGL normal maps, and tune metallic/smoothness.',
+    wikiTopic: 'modes'
+  },
+  backupManager: {
+    title: 'Workspace Backup & Restore',
+    badge: 'Data Safety',
+    badgeClass: 'pill-purple',
+    desc: 'Backup and restore all asset sets, priority allocations, default badges, and drafts.',
+    details: 'Exports a single portable JSON snapshot of your entire workspace:<br>• All registered asset sets and allocated priority bands.<br>• Saved default icon watermarks, logos, and typography.<br>• Local asset library drafts.<br>Easily transfer configurations between browsers or recover from accidental clearing.',
     wikiTopic: 'install'
   }
 };

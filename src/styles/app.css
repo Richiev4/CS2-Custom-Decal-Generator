@@ -3460,6 +3460,18 @@
       display: flex !important;
     }
 
+    /* Elevated child modals, wizards, and confirm dialogs */
+    #createSetAssetModal,
+    #createNewSetWizardModal,
+    #setRegistryModal,
+    #backupAllDataModal {
+      z-index: 11000;
+    }
+
+    #unsavedGuardModal {
+      z-index: 12000;
+    }
+
     .modal-card {
       background: var(--bg-panel);
       border: 1px solid var(--border-color);
