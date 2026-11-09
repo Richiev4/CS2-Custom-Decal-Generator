@@ -1107,7 +1107,8 @@ export function updateConfigJson() {
   let defaultName = 'CustomDecal';
   if (state.appMode === 'surface') defaultName = 'CustomSurface';
   if (state.appMode === 'netlane') defaultName = 'CustomNetLane';
-  const name = document.getElementById('assetName').value.trim() || defaultName;
+  const nameInput = document.getElementById('assetName');
+  const name = (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : defaultName;
 
   const catInput = document.getElementById('assetCategory');
   const defaultCategory = state.appMode === 'decal' ? 'RoadMarkings' : (state.appMode === 'surface' ? 'Pavement' : 'Lines');
@@ -1115,9 +1116,12 @@ export function updateConfigJson() {
   const catBadge = document.getElementById('categorySubfolderBadge');
   if (catBadge) catBadge.textContent = category;
 
-  document.getElementById('nameCardBase').textContent = '_BaseColorMap.png';
-  document.getElementById('nameCardNormal').textContent = '_NormalMap.png';
-  document.getElementById('nameCardMask').textContent = '_MaskMap.png';
+  const cardBase = document.getElementById('nameCardBase');
+  if (cardBase) cardBase.textContent = '_BaseColorMap.png';
+  const cardNormal = document.getElementById('nameCardNormal');
+  if (cardNormal) cardNormal.textContent = '_NormalMap.png';
+  const cardMask = document.getElementById('nameCardMask');
+  if (cardMask) cardMask.textContent = '_MaskMap.png';
   const nameCardIcon = document.getElementById('nameCardIcon');
   if (nameCardIcon) nameCardIcon.textContent = 'icon.png';
 
@@ -1138,9 +1142,9 @@ export function updateConfigJson() {
   if (layerMaskBadge) layerMaskBadge.textContent = `Mask: ${maskSum}`;
 
   const defaultDraw = state.appMode === 'surface' ? -50 : (state.appMode === 'netlane' ? 60 : 50);
-  const drawOrder = parseInt(document.getElementById('drawOrderSlider').value, 10) || defaultDraw;
-  const globalMetallic = parseFloat(document.getElementById('globalMetallicSlider').value) || 0.0;
-  const globalSmoothness = parseFloat(document.getElementById('globalSmoothnessSlider').value) || 0.0;
+  const drawOrder = parseInt(document.getElementById('drawOrderSlider')?.value, 10) || defaultDraw;
+  const globalMetallic = parseFloat(document.getElementById('globalMetallicSlider')?.value) || 0.0;
+  const globalSmoothness = parseFloat(document.getElementById('globalSmoothnessSlider')?.value) || 0.0;
   const schemaFormat = document.getElementById('jsonSchemaFormat')?.value || 'extended';
 
   const baseProps = getBaseJsonProps();
@@ -1164,9 +1168,9 @@ export function updateConfigJson() {
   }
 
   if (state.appMode === 'decal') {
-    const width = parseFloat(document.getElementById('dimWidth').value) || 2.0;
-    const height = parseFloat(document.getElementById('dimHeight').value) || 2.0;
-    const depth = parseFloat(document.getElementById('dimDepth').value) || 1.0;
+    const width = parseFloat(document.getElementById('dimWidth')?.value) || 2.0;
+    const height = parseFloat(document.getElementById('dimHeight')?.value) || 2.0;
+    const depth = parseFloat(document.getElementById('dimDepth')?.value) || 1.0;
 
     const wSlider = document.getElementById('dimWidthSlider');
     const hSlider = document.getElementById('dimHeightSlider');
@@ -1243,7 +1247,7 @@ export function updateConfigJson() {
       pathTextEl.textContent = `%AppData%\\..\\LocalLow\\Colossal Order\\Cities Skylines II\\ModsData\\ExtraAssetsImporter\\CustomDecals\\${category}\\${name}\\`;
     }
   } else if (state.appMode === 'surface') {
-    const uvScale = parseFloat(document.getElementById('uvScaleSlider').value) || 1.0;
+    const uvScale = parseFloat(document.getElementById('uvScaleSlider')?.value) || 1.0;
 
     if (schemaFormat === 'extended') {
       jsonString = JSON.stringify({
@@ -1323,7 +1327,8 @@ export function updateConfigJson() {
     }
   }
 
-  document.getElementById('jsonCodeText').textContent = jsonString;
+  const jsonCodeEl = document.getElementById('jsonCodeText');
+  if (jsonCodeEl) jsonCodeEl.textContent = jsonString;
 }
 
 export function getBaseJsonProps() {
