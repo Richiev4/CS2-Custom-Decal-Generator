@@ -1,7 +1,8 @@
 // ==========================================
 // Exporter, Packaging, JSON & Library Module
 // ==========================================
-import JSZip from 'jszip';
+// Access JSZip from window (loaded via CDN script or importmap) for static browser environments
+const JSZip = typeof window !== 'undefined' ? window.JSZip : (typeof globalThis !== 'undefined' ? globalThis.JSZip : undefined);
 import { state, getCanvases, showToast, escapeHtml } from './state.js';
 import { clearCustomNormal, updateCustomNormalUI } from './normalMap.js';
 import { renderIconMap, loadGoogleFont, populateFontDropdowns, setCreatorBadgeMode, setSeriesBadgeMode, setCreatorColorTheme, setCreatorGradDirection, setCreatorColorMode, setSeriesColorTheme, setSeriesGradDirection, setSeriesColorMode, onBadge1TextChange, onSeriesTextChange, clearDesignerLogo } from './badges.js';
@@ -1905,7 +1906,8 @@ export function downloadAllMaps() {
 
 
 export async function exportZipPackage() {
-  if (typeof JSZip === 'undefined') {
+  const JSZipLib = (typeof window !== 'undefined' && window.JSZip) || JSZip;
+  if (!JSZipLib) {
     showToast('JSZip library is still loading, please wait...');
     return;
   }
@@ -1917,7 +1919,7 @@ export async function exportZipPackage() {
   const jsonString = document.getElementById('jsonCodeText').textContent;
   const isIconEnabled = true;
 
-  const zip = new JSZip();
+  const zip = new JSZipLib();
   const folder = zip.folder(assetName);
 
   if (state.appMode === 'decal') {
@@ -2040,7 +2042,8 @@ INSTRUCTIONS:
 }
 
 export async function exportCompleteSetZip() {
-  if (typeof JSZip === 'undefined') {
+  const JSZipLib = (typeof window !== 'undefined' && window.JSZip) || JSZip;
+  if (!JSZipLib) {
     showToast('JSZip library is still loading, please wait...');
     return;
   }
@@ -2073,7 +2076,7 @@ export async function exportCompleteSetZip() {
 
   showToast(`Packaging complete set "${setName}" (${loadedSlots.length} item${loadedSlots.length > 1 ? 's' : ''})...`);
 
-  const zip = new JSZip();
+  const zip = new JSZipLib();
   const getCanvasBlob = (canvas) => new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
   const manifestAssets = [];
 
