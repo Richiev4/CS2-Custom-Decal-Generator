@@ -8,15 +8,16 @@ import { setAssetCategory, setAssetSeriesName, getAssetSeriesName, updateConfigJ
 import { onBumpChange } from './normalMap.js';
 import { onMetalChange, onSmoothChange } from './maskMap.js';
 
+export function getPresetMode(type) {
+  if (['cobblestone', 'bricks', 'tiles'].includes(type)) return 'surface';
+  if (['centerline', 'yellowlines', 'curb'].includes(type)) return 'netlane';
+  return 'decal';
+}
+
 export function loadSample(type, force = false) {
-  if (!force && hasActiveWork()) {
-    state.pendingGuardAction = () => {
-      state.isCustomImageLoaded = false;
-      state.hasUnsavedChanges = false;
-      loadSample(type, true);
-    };
-    openUnsavedModal('Loading a preset will clear what you are currently doing.');
-    return;
+  const targetMode = getPresetMode(type);
+  if (state.appMode !== targetMode && window.setMode) {
+    window.setMode(targetMode, true);
   }
 
   clearCustomNormal(false);
@@ -547,10 +548,173 @@ export function loadSample(type, force = false) {
       const h = parseFloat(document.getElementById('dimHeight')?.value || '2.0') || 2.0;
       state.decalLockedRatio = h > 0 ? (w / h) : 1.0;
     }
+
+    // Save to active slot in Set
+    if (state.setSlots && state.setSlots[state.appMode]) {
+      const slot = state.setSlots[state.appMode];
+      slot.image = img;
+      slot.isCustomImageLoaded = false;
+      slot.hasUnsavedChanges = false;
+      slot.assetName = state.currentLoadedAssetName;
+      slot.category = document.getElementById('assetCategory')?.value || slot.category;
+      slot.seriesName = state.currentLoadedAssetSeries;
+      try {
+        const tc = document.createElement('canvas');
+        tc.width = 64;
+        tc.height = 64;
+        const tctx = tc.getContext('2d');
+        tctx.drawImage(img, 0, 0, 64, 64);
+        slot.thumbnail = tc.toDataURL('image/png');
+      } catch (_) {}
+    }
+
     if (window.updateDecalAspectUI) window.updateDecalAspectUI();
     if (window.renderAllMaps) window.renderAllMaps();
+    if (window.updateSetSlotsUI) window.updateSetSlotsUI();
     renderSeriesRibbon();
-    showToast(`Loaded ${type} preset`);
+    showToast(`Loaded ${type} preset into ${state.appMode.toUpperCase()} slot`);
   };
   img.src = canvas.toDataURL('image/png');
+}
+
+export function createSampleSlot(type) {
+  const mode = getPresetMode(type);
+  const canvas = document.createElement('canvas');
+  canvas.width = 1024;
+  canvas.height = 1024;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, 1024, 1024);
+
+  let assetName = 'CustomAsset_01';
+  let category = 'Utilities';
+  let seriesName = 'City Utilities';
+  let bump = 2.5;
+  let metal = 0;
+  let smooth = 40;
+  let dims = { width: 1.8, height: 1.8, depth: 0.5, aspectLocked: false, lockedRatio: 1.0 };
+  let uvScale = 1.0;
+  let netlane = { width: 1.0, length: 2.0 };
+  let fitStrategy = mode === 'surface' ? 'stretch' : 'fill';
+
+  if (type === 'manhole') {
+    assetName = 'CityUtility_Manhole_01';
+    category = 'Utilities';
+    bump = 3.5;
+    metal = 180;
+    smooth = 80;
+    dims = { width: 1.8, height: 1.8, depth: 0.5, aspectLocked: false, lockedRatio: 1.0 };
+    const cx = 512, cy = 512, r = 440;
+    ctx.fillStyle = '#22252a';
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#40454d';
+    for (let a = 0; a < Math.PI * 2; a += Math.PI / 12) {
+      ctx.beginPath();
+      ctx.arc(cx + Math.cos(a) * (r - 25), cy + Math.sin(a) * (r - 25), 10, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.fillStyle = '#17191d';
+    ctx.beginPath();
+    ctx.arc(cx, cy, r - 55, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#383d46';
+    ctx.lineWidth = 14;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, r - 65, 0, Math.PI * 2);
+    ctx.clip();
+    for (let i = -600; i < 1600; i += 40) {
+      ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i + 1024, 1024); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(i + 1024, 0); ctx.lineTo(i, 1024); ctx.stroke();
+    }
+    ctx.fillStyle = '#23272e';
+    ctx.beginPath();
+    ctx.arc(cx, cy, 140, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#474d57';
+    ctx.lineWidth = 8;
+    ctx.stroke();
+    ctx.fillStyle = '#d1d5db';
+    ctx.font = 'bold 36px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('CS2 SEWER', cx, cy - 20);
+    ctx.font = 'bold 24px sans-serif';
+    ctx.fillStyle = '#9ca3af';
+    ctx.fillText('COLOSSAL WATER', cx, cy + 25);
+    ctx.restore();
+  } else if (type === 'cobblestone') {
+    assetName = 'CustomSurface_Pavement_01';
+    category = 'Tiles';
+    bump = 3.2;
+    metal = 0;
+    smooth = 35;
+    fitStrategy = 'stretch';
+    ctx.fillStyle = '#2e333d';
+    ctx.fillRect(0, 0, 1024, 1024);
+    const cols = 8;
+    const rows = 8;
+    const stoneW = 1024 / cols;
+    const stoneH = 1024 / rows;
+    for (let r = 0; r < rows; r++) {
+      const rowOffset = (r % 2) * (stoneW * 0.5);
+      for (let c = -1; c <= cols; c++) {
+        const x = c * stoneW + rowOffset;
+        const y = r * stoneH;
+        const grayVal = 110 + ((r * 17 + c * 31) % 55);
+        ctx.fillStyle = `rgb(${grayVal}, ${grayVal + 4}, ${grayVal + 8})`;
+        const pad = 6;
+        ctx.beginPath();
+        ctx.roundRect(x + pad, y + pad, stoneW - pad * 2, stoneH - pad * 2, 8);
+        ctx.fill();
+        ctx.strokeStyle = `rgba(255, 255, 255, 0.15)`;
+        ctx.lineWidth = 3;
+        ctx.stroke();
+      }
+    }
+  } else if (type === 'centerline') {
+    assetName = 'CustomNetLane_DashedLine_01';
+    category = 'Lines';
+    bump = 2.0;
+    metal = 0;
+    smooth = 25;
+    netlane = { width: 0.4, length: 3.0 };
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(412, 128, 200, 768);
+    ctx.fillStyle = 'rgba(200, 200, 200, 0.4)';
+    for (let i = 0; i < 200; i++) {
+      ctx.fillRect(412 + Math.random() * 200, 128 + Math.random() * 768, 3, 3);
+    }
+  }
+
+  const dataUrl = canvas.toDataURL('image/png');
+  const img = new Image();
+  img.src = dataUrl;
+
+  const tc = document.createElement('canvas');
+  tc.width = 64;
+  tc.height = 64;
+  const tctx = tc.getContext('2d');
+  tctx.drawImage(canvas, 0, 0, 64, 64);
+  const thumbnail = tc.toDataURL('image/png');
+
+  return {
+    mode,
+    image: img,
+    imageSrc: dataUrl,
+    thumbnail,
+    assetName,
+    category,
+    seriesName,
+    bumpIntensity: bump,
+    metallic: metal,
+    smoothness: smooth,
+    dimensions: dims,
+    uvScale,
+    netlane,
+    fitStrategy,
+    isCustomImageLoaded: false,
+    hasUnsavedChanges: false
+  };
 }

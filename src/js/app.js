@@ -29,7 +29,14 @@ import {
   confirmGuardSaveAndContinue,
   confirmGuardContinueWithoutSaving,
   cancelGuardAction,
-  toggleAlwaysAskWhereToSave
+  toggleAlwaysAskWhereToSave,
+  setHideSamplePresets,
+  toggleHideSamplePresets,
+  createDefaultSlot,
+  getSlot,
+  isSlotLoaded,
+  getLoadedSlotsCount,
+  getLoadedSlots
 } from './state.js';
 
 import {
@@ -262,7 +269,7 @@ import {
 
 import { getSavedLibraryFromMemory, saveAssetToIndexedDB } from './db.js';
 
-import { loadSample } from './samples.js';
+import { loadSample, createSampleSlot } from './samples.js';
 
 import {
   recallSetProfile,
@@ -307,11 +314,26 @@ import {
   handleWizardGraphicDragLeave,
   handleWizardGraphicDrop,
   useWizardStarterGraphic,
-  confirmCreateNewSet,
-  exportAllSetsAndStorageBackup,
-  handleBackupFileSelect,
-  importStorageBackupFromFile
+  confirmCreateNewSet
 } from './setRegistry.js';
+
+import {
+  openBackupAllDataModal,
+  closeBackupAllDataModal,
+  closeBackupAllDataModalOnBackdrop,
+  exportAllSetsAndStorageBackup,
+  copyBackupJsonToClipboard,
+  handleBackupFileSelect,
+  handleBackupModalFileSelect,
+  handleBackupDropzoneDragOver,
+  handleBackupDropzoneDragLeave,
+  handleBackupDropzoneDrop,
+  inspectBackupFile,
+  confirmRestoreBackup,
+  cancelPendingRestore,
+  refreshBackupModalStats,
+  resetAllLocalDataWithConfirmation
+} from './backupManager.js';
 
 import {
   openNewStandaloneAssetWizard,
@@ -347,16 +369,433 @@ import {
 } from './assetWizard.js';
 
 // ==========================================
+// 3-in-1 Set Slots State Preservation
+// ==========================================
+
+export function saveCurrentSlotState(mode = state.appMode) {
+  if (!state.setSlots || !state.setSlots[mode]) return;
+  const slot = state.setSlots[mode];
+
+  // Save current image & transform state
+  slot.image = state.currentImage;
+  slot.isCustomImageLoaded = !!state.isCustomImageLoaded;
+  slot.hasUnsavedChanges = !!state.hasUnsavedChanges;
+  slot.textureRotation = state.textureRotation || 0;
+  slot.flipH = !!state.flipH;
+  slot.flipV = !!state.flipV;
+  slot.customNormalImg = state.customNormalImg;
+  slot.customNormalFileName = state.customNormalFileName || '';
+  slot.customMaskImg = state.customMaskImg;
+  slot.customMaskFileName = state.customMaskFileName || '';
+  slot.targetResolution = state.currentResolution || 1024;
+
+  const assetNameEl = document.getElementById('assetName');
+  if (assetNameEl && assetNameEl.value.trim()) {
+    slot.assetName = assetNameEl.value.trim();
+  }
+
+  const catEl = document.getElementById('assetCategory');
+  if (catEl && catEl.value.trim()) {
+    slot.category = catEl.value.trim();
+  }
+
+  const seriesEl = document.getElementById('assetSeries') || document.getElementById('metaSetName');
+  if (seriesEl && seriesEl.value.trim()) {
+    slot.seriesName = seriesEl.value.trim();
+    state.setName = seriesEl.value.trim();
+  }
+
+  const fitEl = document.getElementById('fitStrategy');
+  if (fitEl) slot.fitStrategy = fitEl.value;
+
+  const bumpEl = document.getElementById('bumpIntensity');
+  if (bumpEl) slot.bumpIntensity = parseFloat(bumpEl.value) || slot.bumpIntensity;
+
+  const blurEl = document.getElementById('normalBlur');
+  if (blurEl) slot.normalBlur = parseInt(blurEl.value, 10) || 0;
+
+  const invertEl = document.getElementById('invertBump');
+  if (invertEl) slot.invertBump = invertEl.checked;
+
+  const flipYEl = document.getElementById('flipNormalY');
+  if (flipYEl) slot.flipNormalY = flipYEl.checked;
+
+  const metalEl = document.getElementById('metallic');
+  if (metalEl) slot.metallic = parseInt(metalEl.value, 10) || 0;
+
+  const smoothEl = document.getElementById('smoothness');
+  if (smoothEl) slot.smoothness = parseInt(smoothEl.value, 10) || 0;
+
+  const maskAlphaEl = document.getElementById('maskWithDecalAlpha');
+  if (maskAlphaEl) slot.maskWithDecalAlpha = maskAlphaEl.checked;
+
+  const prioEl = document.getElementById('uiPriorityInput');
+  if (prioEl && prioEl.value) slot.uiPriority = parseInt(prioEl.value, 10) || slot.uiPriority;
+
+  const prioBaseEl = document.getElementById('uiPriorityBase');
+  if (prioBaseEl && prioBaseEl.value) slot.uiPriorityBase = parseInt(prioBaseEl.value, 10) || slot.uiPriorityBase;
+
+  const prioStepEl = document.getElementById('uiPriorityStep');
+  if (prioStepEl && prioStepEl.value) slot.uiPriorityStep = parseInt(prioStepEl.value, 10) || slot.uiPriorityStep;
+
+  const drawOrderEl = document.getElementById('drawOrderSlider');
+  if (drawOrderEl) slot.drawOrder = parseInt(drawOrderEl.value, 10) || slot.drawOrder;
+
+  if (mode === 'decal') {
+    slot.dimensions = {
+      width: parseFloat(document.getElementById('dimWidth')?.value || '2.0') || 2.0,
+      height: parseFloat(document.getElementById('dimHeight')?.value || '2.0') || 2.0,
+      depth: parseFloat(document.getElementById('dimDepth')?.value || '0.5') || 0.5,
+      aspectLocked: !!state.decalAspectLocked,
+      lockedRatio: state.decalLockedRatio || 1.0
+    };
+    slot.layerMask = {
+      terrain: document.getElementById('layerTerrain')?.checked !== false,
+      roads: document.getElementById('layerRoads')?.checked !== false,
+      buildings: !!document.getElementById('layerBuildings')?.checked,
+      vehicles: !!document.getElementById('layerVehicles')?.checked
+    };
+    slot.normalOpacity = parseFloat(document.getElementById('normalOpacitySlider')?.value || '1.0');
+    slot.baseOpacity = parseFloat(document.getElementById('baseOpacitySlider')?.value || '1.0');
+    slot.metallicOpacity = parseFloat(document.getElementById('metallicOpacitySlider')?.value || '0.0');
+  } else if (mode === 'surface') {
+    slot.uvScale = parseFloat(document.getElementById('uvScaleSlider')?.value || '1.0');
+    slot.surfaceTiling = state.surfaceTiling || 4;
+  } else if (mode === 'netlane') {
+    slot.netlane = {
+      width: parseFloat(document.getElementById('netlaneWidthSlider')?.value || '1.0'),
+      length: parseFloat(document.getElementById('netlaneLengthSlider')?.value || '2.0')
+    };
+  }
+
+  // Capture clean 64x64 thumbnail from canvasBase if image exists
+  const { canvasBase } = getCanvases();
+  if (canvasBase && canvasBase.width > 0 && state.currentImage) {
+    try {
+      const tc = document.createElement('canvas');
+      tc.width = 64;
+      tc.height = 64;
+      const tctx = tc.getContext('2d');
+      tctx.drawImage(canvasBase, 0, 0, 64, 64);
+      slot.thumbnail = tc.toDataURL('image/png');
+    } catch (_) {}
+  }
+}
+
+export function restoreSlotState(mode) {
+  if (!state.setSlots || !state.setSlots[mode]) return;
+  const slot = state.setSlots[mode];
+
+  state.currentImage = slot.image;
+  state.isCustomImageLoaded = !!slot.isCustomImageLoaded;
+  state.hasUnsavedChanges = !!slot.hasUnsavedChanges;
+  state.textureRotation = slot.textureRotation || 0;
+  state.flipH = !!slot.flipH;
+  state.flipV = !!slot.flipV;
+  state.customNormalImg = slot.customNormalImg || null;
+  state.customNormalFileName = slot.customNormalFileName || '';
+  state.customMaskImg = slot.customMaskImg || null;
+  state.customMaskFileName = slot.customMaskFileName || '';
+
+  const assetNameEl = document.getElementById('assetName');
+  if (assetNameEl) assetNameEl.value = slot.assetName || '';
+  state.currentLoadedAssetName = slot.assetName || '';
+
+  if (slot.category && typeof setAssetCategory === 'function') {
+    setAssetCategory(slot.category);
+  }
+
+  const fitEl = document.getElementById('fitStrategy');
+  if (fitEl && slot.fitStrategy) fitEl.value = slot.fitStrategy;
+
+  const bumpEl = document.getElementById('bumpIntensity');
+  if (bumpEl && slot.bumpIntensity !== undefined) {
+    bumpEl.value = slot.bumpIntensity;
+    const bv = document.getElementById('bumpVal');
+    if (bv) bv.textContent = `${Number(slot.bumpIntensity).toFixed(1)}×`;
+  }
+
+  const blurEl = document.getElementById('normalBlur');
+  if (blurEl && slot.normalBlur !== undefined) {
+    blurEl.value = slot.normalBlur;
+    const blv = document.getElementById('blurVal');
+    if (blv) blv.textContent = `${slot.normalBlur} px`;
+  }
+
+  const invertEl = document.getElementById('invertBump');
+  if (invertEl && slot.invertBump !== undefined) invertEl.checked = !!slot.invertBump;
+
+  const flipYEl = document.getElementById('flipNormalY');
+  if (flipYEl && slot.flipNormalY !== undefined) flipYEl.checked = !!slot.flipNormalY;
+
+  const metalEl = document.getElementById('metallic');
+  if (metalEl && slot.metallic !== undefined) {
+    metalEl.value = slot.metallic;
+    const mv = document.getElementById('metalVal');
+    if (mv) mv.textContent = `${slot.metallic} (${Math.round((slot.metallic / 255) * 100)}%)`;
+  }
+
+  const smoothEl = document.getElementById('smoothness');
+  if (smoothEl && slot.smoothness !== undefined) {
+    smoothEl.value = slot.smoothness;
+    const sv = document.getElementById('smoothVal');
+    if (sv) sv.textContent = `${slot.smoothness} (${Math.round((slot.smoothness / 255) * 100)}%)`;
+  }
+
+  const maskAlphaEl = document.getElementById('maskWithDecalAlpha');
+  if (maskAlphaEl && slot.maskWithDecalAlpha !== undefined) maskAlphaEl.checked = !!slot.maskWithDecalAlpha;
+
+  const prioEl = document.getElementById('uiPriorityInput');
+  if (prioEl && slot.uiPriority !== undefined) {
+    prioEl.value = slot.uiPriority;
+    const pSlider = document.getElementById('uiPrioritySlider');
+    if (pSlider) pSlider.value = Math.min(parseInt(pSlider.max, 10), slot.uiPriority);
+    const pVal = document.getElementById('uiPriorityVal');
+    if (pVal) pVal.textContent = slot.uiPriority.toLocaleString();
+  }
+
+  const drawOrderEl = document.getElementById('drawOrderSlider');
+  if (drawOrderEl && slot.drawOrder !== undefined) {
+    drawOrderEl.value = slot.drawOrder;
+    const dov = document.getElementById('drawOrderVal');
+    if (dov) dov.textContent = slot.drawOrder;
+  }
+
+  if (mode === 'decal' && slot.dimensions) {
+    if (document.getElementById('dimWidth')) document.getElementById('dimWidth').value = slot.dimensions.width;
+    if (document.getElementById('dimHeight')) document.getElementById('dimHeight').value = slot.dimensions.height;
+    if (document.getElementById('dimDepth')) document.getElementById('dimDepth').value = slot.dimensions.depth;
+    state.decalAspectLocked = !!slot.dimensions.aspectLocked;
+    state.decalLockedRatio = slot.dimensions.lockedRatio || 1.0;
+
+    if (slot.layerMask) {
+      if (document.getElementById('layerTerrain')) document.getElementById('layerTerrain').checked = !!slot.layerMask.terrain;
+      if (document.getElementById('layerRoads')) document.getElementById('layerRoads').checked = !!slot.layerMask.roads;
+      if (document.getElementById('layerBuildings')) document.getElementById('layerBuildings').checked = !!slot.layerMask.buildings;
+      if (document.getElementById('layerVehicles')) document.getElementById('layerVehicles').checked = !!slot.layerMask.vehicles;
+    }
+  } else if (mode === 'surface') {
+    if (slot.uvScale !== undefined && document.getElementById('uvScaleSlider')) {
+      document.getElementById('uvScaleSlider').value = slot.uvScale;
+      const uvv = document.getElementById('uvScaleVal');
+      if (uvv) uvv.textContent = Number(slot.uvScale).toFixed(1);
+    }
+    if (slot.surfaceTiling !== undefined) {
+      state.surfaceTiling = slot.surfaceTiling;
+      if (typeof setSurfaceTiling === 'function') setSurfaceTiling(slot.surfaceTiling);
+    }
+  } else if (mode === 'netlane' && slot.netlane) {
+    if (document.getElementById('netlaneWidthSlider')) {
+      document.getElementById('netlaneWidthSlider').value = slot.netlane.width;
+      const nwv = document.getElementById('netlaneWidthVal');
+      if (nwv) nwv.textContent = `${Number(slot.netlane.width).toFixed(1)} m`;
+    }
+    if (document.getElementById('netlaneLengthSlider')) {
+      document.getElementById('netlaneLengthSlider').value = slot.netlane.length;
+      const nlv = document.getElementById('netlaneLengthVal');
+      if (nlv) nlv.textContent = `${Number(slot.netlane.length).toFixed(1)} m`;
+    }
+  }
+
+  // Restore rotation UI
+  [0, 90, 180, 270].forEach(d => {
+    const btn = document.getElementById(`rotBtn${d}`);
+    if (btn) btn.classList.toggle('active', d === (slot.textureRotation || 0));
+  });
+  const rotValEl = document.getElementById('rotationVal');
+  if (rotValEl) rotValEl.textContent = (slot.textureRotation || 0) === 0 ? '0° (Default)' : `${slot.textureRotation}°`;
+
+  const btnFlipH = document.getElementById('btnFlipH');
+  if (btnFlipH) {
+    btnFlipH.style.borderColor = slot.flipH ? 'var(--primary)' : 'var(--border-color)';
+    btnFlipH.style.color = slot.flipH ? 'var(--primary)' : 'var(--text-muted)';
+    btnFlipH.style.background = slot.flipH ? 'rgba(0, 168, 255, 0.15)' : 'var(--bg-card)';
+  }
+
+  const btnFlipV = document.getElementById('btnFlipV');
+  if (btnFlipV) {
+    btnFlipV.style.borderColor = slot.flipV ? 'var(--primary)' : 'var(--border-color)';
+    btnFlipV.style.color = slot.flipV ? 'var(--primary)' : 'var(--text-muted)';
+    btnFlipV.style.background = slot.flipV ? 'rgba(0, 168, 255, 0.15)' : 'var(--bg-card)';
+  }
+
+  // Source image status badge
+  if (slot.image) {
+    const rawW = slot.image.naturalWidth || slot.image.width || 1024;
+    const rawH = slot.image.naturalHeight || slot.image.height || 1024;
+    if (typeof updateSourceImageBadge === 'function') {
+      updateSourceImageBadge(rawW, rawH, rawW / rawH);
+    }
+  } else {
+    const badge = document.getElementById('sourceImageStatusBadge');
+    if (badge) badge.textContent = 'No Graphic Loaded (Drop PNG/JPG)';
+  }
+
+  updateCustomNormalUI();
+  updateCustomMaskUI();
+}
+
+export function updateSetSlotsUI() {
+  if (!state.setSlots) return;
+
+  const count = getLoadedSlotsCount();
+
+  // 1. Header Set Bundle Count Badge
+  const headerCountBadge = document.getElementById('setBundleCountBadge');
+  if (headerCountBadge) {
+    headerCountBadge.textContent = count === 3 ? 'Set: 3/3 Complete' : `Set: ${count}/3 Loaded`;
+    headerCountBadge.className = count === 3 ? 'set-bundle-count complete' : (count > 0 ? 'set-bundle-count partial' : 'set-bundle-count empty');
+  }
+
+  // 2. Header Mode Switcher Slots (Thumbnails, Subtitles & Badges)
+  ['decal', 'surface', 'netlane'].forEach(mode => {
+    const slot = state.setSlots[mode];
+    const isLoaded = isSlotLoaded(mode);
+
+    const thumbEl = document.getElementById(`headerThumb${mode.charAt(0).toUpperCase() + mode.slice(1)}`);
+    if (thumbEl) {
+      if (slot && slot.thumbnail) {
+        thumbEl.style.backgroundImage = `url(${slot.thumbnail})`;
+        thumbEl.classList.add('has-thumb');
+      } else {
+        thumbEl.style.backgroundImage = 'none';
+        thumbEl.classList.remove('has-thumb');
+      }
+    }
+
+    const subEl = document.getElementById(`headerSub${mode.charAt(0).toUpperCase() + mode.slice(1)}`);
+    if (subEl) {
+      subEl.textContent = isLoaded ? (slot.assetName || 'Loaded') : '(Empty)';
+    }
+
+    const badgeEl = document.getElementById(`headerBadge${mode.charAt(0).toUpperCase() + mode.slice(1)}`);
+    if (badgeEl) {
+      badgeEl.textContent = isLoaded ? '✓' : '＋';
+      badgeEl.className = isLoaded ? 'mode-slot-badge loaded' : 'mode-slot-badge empty';
+    }
+
+    // Section 2 Source Image Quick-Slot Pills
+    const qTab = document.getElementById(`quickSlot${mode.charAt(0).toUpperCase() + mode.slice(1)}`);
+    if (qTab) {
+      qTab.classList.toggle('active', state.appMode === mode);
+      qTab.classList.toggle('is-loaded', isLoaded);
+    }
+
+    const qCheck = document.getElementById(`quickCheck${mode.charAt(0).toUpperCase() + mode.slice(1)}`);
+    if (qCheck) {
+      qCheck.textContent = isLoaded ? '✓' : '＋';
+      qCheck.className = isLoaded ? 'quick-slot-check loaded' : 'quick-slot-check empty';
+    }
+
+    const qName = document.getElementById(`slotName${mode.charAt(0).toUpperCase() + mode.slice(1)}`);
+    if (qName) {
+      qName.textContent = isLoaded ? (slot.assetName || 'Loaded') : 'Empty';
+    }
+
+    // Section 6 Export Card Items
+    const expRow = document.getElementById(`setItemRow${mode.charAt(0).toUpperCase() + mode.slice(1)}`);
+    if (expRow) {
+      expRow.classList.toggle('is-loaded', isLoaded);
+      expRow.classList.toggle('is-active', state.appMode === mode);
+    }
+
+    const expThumb = document.getElementById(`setExportThumb${mode.charAt(0).toUpperCase() + mode.slice(1)}`);
+    if (expThumb) {
+      if (slot && slot.thumbnail) {
+        expThumb.style.backgroundImage = `url(${slot.thumbnail})`;
+        expThumb.classList.add('has-thumb');
+      } else {
+        expThumb.style.backgroundImage = 'none';
+        expThumb.classList.remove('has-thumb');
+      }
+    }
+
+    const expName = document.getElementById(`setExportName${mode.charAt(0).toUpperCase() + mode.slice(1)}`);
+    if (expName) {
+      expName.textContent = isLoaded ? slot.assetName : 'Not Loaded';
+    }
+
+    const expStatus = document.getElementById(`setExportStatus${mode.charAt(0).toUpperCase() + mode.slice(1)}`);
+    if (expStatus) {
+      expStatus.textContent = isLoaded ? '✓ Ready' : 'Empty';
+      expStatus.className = isLoaded ? 'set-item-status ready' : 'set-item-status empty';
+    }
+  });
+
+  // Source slot tag and name in Section 2
+  const srcSlotTag = document.getElementById('sourceSlotModeTag');
+  if (srcSlotTag) {
+    srcSlotTag.textContent = `${state.appMode.toUpperCase()} SLOT`;
+    srcSlotTag.className = `set-slot-tag tag-${state.appMode}`;
+  }
+  const srcSlotName = document.getElementById('sourceSlotAssetName');
+  if (srcSlotName) {
+    const curSlot = state.setSlots[state.appMode];
+    srcSlotName.textContent = curSlot?.assetName || 'Unnamed';
+  }
+
+  // Section 6 Export Count Badge & Subtext
+  const expCountBadge = document.getElementById('setExportCountBadge');
+  if (expCountBadge) {
+    expCountBadge.textContent = count === 3 ? '3/3 Items Ready' : `${count}/3 Items Ready`;
+    expCountBadge.className = count === 3 ? 'set-bundle-count complete' : (count > 0 ? 'set-bundle-count partial' : 'set-bundle-count empty');
+  }
+
+  const btnFullSet = document.getElementById('btnExportFullSet');
+  if (btnFullSet) {
+    if (count === 0) {
+      btnFullSet.disabled = true;
+      btnFullSet.title = 'Load at least one item into your set to export';
+    } else {
+      btnFullSet.disabled = false;
+      btnFullSet.title = `Export complete set (${count} item${count > 1 ? 's' : ''}) in one unified .zip`;
+    }
+  }
+}
+window.updateSetSlotsUI = updateSetSlotsUI;
+
+export function clearCurrentSlot() {
+  const mode = state.appMode;
+  if (!state.setSlots || !state.setSlots[mode]) return;
+  const slot = state.setSlots[mode];
+
+  slot.image = null;
+  slot.imageSrc = '';
+  slot.fileName = '';
+  slot.thumbnail = '';
+  slot.isCustomImageLoaded = false;
+  slot.hasUnsavedChanges = false;
+  state.currentImage = null;
+  state.isCustomImageLoaded = false;
+  state.hasUnsavedChanges = false;
+
+  const defaultNames = {
+    decal: 'CustomDecal_01',
+    surface: 'CustomSurface_01',
+    netlane: 'CustomNetLane_01'
+  };
+  const nameInput = document.getElementById('assetName');
+  if (nameInput) nameInput.value = defaultNames[mode] || 'CustomAsset_01';
+  slot.assetName = defaultNames[mode] || 'CustomAsset_01';
+
+  updateEmptyPreviewIndicator();
+  updateConfigJson();
+  renderAllMaps();
+  updateSetSlotsUI();
+  showToast(`Cleared ${mode.toUpperCase()} graphic from set`);
+}
+window.clearCurrentSlot = clearCurrentSlot;
+
+// ==========================================
 // Mode Switching: Decal Mode vs Surface Mode vs NetLane Mode
 // ==========================================
-export function setMode(mode, force = false) {
-  if (!force && state.appMode !== mode && hasActiveWork()) {
-    state.pendingGuardAction = () => {
-      setMode(mode, true);
-    };
-    openUnsavedModal(`Switching to ${mode.toUpperCase()} mode will reset workspace settings.`);
-    return;
-  }
+export function setMode(mode, force = false, silent = false) {
+  if (state.appMode === mode && !force) return;
+
+  // 1. Save current active workspace into its slot first!
+  saveCurrentSlotState(state.appMode);
+
+  // 2. Switch mode
   state.appMode = mode;
   const btnDecal = document.getElementById('btnModeDecal');
   const btnSurface = document.getElementById('btnModeSurface');
@@ -385,10 +824,17 @@ export function setMode(mode, force = false) {
   if (btnSurface) btnSurface.className = mode === 'surface' ? 'mode-btn active-surface' : 'mode-btn';
   if (btnNetlane) btnNetlane.className = mode === 'netlane' ? 'mode-btn active-netlane' : 'mode-btn';
 
+  const tabDecal = document.getElementById('presetTabDecal');
+  const tabSurface = document.getElementById('presetTabSurface');
+  const tabNetlane = document.getElementById('presetTabNetlane');
+  if (tabDecal) tabDecal.className = mode === 'decal' ? 'preset-tab-pill active' : 'preset-tab-pill';
+  if (tabSurface) tabSurface.className = mode === 'surface' ? 'preset-tab-pill active' : 'preset-tab-pill';
+  if (tabNetlane) tabNetlane.className = mode === 'netlane' ? 'preset-tab-pill active' : 'preset-tab-pill';
+
   if (mode === 'decal') {
     if (guidanceBanner) guidanceBanner.className = 'guidance-banner';
     if (guidanceIcon) guidanceIcon.textContent = '💡';
-    if (guidanceText) guidanceText.textContent = 'Images should have transparent backgrounds and do not need to tile.';
+    if (guidanceText) guidanceText.textContent = 'Decal graphic: transparent background, projected onto 3D surfaces.';
 
     if (sec1Title) sec1Title.textContent = '2. Decal Settings & Geometry';
     if (modeBadge) {
@@ -418,23 +864,43 @@ export function setMode(mode, force = false) {
     if (exportZipLabel) exportZipLabel.textContent = 'Export Decal Package (.zip)';
     if (maskAlphaLabel) maskAlphaLabel.textContent = 'Modulate Mask with Decal Alpha (Recommended for decals)';
 
-    if (dropTitleText) dropTitleText.textContent = 'Drop Source Graphic (PNG or JPG)';
+    if (dropTitleText) dropTitleText.textContent = 'Drop Source Graphic for Decal (PNG or JPG)';
     if (dropHintText) dropHintText.textContent = 'All ratios supported: 2:3 / 3:4 Posters, 16:9 Billboards, or 1:1 Road Marks';
     if (folderTitleText) folderTitleText.textContent = 'Cities: Skylines 2 Custom Decal Destination Folder';
 
     if (presetButtonsGroup) {
       presetButtonsGroup.innerHTML = `
-        <button class="preset-btn" onclick="loadSample('manhole')">Manhole Cover</button>
-        <button class="preset-btn" onclick="loadSample('arrow')">Turn Arrow</button>
-        <button class="preset-btn" onclick="loadSample('poster')">Poster (2:3)</button>
-        <button class="preset-btn" onclick="loadSample('crack')">Asphalt Crack</button>
+        <div class="menu-preset-grid">
+          <button type="button" class="menu-preset-btn" onclick="loadSample('manhole'); toggleMainProjectMenu(false);" title="Load circular utility manhole decal">
+            <span class="menu-preset-icon">🕳️</span>
+            <div class="menu-preset-text">
+              <div class="menu-preset-name">Manhole Cover</div>
+              <div class="menu-preset-desc">1:1 Cast Iron Utility</div>
+            </div>
+          </button>
+          <button type="button" class="menu-preset-btn" onclick="loadSample('arrow'); toggleMainProjectMenu(false);" title="Load directional road turn arrow decal">
+            <span class="menu-preset-icon">↗️</span>
+            <div class="menu-preset-text">
+              <div class="menu-preset-name">Turn Arrow</div>
+              <div class="menu-preset-desc">Road Pavement Decal</div>
+            </div>
+          </button>
+          <button type="button" class="menu-preset-btn" onclick="loadSample('poster'); toggleMainProjectMenu(false);" title="Load 2:3 vertical poster billboard decal">
+            <span class="menu-preset-icon">🖼️</span>
+            <div class="menu-preset-text">
+              <div class="menu-preset-name">Poster (2:3)</div>
+              <div class="menu-preset-desc">Wall Advertisement</div>
+            </div>
+          </button>
+          <button type="button" class="menu-preset-btn" onclick="loadSample('crack'); toggleMainProjectMenu(false);" title="Load asphalt crack surface wear decal">
+            <span class="menu-preset-icon">⚡</span>
+            <div class="menu-preset-text">
+              <div class="menu-preset-name">Asphalt Crack</div>
+              <div class="menu-preset-desc">Road Wear &amp; Damage</div>
+            </div>
+          </button>
+        </div>
       `;
-    }
-
-    const assetNameInput = document.getElementById('assetName');
-    if (assetNameInput && (assetNameInput.value.startsWith('CustomSurface_') || assetNameInput.value.startsWith('CustomNetLane_') || assetNameInput.value.startsWith('NetLane_'))) {
-      assetNameInput.value = 'CustomRoadMarking_TurnArrow_01';
-      loadSample('arrow');
     }
 
   } else if (mode === 'surface') {
@@ -476,16 +942,30 @@ export function setMode(mode, force = false) {
 
     if (presetButtonsGroup) {
       presetButtonsGroup.innerHTML = `
-        <button class="preset-btn" onclick="loadSample('cobblestone')">Cobblestones</button>
-        <button class="preset-btn" onclick="loadSample('bricks')">Red Bricks</button>
-        <button class="preset-btn" onclick="loadSample('tiles')">Granite Tiles</button>
+        <div class="menu-preset-grid">
+          <button type="button" class="menu-preset-btn" onclick="loadSample('cobblestone'); toggleMainProjectMenu(false);" title="Load seamless cobblestone pavement surface">
+            <span class="menu-preset-icon">🪨</span>
+            <div class="menu-preset-text">
+              <div class="menu-preset-name">Cobblestones</div>
+              <div class="menu-preset-desc">Tiling Old-Town Stone</div>
+            </div>
+          </button>
+          <button type="button" class="menu-preset-btn" onclick="loadSample('bricks'); toggleMainProjectMenu(false);" title="Load seamless red brick surface">
+            <span class="menu-preset-icon">🧱</span>
+            <div class="menu-preset-text">
+              <div class="menu-preset-name">Red Bricks</div>
+              <div class="menu-preset-desc">Tiling Masonry Brick</div>
+            </div>
+          </button>
+          <button type="button" class="menu-preset-btn" onclick="loadSample('tiles'); toggleMainProjectMenu(false);" title="Load seamless granite tile surface">
+            <span class="menu-preset-icon">⬛</span>
+            <div class="menu-preset-text">
+              <div class="menu-preset-name">Granite Tiles</div>
+              <div class="menu-preset-desc">Tiling Polished Plaza</div>
+            </div>
+          </button>
+        </div>
       `;
-    }
-
-    const assetNameInput = document.getElementById('assetName');
-    if (assetNameInput && (assetNameInput.value.startsWith('CustomRoadMarking_') || assetNameInput.value.startsWith('CityUtility_') || assetNameInput.value.startsWith('CustomNetLane_'))) {
-      assetNameInput.value = 'CustomSurface_Pavement_01';
-      loadSample('cobblestone');
     }
 
   } else {
@@ -530,30 +1010,130 @@ export function setMode(mode, force = false) {
 
     if (presetButtonsGroup) {
       presetButtonsGroup.innerHTML = `
-        <button class="preset-btn" onclick="loadSample('centerline')">Dashed Line</button>
-        <button class="preset-btn" onclick="loadSample('yellowlines')">Double Yellow</button>
-        <button class="preset-btn" onclick="loadSample('curb')">Granite Curb</button>
+        <div class="menu-preset-grid">
+          <button type="button" class="menu-preset-btn" onclick="loadSample('centerline'); toggleMainProjectMenu(false);" title="Load road dashed lane stripe net lane">
+            <span class="menu-preset-icon">➖</span>
+            <div class="menu-preset-text">
+              <div class="menu-preset-name">Dashed Line</div>
+              <div class="menu-preset-desc">Extruded Centerline</div>
+            </div>
+          </button>
+          <button type="button" class="menu-preset-btn" onclick="loadSample('yellowlines'); toggleMainProjectMenu(false);" title="Load road double yellow barrier net lane">
+            <span class="menu-preset-icon">⏸️</span>
+            <div class="menu-preset-text">
+              <div class="menu-preset-name">Double Yellow</div>
+              <div class="menu-preset-desc">No-Passing Lines</div>
+            </div>
+          </button>
+          <button type="button" class="menu-preset-btn" onclick="loadSample('curb'); toggleMainProjectMenu(false);" title="Load roadside granite curb edge net lane">
+            <span class="menu-preset-icon">🛣️</span>
+            <div class="menu-preset-text">
+              <div class="menu-preset-name">Granite Curb</div>
+              <div class="menu-preset-desc">Roadside Raised Edge</div>
+            </div>
+          </button>
+        </div>
       `;
-    }
-
-    const assetNameInput = document.getElementById('assetName');
-    if (assetNameInput && (assetNameInput.value.startsWith('CustomRoadMarking_') || assetNameInput.value.startsWith('CityUtility_') || assetNameInput.value.startsWith('CustomSurface_'))) {
-      assetNameInput.value = 'CustomNetLane_DashedLine_01';
-      loadSample('centerline');
     }
   }
 
+  // 3. Restore target mode slot state
+  restoreSlotState(mode);
+
+  // 4. Update UI & re-render maps
   updateConfigJson();
   updateSimulationText();
   checkRotationNameReminder();
   updateDecalAspectUI();
   renderAllMaps();
+  applySamplePresetsVisibilityUI();
+  updateSetSlotsUI();
+
+  if (!silent) {
+    const slot = state.setSlots[mode];
+    const loaded = isSlotLoaded(mode);
+    showToast(`Switched to ${mode.toUpperCase()} slot: ${loaded ? slot.assetName : 'Ready for graphic'}`);
+  }
+}
+
+// ==========================================
+// Sample Presets Visibility Controls (Hide / Unhide)
+// ==========================================
+export function applySamplePresetsVisibilityUI() {
+  const isHidden = !!state.hideSamplePresets;
+
+  // 1. Project & Tools menu preset section & collapsed indicator
+  const container = document.getElementById('samplePresetsContainer');
+  const collapsedBar = document.getElementById('samplePresetsCollapsedBar');
+  if (container) container.style.display = isHidden ? 'none' : 'block';
+  if (collapsedBar) collapsedBar.style.display = isHidden ? 'flex' : 'none';
+
+  // 2. Project & Tools menu visibility toggle button & badge
+  const menuBadge = document.getElementById('menuTogglePresetsBadge');
+  if (menuBadge) {
+    menuBadge.textContent = isHidden ? 'Hidden' : 'Visible';
+    menuBadge.className = isHidden ? 'pref-badge pref-badge-hidden' : 'pref-badge pref-badge-active';
+  }
+
+  // 3. Sidebar Toolbar button
+  const sidebarBtn = document.getElementById('sidebarPresetsToggleBtn');
+  const sidebarLabel = document.getElementById('sidebarPresetsToggleLabel');
+  if (sidebarBtn) {
+    sidebarBtn.classList.toggle('presets-hidden', isHidden);
+    sidebarBtn.title = isHidden ? 'Sample presets are hidden. Click to unhide.' : 'Sample presets are visible. Click to hide.';
+  }
+  if (sidebarLabel) {
+    sidebarLabel.textContent = isHidden ? '⚡ Presets: Off' : '⚡ Presets: On';
+  }
+
+  // 4. Empty workspace preview card
+  const emptyPresetCard = document.getElementById('emptyLoadSampleActionCard');
+  const emptyQuickStarters = document.getElementById('emptyQuickStarters');
+  const emptyUnhideContainer = document.getElementById('emptyUnhidePresetsContainer');
+  const emptyActionsWrapper = document.getElementById('emptyCardActionsWrapper');
+
+  if (emptyPresetCard) emptyPresetCard.style.display = isHidden ? 'none' : 'flex';
+  if (emptyQuickStarters) emptyQuickStarters.style.display = isHidden ? 'none' : 'flex';
+  if (emptyUnhideContainer) emptyUnhideContainer.style.display = isHidden ? 'block' : 'none';
+  if (emptyActionsWrapper) emptyActionsWrapper.classList.toggle('single-action', isHidden);
+
+  // 5. Welcome Splash modal
+  const splashSampleBtn = document.getElementById('splashLoadSampleBtn');
+  if (splashSampleBtn) splashSampleBtn.style.display = isHidden ? 'none' : 'inline-block';
+}
+
+// ==========================================
+// Empty Preview State Indicator Logic
+// ==========================================
+export function updateEmptyPreviewIndicator() {
+  const overlay = document.getElementById('emptyPreviewOverlay');
+  const pill = document.getElementById('previewEmptyPill');
+  const container = document.getElementById('previewCanvasContainer');
+
+  if (overlay) {
+    overlay.style.display = 'none';
+  }
+  if (pill) {
+    pill.style.display = 'none';
+  }
+  if (container) {
+    container.classList.remove('is-empty-state');
+  }
+  applySamplePresetsVisibilityUI();
+}
+
+export function toggleEmptyOverlayMinimize(_forceRestore) {
+  const overlay = document.getElementById('emptyPreviewOverlay');
+  if (overlay) {
+    overlay.style.display = 'none';
+  }
 }
 
 // ==========================================
 // Primary Map Rendering Logic
 // ==========================================
 export function renderAllMaps() {
+  updateEmptyPreviewIndicator();
   if (!state.currentImage) return;
 
   const { canvasBase, canvasNormal, canvasMask, ctxBase, ctxNormal, ctxMask } = getCanvases();
@@ -685,6 +1265,26 @@ export function processUploadedFile(file, force = false) {
       state.isCustomImageLoaded = true;
       state.hasUnsavedChanges = true;
 
+      // Update current mode slot in the 3-in-1 Set!
+      if (state.setSlots && state.setSlots[state.appMode]) {
+        const slot = state.setSlots[state.appMode];
+        slot.image = img;
+        slot.imageSrc = event.target.result;
+        slot.fileName = file.name;
+        slot.isCustomImageLoaded = true;
+        slot.hasUnsavedChanges = true;
+        if (cleanName) slot.assetName = cleanName;
+
+        try {
+          const tc = document.createElement('canvas');
+          tc.width = 64;
+          tc.height = 64;
+          const tctx = tc.getContext('2d');
+          tctx.drawImage(img, 0, 0, 64, 64);
+          slot.thumbnail = tc.toDataURL('image/png');
+        } catch (_) {}
+      }
+
       const rawW = img.naturalWidth || img.width || 1024;
       const rawH = img.naturalHeight || img.height || 1024;
       const nativeRatio = rawW / rawH;
@@ -705,9 +1305,10 @@ export function processUploadedFile(file, force = false) {
 
       renderAllMaps();
       updateDecalAspectUI();
+      updateSetSlotsUI();
       
       const format = getAspectFormatName(nativeRatio);
-      showToast(`Loaded ${file.name} (${rawW}×${rawH} • ${format})`);
+      showToast(`Loaded ${file.name} into ${state.appMode.toUpperCase()} slot (${rawW}×${rawH} • ${format})`);
     };
     img.src = event.target.result;
   };
@@ -730,6 +1331,7 @@ export function onAssetNameInput() {
   if (typeof renderSetThumbnailsStrip === 'function') {
     renderSetThumbnailsStrip();
   }
+  scheduleSessionAutosave();
 }
 
 export function clearAllWorkspace(force = false) {
@@ -760,6 +1362,13 @@ export function clearAllWorkspace(force = false) {
   state.badge4FileName = '';
   state.currentLoadedAssetName = '';
   state.currentLoadedAssetSeries = '';
+
+  // Reset 3-in-1 Set Slots
+  state.setSlots = {
+    decal: createDefaultSlot('decal'),
+    surface: createDefaultSlot('surface'),
+    netlane: createDefaultSlot('netlane')
+  };
 
   // 2. Clear all file inputs
   ['fileInput', 'customNormalInput', 'customMaskInput', 'designerLogoInput', 'seriesLogoInput', 'extra1LogoInput', 'extra2LogoInput', 'projectFileInput', 'communityZipInput', 'communityFolderInput', 'communityFilesInput'].forEach(id => {
@@ -901,6 +1510,8 @@ export function clearAllWorkspace(force = false) {
   if (cardIconFooter) cardIconFooter.textContent = 'No icon generated';
 
   updateConfigJson();
+  updateEmptyPreviewIndicator();
+  updateSetSlotsUI();
   showToast('Workspace wiped to a completely clear slate');
 }
 
@@ -913,6 +1524,11 @@ Object.assign(window, {
   setMode,
   renderAllMaps,
   loadSample,
+  setHideSamplePresets,
+  toggleHideSamplePresets,
+  applySamplePresetsVisibilityUI,
+  updateEmptyPreviewIndicator,
+  toggleEmptyOverlayMinimize,
   handleFileSelect,
   processUploadedFile,
   clearAllWorkspace,
@@ -1164,13 +1780,30 @@ Object.assign(window, {
   handleWizardGraphicDrop,
   useWizardStarterGraphic,
   confirmCreateNewSet,
+  openBackupAllDataModal,
+  closeBackupAllDataModal,
+  closeBackupAllDataModalOnBackdrop,
   exportAllSetsAndStorageBackup,
+  copyBackupJsonToClipboard,
   handleBackupFileSelect,
-  importStorageBackupFromFile,
+  handleBackupModalFileSelect,
+  handleBackupDropzoneDragOver,
+  handleBackupDropzoneDragLeave,
+  handleBackupDropzoneDrop,
+  inspectBackupFile,
+  confirmRestoreBackup,
+  cancelPendingRestore,
+  refreshBackupModalStats,
+  resetAllLocalDataWithConfirmation,
   openWelcomeSplash,
   closeWelcomeSplash,
   closeWelcomeSplashOnBackdrop,
   toggleNeverShowSplashAgain,
+  continueSessionFromSplash,
+  startWizardFromSplash,
+  startBlankFromSplash,
+  saveCurrentSessionSnapshot,
+  updateSplashScreenSessionInfo,
   openNewStandaloneAssetWizard,
   closeNewStandaloneAssetWizard,
   closeNewStandaloneAssetWizardOnBackdrop,
@@ -1204,11 +1837,188 @@ Object.assign(window, {
 });
 
 // ==========================================
+// Session Snapshot & Quick Launch Handlers
+// ==========================================
+let sessionAutosaveTimer = null;
+
+export function formatRelativeSessionTime(timestamp) {
+  if (!timestamp) return 'Ready to resume';
+  const diffSec = Math.floor((Date.now() - timestamp) / 1000);
+  if (diffSec < 60) return 'Saved just now';
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `Saved ${diffMin}m ago`;
+  const diffHours = Math.floor(diffMin / 60);
+  if (diffHours < 24) return `Saved ${diffHours}h ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  return `Saved ${diffDays}d ago`;
+}
+
+export function getStoredSessionData() {
+  try {
+    const raw = localStorage.getItem('cs2_autosave_session');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && (parsed.project || parsed.meta)) {
+        return parsed;
+      }
+    }
+  } catch (_) {}
+
+  try {
+    const rawMeta = localStorage.getItem('cs2_autosave_session_meta');
+    if (rawMeta) {
+      const meta = JSON.parse(rawMeta);
+      return { meta, project: null };
+    }
+  } catch (_) {}
+
+  return null;
+}
+
+export function saveCurrentSessionSnapshot(force = false) {
+  try {
+    if (typeof serializeCurrentProject !== 'function') return;
+    const proj = serializeCurrentProject();
+    if (!proj) return;
+
+    const assetName = proj.assetName || state.currentLoadedAssetName || 'CustomAsset';
+    const appMode = proj.appMode || state.appMode || 'decal';
+    const sessionObj = {
+      format: 'cs2-active-session',
+      timestamp: Date.now(),
+      meta: {
+        assetName: assetName,
+        appMode: appMode,
+        category: proj.assetCategory || 'RoadMarkings',
+        dimensions: proj.dimensions || {},
+        hasCustomImage: !!state.isCustomImageLoaded,
+        timestamp: Date.now()
+      },
+      project: proj
+    };
+
+    try {
+      localStorage.setItem('cs2_autosave_session', JSON.stringify(sessionObj));
+      localStorage.setItem('cs2_autosave_session_meta', JSON.stringify(sessionObj.meta));
+    } catch (e) {
+      // If project payload exceeds quota (e.g. large base64 image), save meta and store in IndexedDB
+      try {
+        localStorage.setItem('cs2_autosave_session_meta', JSON.stringify(sessionObj.meta));
+        if (typeof saveAssetToIndexedDB === 'function') {
+          saveAssetToIndexedDB({ ...proj, assetName: '__cs2_last_session__' });
+        }
+      } catch (_) {}
+    }
+  } catch (err) {
+    console.warn('Session auto-save warning:', err);
+  }
+}
+
+export function scheduleSessionAutosave() {
+  if (sessionAutosaveTimer) clearTimeout(sessionAutosaveTimer);
+  sessionAutosaveTimer = setTimeout(() => {
+    saveCurrentSessionSnapshot();
+  }, 1000);
+}
+
+export function updateSplashScreenSessionInfo() {
+  const infoTextEl = document.getElementById('splashSessionInfoText');
+  const badgeEl = document.getElementById('splashSessionStatusBadge');
+  if (!infoTextEl) return;
+
+  const stored = getStoredSessionData();
+  if (stored && stored.meta) {
+    const meta = stored.meta;
+    const timeStr = formatRelativeSessionTime(meta.timestamp);
+    const modeLabel = (meta.appMode || 'decal').toUpperCase();
+    infoTextEl.textContent = `Resume "${meta.assetName}" (${modeLabel}) • ${timeStr}`;
+    if (badgeEl) {
+      badgeEl.textContent = 'Draft Saved';
+      badgeEl.className = 'splash-card-badge badge-cyan';
+    }
+    return;
+  }
+
+  // Fallback: Check library assets or current active draft
+  const lib = typeof getSavedLibraryFromMemory === 'function' ? getSavedLibraryFromMemory() : [];
+  if (lib && lib.length > 0) {
+    const latest = lib[lib.length - 1];
+    infoTextEl.textContent = `Library: "${latest.assetName}" (${(latest.appMode || 'decal').toUpperCase()})`;
+    if (badgeEl) {
+      badgeEl.textContent = 'From Library';
+      badgeEl.className = 'splash-card-badge badge-cyan';
+    }
+    return;
+  }
+
+  const currentName = state.currentLoadedAssetName || document.getElementById('assetName')?.value?.trim() || 'CustomDecal';
+  const modeLabel = (state.appMode || 'decal').toUpperCase();
+  infoTextEl.textContent = `Current: "${currentName}" (${modeLabel})`;
+  if (badgeEl) {
+    badgeEl.textContent = 'Active Draft';
+    badgeEl.className = 'splash-card-badge badge-cyan';
+  }
+}
+
+export async function continueSessionFromSplash() {
+  closeWelcomeSplash();
+
+  const stored = getStoredSessionData();
+  if (stored && stored.project) {
+    try {
+      deserializeAndLoadProject(stored.project);
+      showToast(`✓ Resumed session: ${stored.project.assetName || 'Custom Asset'}`);
+      return;
+    } catch (err) {
+      console.warn('Could not deserialize session project:', err);
+    }
+  }
+
+  // Check if saved in IndexedDB
+  if (typeof getSavedLibraryFromMemory === 'function') {
+    const lib = getSavedLibraryFromMemory();
+    const sessionMatch = lib.find(a => a.assetName === '__cs2_last_session__');
+    if (sessionMatch) {
+      try {
+        deserializeAndLoadProject(sessionMatch);
+        showToast(`✓ Resumed session: ${sessionMatch.assetName || 'Custom Asset'}`);
+        return;
+      } catch (_) {}
+    }
+    if (lib.length > 0) {
+      const latest = lib[lib.length - 1];
+      try {
+        deserializeAndLoadProject(latest);
+        showToast(`✓ Resumed library asset: ${latest.assetName}`);
+        return;
+      } catch (_) {}
+    }
+  }
+
+  // If no saved session, workspace is already open
+  const name = state.currentLoadedAssetName || document.getElementById('assetName')?.value?.trim() || 'Workspace';
+  showToast(`✓ Continuing active session: ${name}`);
+}
+
+export function startWizardFromSplash() {
+  closeWelcomeSplash();
+  openNewStandaloneAssetWizard();
+  showToast('⚡ Started New Asset Setup Wizard');
+}
+
+export function startBlankFromSplash() {
+  closeWelcomeSplash();
+  clearAllWorkspace(true);
+  showToast('✨ Started blank workspace. Drop your texture to begin!');
+}
+
+// ==========================================
 // Quick Guide Splash Screen Logic
 // ==========================================
 export function openWelcomeSplash() {
   const modal = document.getElementById('welcomeSplashModal');
   if (modal) {
+    updateSplashScreenSessionInfo();
     modal.style.display = 'flex';
     const chk = document.getElementById('splashNeverShowCheckbox');
     if (chk) {
@@ -1242,8 +2052,38 @@ export function toggleNeverShowSplashAgain(checked) {
 // Initialization on Launch
 // ==========================================
 window.addEventListener('DOMContentLoaded', async () => {
-  setMode('decal');
-  loadSample('manhole');
+  const hidePresets = localStorage.getItem('cs2_hide_sample_presets') === 'true';
+  state.hideSamplePresets = hidePresets;
+
+  if (!hidePresets) {
+    try {
+      // Bootstrap all 3 slots with high-quality themed starter items
+      const decalSlotData = createSampleSlot('manhole');
+      Object.assign(state.setSlots.decal, decalSlotData);
+
+      const surfaceSlotData = createSampleSlot('cobblestone');
+      Object.assign(state.setSlots.surface, surfaceSlotData);
+
+      const netlaneSlotData = createSampleSlot('centerline');
+      Object.assign(state.setSlots.netlane, netlaneSlotData);
+    } catch (e) {
+      console.warn('Could not populate initial sample slots:', e);
+    }
+  }
+
+  setMode('decal', true, true);
+  if (!hidePresets && state.setSlots.decal.image) {
+    state.currentImage = state.setSlots.decal.image;
+    renderAllMaps();
+  } else if (!hidePresets) {
+    loadSample('manhole');
+  } else {
+    state.currentImage = null;
+    state.isCustomImageLoaded = false;
+    updateEmptyPreviewIndicator();
+  }
+  updateSetSlotsUI();
+  applySamplePresetsVisibilityUI();
   updateDecalAspectUI();
   updateUiPrioritySequenceUI();
   initBadgeDefaults();
@@ -1329,6 +2169,16 @@ window.addEventListener('DOMContentLoaded', async () => {
       closeCreateNewSetWizard();
       closeNewStandaloneAssetWizard();
       cancelGuardAction();
+    }
+  });
+
+  // Automatically snapshot session state on tab switch or page leave
+  window.addEventListener('beforeunload', () => {
+    saveCurrentSessionSnapshot(true);
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      saveCurrentSessionSnapshot(true);
     }
   });
 });

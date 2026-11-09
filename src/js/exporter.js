@@ -1608,6 +1608,180 @@ export function copyDecalPath() {
   }
 }
 
+// ==========================================
+// Floating / Detachable JSON Preview Panel
+// ==========================================
+let isJsonFloating = false;
+let isJsonMinimized = false;
+let jsonFloatPos = null;
+let isDraggingJson = false;
+let dragStartX = 0;
+let dragStartY = 0;
+let cardStartX = 0;
+let cardStartY = 0;
+let dragInitialized = false;
+
+export function floatJsonPreview() {
+  const card = document.getElementById('jsonFloatingCard');
+  const placeholder = document.getElementById('jsonDockPlaceholder');
+  const floatBtnLabel = document.getElementById('floatBtnLabel');
+  const minBtn = document.getElementById('btnMinimizeJsonFloat');
+  if (!card) return;
+
+  isJsonFloating = true;
+  card.classList.add('is-floating');
+  if (placeholder) placeholder.style.display = 'block';
+  if (minBtn) minBtn.style.display = 'inline-flex';
+  if (floatBtnLabel) floatBtnLabel.textContent = 'Dock';
+
+  if (jsonFloatPos && jsonFloatPos.x !== undefined && jsonFloatPos.y !== undefined) {
+    const maxX = Math.max(10, window.innerWidth - 300);
+    const maxY = Math.max(10, window.innerHeight - 100);
+    const clampedX = Math.min(Math.max(10, jsonFloatPos.x), maxX);
+    const clampedY = Math.min(Math.max(10, jsonFloatPos.y), maxY);
+    card.style.left = `${clampedX}px`;
+    card.style.top = `${clampedY}px`;
+    card.style.right = 'auto';
+    card.style.bottom = 'auto';
+  } else {
+    card.style.right = '24px';
+    card.style.top = '72px';
+    card.style.left = 'auto';
+    card.style.bottom = 'auto';
+    card.style.width = '400px';
+    card.style.height = '380px';
+  }
+
+  initJsonDrag();
+  showToast('JSON preview floating. Drag header to move anywhere.');
+}
+
+export function dockJsonPreview() {
+  const card = document.getElementById('jsonFloatingCard');
+  const placeholder = document.getElementById('jsonDockPlaceholder');
+  const floatBtnLabel = document.getElementById('floatBtnLabel');
+  const minBtn = document.getElementById('btnMinimizeJsonFloat');
+  if (!card) return;
+
+  isJsonFloating = false;
+  card.classList.remove('is-floating');
+  card.classList.remove('is-minimized');
+  isJsonMinimized = false;
+
+  card.style.left = '';
+  card.style.top = '';
+  card.style.right = '';
+  card.style.bottom = '';
+  card.style.width = '';
+  card.style.height = '';
+
+  if (placeholder) placeholder.style.display = 'none';
+  if (minBtn) minBtn.style.display = 'none';
+  if (floatBtnLabel) floatBtnLabel.textContent = 'Float';
+
+  const minusIcon = document.getElementById('minimizeIconMinus');
+  const plusIcon = document.getElementById('minimizeIconPlus');
+  if (minusIcon) minusIcon.style.display = 'inline';
+  if (plusIcon) plusIcon.style.display = 'none';
+
+  showToast('JSON preview docked back to sidebar');
+}
+
+export function toggleJsonFloat() {
+  if (isJsonFloating) {
+    dockJsonPreview();
+  } else {
+    floatJsonPreview();
+  }
+}
+
+export function toggleMinimizeJsonFloat() {
+  const card = document.getElementById('jsonFloatingCard');
+  if (!card || !isJsonFloating) return;
+
+  isJsonMinimized = !isJsonMinimized;
+  card.classList.toggle('is-minimized', isJsonMinimized);
+
+  const minusIcon = document.getElementById('minimizeIconMinus');
+  const plusIcon = document.getElementById('minimizeIconPlus');
+  if (minusIcon && plusIcon) {
+    minusIcon.style.display = isJsonMinimized ? 'none' : 'inline';
+    plusIcon.style.display = isJsonMinimized ? 'inline' : 'none';
+  }
+}
+
+export function initJsonDrag() {
+  if (dragInitialized) return;
+  const header = document.getElementById('jsonPanelDragHandle');
+  const card = document.getElementById('jsonFloatingCard');
+  if (!header || !card) return;
+
+  dragInitialized = true;
+
+  header.addEventListener('pointerdown', (e) => {
+    if (!isJsonFloating) return;
+    if (e.target.closest('button, select, a, input')) return;
+
+    isDraggingJson = true;
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+
+    const rect = card.getBoundingClientRect();
+    cardStartX = rect.left;
+    cardStartY = rect.top;
+
+    card.style.left = `${cardStartX}px`;
+    card.style.top = `${cardStartY}px`;
+    card.style.right = 'auto';
+    card.style.bottom = 'auto';
+
+    try {
+      header.setPointerCapture(e.pointerId);
+    } catch {}
+    e.preventDefault();
+  });
+
+  header.addEventListener('pointermove', (e) => {
+    if (!isDraggingJson || !isJsonFloating) return;
+    const dx = e.clientX - dragStartX;
+    const dy = e.clientY - dragStartY;
+
+    const newX = cardStartX + dx;
+    const newY = cardStartY + dy;
+
+    const minX = 8;
+    const minY = 8;
+    const maxX = Math.max(8, window.innerWidth - 80);
+    const maxY = Math.max(8, window.innerHeight - 40);
+
+    const clampedX = Math.min(Math.max(minX, newX), maxX);
+    const clampedY = Math.min(Math.max(minY, newY), maxY);
+
+    card.style.left = `${clampedX}px`;
+    card.style.top = `${clampedY}px`;
+    jsonFloatPos = { x: clampedX, y: clampedY };
+  });
+
+  const stopDrag = (e) => {
+    if (!isDraggingJson) return;
+    isDraggingJson = false;
+    try {
+      if (header.hasPointerCapture && header.hasPointerCapture(e.pointerId)) {
+        header.releasePointerCapture(e.pointerId);
+      }
+    } catch {}
+  };
+
+  header.addEventListener('pointerup', stopDrag);
+  header.addEventListener('pointercancel', stopDrag);
+}
+
+window.floatJsonPreview = floatJsonPreview;
+window.dockJsonPreview = dockJsonPreview;
+window.toggleJsonFloat = toggleJsonFloat;
+window.toggleMinimizeJsonFloat = toggleMinimizeJsonFloat;
+window.initJsonDrag = initJsonDrag;
+
 /**
  * Prompts the user where to save the file using the native OS Save As dialog (File System Access API).
  * If the user's browser does not support showSaveFilePicker, or if permission fails,
@@ -1865,6 +2039,186 @@ INSTRUCTIONS:
   }
 }
 
+export async function exportCompleteSetZip() {
+  if (typeof JSZip === 'undefined') {
+    showToast('JSZip library is still loading, please wait...');
+    return;
+  }
+
+  // 1. Save current active workspace state to its slot first
+  if (typeof window.saveCurrentSlotState === 'function') {
+    window.saveCurrentSlotState();
+  }
+
+  const loadedSlots = [];
+  ['decal', 'surface', 'netlane'].forEach(mode => {
+    if (state.setSlots && state.setSlots[mode] && (state.setSlots[mode].image || state.setSlots[mode].isCustomImageLoaded)) {
+      loadedSlots.push({ mode, slot: state.setSlots[mode] });
+    }
+  });
+
+  if (loadedSlots.length === 0) {
+    showToast('Please load at least one asset graphic into your set first');
+    return;
+  }
+
+  const originalMode = state.appMode;
+  const setName = state.setName ||
+                  document.getElementById('metaSetName')?.value?.trim() ||
+                  document.getElementById('assetSeries')?.value?.trim() ||
+                  'Custom_Asset_Set';
+  const cleanSetName = setName.replace(/[^a-zA-Z0-9_-]/g, '_');
+  const author = document.getElementById('metaAuthor')?.value?.trim() || 'CS2 Creator';
+  const version = document.getElementById('metaVersion')?.value?.trim() || '1.0.0';
+
+  showToast(`Packaging complete set "${setName}" (${loadedSlots.length} item${loadedSlots.length > 1 ? 's' : ''})...`);
+
+  const zip = new JSZip();
+  const getCanvasBlob = (canvas) => new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+  const manifestAssets = [];
+
+  try {
+    for (const { mode, slot } of loadedSlots) {
+      // Switch workspace to this mode temporarily to render exact PBR maps and configs
+      if (typeof window.setMode === 'function') {
+        window.setMode(mode, true, true);
+      }
+
+      const { canvasBase, canvasNormal, canvasMask, canvasIcon } = getCanvases();
+      const assetName = slot.assetName || (mode === 'decal' ? 'CustomDecal' : (mode === 'surface' ? 'CustomSurface' : 'CustomNetLane'));
+      const category = slot.category || getAssetCategory();
+      const jsonString = document.getElementById('jsonCodeText')?.textContent || '';
+
+      const folderName = mode === 'decal' ? 'Decals' : (mode === 'surface' ? 'Surfaces' : 'NetLanes');
+      const itemFolder = zip.folder(folderName).folder(assetName);
+
+      if (mode === 'decal') {
+        itemFolder.file('decal.json', jsonString);
+        const normalOpacity = parseFloat(document.getElementById('normalOpacitySlider')?.value || '1.0');
+        const baseOpacity = parseFloat(document.getElementById('baseOpacitySlider')?.value || '1.0');
+        const metallicOpacity = parseFloat(document.getElementById('metallicOpacitySlider')?.value || '0.0');
+        const officialSettings = {
+          SurfacePostProcessor: { materialTemplate: "DefaultDecal" },
+          floatProperties: {
+            _NormalOpacity: Number(normalOpacity.toFixed(2)),
+            _BaseOpacity: Number(baseOpacity.toFixed(2)),
+            _MetallicOpacity: Number(metallicOpacity.toFixed(2))
+          }
+        };
+        itemFolder.file('settings.json', JSON.stringify(officialSettings, null, 2));
+      } else if (mode === 'surface') {
+        itemFolder.file('surface.json', jsonString);
+      } else {
+        const schemaFormat = document.getElementById('jsonSchemaFormat')?.value || 'extended';
+        itemFolder.file('decal.json', getNetlaneDecalJson(schemaFormat));
+        itemFolder.file('surface.json', getNetlaneSurfaceJson(schemaFormat));
+        itemFolder.file('netlane.json', getNetlaneJson(schemaFormat));
+      }
+
+      const blobs = await Promise.all([
+        getCanvasBlob(canvasBase),
+        getCanvasBlob(canvasNormal),
+        getCanvasBlob(canvasMask),
+        getCanvasBlob(canvasIcon)
+      ]);
+
+      itemFolder.file('_BaseColorMap.png', blobs[0]);
+      itemFolder.file('_NormalMap.png', blobs[1]);
+      itemFolder.file('_MaskMap.png', blobs[2]);
+      if (blobs[3]) {
+        itemFolder.file('icon.png', blobs[3]);
+      }
+
+      manifestAssets.push({
+        type: mode,
+        name: assetName,
+        category: category,
+        priority: slot.uiPriority || 50000,
+        subfolder: `${folderName}/${assetName}`
+      });
+    }
+
+    // Restore user's previous active mode
+    if (typeof window.setMode === 'function') {
+      window.setMode(originalMode, true, true);
+    }
+
+    // Set manifest JSON
+    const manifest = {
+      format: 'CS2-Asset-Set-Manifest',
+      version: '1.0',
+      setName: setName,
+      author: author,
+      setVersion: version,
+      itemCount: manifestAssets.length,
+      timestamp: new Date().toISOString(),
+      assets: manifestAssets
+    };
+    zip.file('set-manifest.json', JSON.stringify(manifest, null, 2));
+
+    // Master Readme
+    let readmeText = `========================================================================
+Cities: Skylines 2 Custom Asset Set: ${setName}
+Unified Mod Package: ${manifestAssets.map(a => a.type.toUpperCase()).join(' + ')}
+Compatible with ExtraAssetsImporter & Native CS2 Asset Pipeline
+Author: ${author} • Version: ${version}
+========================================================================
+
+INCLUDED ASSET PACKAGES IN THIS SET:
+`;
+    manifestAssets.forEach((a, i) => {
+      readmeText += `${i + 1}. [${a.type.toUpperCase()}] ${a.name}
+   - Category: ${a.category}
+   - In-Game Priority: ${a.priority.toLocaleString()}
+   - Package Directory: ${a.subfolder}/
+
+`;
+    });
+
+    readmeText += `
+HOW TO INSTALL IN CITIES: SKYLINES 2:
+1. Open your Cities: Skylines 2 ExtraAssetsImporter directory:
+   %AppData%\\..\\LocalLow\\Colossal Order\\Cities Skylines II\\ModsData\\ExtraAssetsImporter\\
+
+2. Copy each folder into its matching category:
+   - Copy any folders in "Decals/" into: ModsData\\ExtraAssetsImporter\\CustomDecals\\<Category>\\
+   - Copy any folders in "Surfaces/" into: ModsData\\ExtraAssetsImporter\\CustomSurfaces\\<Category>\\
+   - Copy any folders in "NetLanes/" into: ModsData\\ExtraAssetsImporter\\CustomNetlanes\\<Category>\\
+
+3. Launch Cities: Skylines 2.
+4. Your complete set will appear in-game with matching categories and sequential priority ordering!
+`;
+    zip.file('SET-README.txt', readmeText);
+
+    showToast('Compressing full set package (.zip)...');
+    const content = await zip.generateAsync({ type: 'blob' });
+    const defaultZipName = `${cleanSetName}_CompleteSet.zip`;
+
+    const result = await saveFileWithPicker(content, defaultZipName, {
+      types: [
+        {
+          description: 'Cities: Skylines 2 Asset Set (*.zip)',
+          accept: { 'application/zip': ['.zip'] }
+        }
+      ]
+    });
+
+    if (result.cancelled) {
+      showToast('Set export cancelled');
+      return;
+    }
+
+    showToast(`✓ Exported complete set "${setName}" (${manifestAssets.length} items)!`);
+  } catch (err) {
+    console.error('Error generating complete set zip:', err);
+    if (typeof window.setMode === 'function') {
+      window.setMode(originalMode, true, true);
+    }
+    showToast('Error exporting set package');
+  }
+}
+window.exportCompleteSetZip = exportCompleteSetZip;
+
 // Project Serialization
 export function serializeCurrentProject() {
   const { canvasBase } = getCanvases();
@@ -2065,6 +2419,37 @@ export function serializeCurrentProject() {
     },
     baseImageData: baseDataUrl,
     thumbImageData: thumbDataUrl,
+    setName: state.setName || 'City Utilities',
+    setSlots: state.setSlots ? {
+      decal: {
+        assetName: state.setSlots.decal.assetName,
+        category: state.setSlots.decal.category,
+        dimensions: state.setSlots.decal.dimensions,
+        uiPriority: state.setSlots.decal.uiPriority,
+        thumbnail: state.setSlots.decal.thumbnail,
+        imageSrc: state.setSlots.decal.imageSrc || (state.setSlots.decal.image?.src || ''),
+        isCustomImageLoaded: state.setSlots.decal.isCustomImageLoaded
+      },
+      surface: {
+        assetName: state.setSlots.surface.assetName,
+        category: state.setSlots.surface.category,
+        uvScale: state.setSlots.surface.uvScale,
+        surfaceTiling: state.setSlots.surface.surfaceTiling,
+        uiPriority: state.setSlots.surface.uiPriority,
+        thumbnail: state.setSlots.surface.thumbnail,
+        imageSrc: state.setSlots.surface.imageSrc || (state.setSlots.surface.image?.src || ''),
+        isCustomImageLoaded: state.setSlots.surface.isCustomImageLoaded
+      },
+      netlane: {
+        assetName: state.setSlots.netlane.assetName,
+        category: state.setSlots.netlane.category,
+        netlane: state.setSlots.netlane.netlane,
+        uiPriority: state.setSlots.netlane.uiPriority,
+        thumbnail: state.setSlots.netlane.thumbnail,
+        imageSrc: state.setSlots.netlane.imageSrc || (state.setSlots.netlane.image?.src || ''),
+        isCustomImageLoaded: state.setSlots.netlane.isCustomImageLoaded
+      }
+    } : null,
     timestamp: Date.now()
   };
 }
@@ -2524,6 +2909,36 @@ export function deserializeAndLoadProject(proj) {
     renderIconMap();
   }
 
+  if (proj.setName) {
+    state.setName = proj.setName;
+  }
+  if (proj.setSlots && state.setSlots) {
+    ['decal', 'surface', 'netlane'].forEach(m => {
+      const savedSlot = proj.setSlots[m];
+      if (savedSlot) {
+        state.setSlots[m] = {
+          ...state.setSlots[m],
+          ...savedSlot
+        };
+        if (savedSlot.imageSrc) {
+          const slotImg = new Image();
+          slotImg.crossOrigin = 'anonymous';
+          slotImg.onload = () => {
+            state.setSlots[m].image = slotImg;
+            if (state.appMode === m) {
+              state.currentImage = slotImg;
+              state.isCustomImageLoaded = true;
+              if (window.renderAllMaps) window.renderAllMaps();
+            }
+            if (window.updateSetSlotsUI) window.updateSetSlotsUI();
+          };
+          slotImg.src = savedSlot.imageSrc;
+        }
+      }
+    });
+    if (window.updateSetSlotsUI) window.updateSetSlotsUI();
+  }
+
   if (proj.baseImageData) {
     const img = new Image();
     img.onload = () => {
@@ -2532,6 +2947,7 @@ export function deserializeAndLoadProject(proj) {
       state.hasUnsavedChanges = false;
       updateConfigJson();
       if (window.renderAllMaps) window.renderAllMaps();
+      if (window.updateSetSlotsUI) window.updateSetSlotsUI();
       showToast(`Loaded ${proj.assetName} successfully!`);
     };
     img.src = proj.baseImageData;
@@ -2540,6 +2956,7 @@ export function deserializeAndLoadProject(proj) {
     state.hasUnsavedChanges = false;
     updateConfigJson();
     if (window.renderAllMaps) window.renderAllMaps();
+    if (window.updateSetSlotsUI) window.updateSetSlotsUI();
     showToast(`Loaded ${proj.assetName}`);
   }
 }

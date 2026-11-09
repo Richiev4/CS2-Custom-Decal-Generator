@@ -12,6 +12,31 @@
           </div>
         </div>
         <div class="collapsible-content">
+          <!-- Active Set Slot Indicator & Quick Switcher -->
+          <div class="set-slot-target-banner">
+            <div class="set-slot-target-left">
+              <span class="set-slot-target-icon">🎯</span>
+              <div class="set-slot-target-details">
+                <span class="set-slot-target-title">Target Slot: <strong id="dropZoneTargetSlotLabel">DECAL</strong></span>
+                <span class="set-slot-target-sub" id="dropZoneTargetSlotSub">Uploads will replace Decal graphic only</span>
+              </div>
+            </div>
+            <div class="set-quick-slots-nav" role="tablist" aria-label="Switch target slot">
+              <button type="button" class="quick-slot-tab active" id="quickSlotDecal" onclick="setMode('decal')" title="Upload graphic into Decal slot">
+                <span class="quick-slot-dot loaded" id="quickDotDecal"></span>
+                <span>Decal</span>
+              </button>
+              <button type="button" class="quick-slot-tab" id="quickSlotSurface" onclick="setMode('surface')" title="Upload graphic into Surface slot">
+                <span class="quick-slot-dot loaded" id="quickDotSurface"></span>
+                <span>Surface</span>
+              </button>
+              <button type="button" class="quick-slot-tab" id="quickSlotNetlane" onclick="setMode('netlane')" title="Upload graphic into Net Lane slot">
+                <span class="quick-slot-dot loaded" id="quickDotNetlane"></span>
+                <span>Net Lane</span>
+              </button>
+            </div>
+          </div>
+
           <div class="drop-zone" id="dropZone">
             <input type="file" id="fileInput" accept="image/png, image/jpeg, image/webp" onchange="handleFileSelect(event)">
             <div class="drop-icon">⤓</div>

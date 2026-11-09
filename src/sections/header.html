@@ -11,31 +11,63 @@
       </div>
     </div>
 
-    <!-- Mode Selector: Decal vs Surface vs Net Lane -->
-    <div class="mode-switch-wrapper">
-      <button class="mode-btn active-decal" id="btnModeDecal" onclick="setMode('decal')">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="7"/></svg>
-        Decal Mode
-      </button>
-      <button class="mode-btn" id="btnModeSurface" onclick="setMode('surface')">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-        Surface Mode
-      </button>
-      <button class="mode-btn" id="btnModeNetlane" onclick="setMode('netlane')">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 19c4-4 4-10 8-14 4 4 4 10 8 14"/><path d="M12 4v16" stroke-dasharray="2 2"/></svg>
-        Net Lane Mode
-      </button>
-    </div>
+    <!-- Mode & Set 3-in-1 Slot Selector -->
+    <div class="mode-switch-container">
+      <div class="mode-switch-wrapper">
+        <button class="mode-btn active-decal" id="btnModeDecal" onclick="setMode('decal')" title="Switch to Decal Slot (Single placable ground/wall/curb decal)">
+          <div class="mode-btn-thumb-wrap">
+            <img id="headerThumbDecal" class="mode-btn-thumb" alt="Decal Thumbnail" style="display:none;" />
+            <svg id="headerIconDecal" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="7"/></svg>
+          </div>
+          <div class="mode-btn-info">
+            <div class="mode-btn-title-row">
+              <span class="mode-btn-title">Decal</span>
+              <span class="mode-slot-badge" id="headerBadgeDecal">✓ Loaded</span>
+            </div>
+            <div class="mode-slot-sub" id="headerSubDecal">Manhole Cover</div>
+          </div>
+        </button>
 
-    <!-- Presets -->
-    <div class="quick-presets">
-      <span style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Presets:</span>
-      <span id="presetButtonsGroup">
-        <button class="preset-btn" onclick="loadSample('manhole')">Manhole</button>
-        <button class="preset-btn" onclick="loadSample('arrow')">Turn Arrow</button>
-        <button class="preset-btn" onclick="loadSample('poster')">Poster (2:3)</button>
-        <button class="preset-btn" onclick="loadSample('crack')">Asphalt Crack</button>
-      </span>
+        <button class="mode-btn" id="btnModeSurface" onclick="setMode('surface')" title="Switch to Surface Slot (Tiling area surface for pavement, grass, tiles)">
+          <div class="mode-btn-thumb-wrap">
+            <img id="headerThumbSurface" class="mode-btn-thumb" alt="Surface Thumbnail" style="display:none;" />
+            <svg id="headerIconSurface" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          </div>
+          <div class="mode-btn-info">
+            <div class="mode-btn-title-row">
+              <span class="mode-btn-title">Surface</span>
+              <span class="mode-slot-badge" id="headerBadgeSurface">✓ Loaded</span>
+            </div>
+            <div class="mode-slot-sub" id="headerSubSurface">Cobblestones</div>
+          </div>
+        </button>
+
+        <button class="mode-btn" id="btnModeNetlane" onclick="setMode('netlane')" title="Switch to Net Lane Slot (Repeating network lane for road markings, borders, paths)">
+          <div class="mode-btn-thumb-wrap">
+            <img id="headerThumbNetlane" class="mode-btn-thumb" alt="Net Lane Thumbnail" style="display:none;" />
+            <svg id="headerIconNetlane" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 19c4-4 4-10 8-14 4 4 4 10 8 14"/><path d="M12 4v16" stroke-dasharray="2 2"/></svg>
+          </div>
+          <div class="mode-btn-info">
+            <div class="mode-btn-title-row">
+              <span class="mode-btn-title">Net Lane</span>
+              <span class="mode-slot-badge" id="headerBadgeNetlane">✓ Loaded</span>
+            </div>
+            <div class="mode-slot-sub" id="headerSubNetlane">Dashed Road Line</div>
+          </div>
+        </button>
+      </div>
+
+      <!-- 3-in-1 Set Quick Export / Status Pill -->
+      <div class="set-bundle-bar" id="headerSetBundleBar" title="Combined 3-in-1 Set (Decal + Surface + Net Lane). Each mode retains its own independent graphic and settings.">
+        <div class="set-bundle-info">
+          <span class="set-bundle-label">SET</span>
+          <span class="set-bundle-count" id="headerSetCountBadge">3/3 Items</span>
+        </div>
+        <button type="button" class="set-bundle-export-btn" id="btnHeaderExportSet" onclick="exportCompleteSetZip()" title="Export complete 3-in-1 Set containing Decal, Surface, and Net Lane into a single organized ZIP package">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Export Set (.zip)</span>
+        </button>
+      </div>
     </div>
 
     <!-- Project Save & Load Actions -->
@@ -45,51 +77,202 @@
       <input type="file" id="communityFolderInput" webkitdirectory directory multiple style="display:none;" onchange="handleCommunityFolderImport(event)">
       <input type="file" id="communityFilesInput" multiple accept=".png,.jpg,.jpeg,.json,.txt" style="display:none;" onchange="handleCommunityFilesImport(event)">
 
-      <button class="project-btn" onclick="openSaveModal()" title="Save project or export asset — choose where to save on your computer (Ctrl+S)">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-        Save ▾
-      </button>
-      <button class="project-btn" onclick="document.getElementById('projectFileInput').click()" title="Load a saved .cs2asset project file">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        Load
-      </button>
-      <button class="project-btn" onclick="clearAllWorkspace()" title="Clear all loaded images, maps, overlays, and reset workspace" style="color: #f87171; border-color: rgba(248, 113, 113, 0.35);">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-        Clear All
+      <!-- Backup & Restore Quick Header Button -->
+      <button class="project-btn" id="btnHeaderBackup" onclick="openBackupAllDataModal()" title="Backup &amp; Restore All Local Data (Sets, IndexedDB assets, preferences)" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); color: #34d399; font-weight: 700; padding: 6px 11px; font-size: 12px; gap: 6px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+          <polyline points="17 21 17 13 7 13 7 21"/>
+          <polyline points="7 3 7 8 15 8"/>
+        </svg>
+        <span>Backup Data</span>
       </button>
 
-      <button class="project-btn" onclick="openNewStandaloneAssetWizard()" title="Step-by-step guided wizard to create any standalone decal, surface, or netlane asset" style="background: rgba(0, 229, 255, 0.12); border-color: rgba(0, 229, 255, 0.4); color: var(--accent-cyan); font-weight: 600;">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-        New Asset Wizard
-      </button>
-
-      <!-- Import Community Asset Dropdown -->
-      <div style="position: relative; display: inline-block;">
-        <button class="project-btn" id="btnImportAsset" onclick="toggleImportDropdown(event)" title="Load a community asset package from a .zip or extracted folder" style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); color: var(--accent-emerald);">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Import ▾
+      <!-- Unified Project & Tools Menu Dropdown -->
+      <div style="position: relative; display: inline-block; z-index: 100100;">
+        <button class="project-btn" id="btnMainProjectMenu" onclick="toggleMainProjectMenu(event)" title="Open project actions, presets, pack collection, import, and tools menu" style="background: rgba(0, 168, 255, 0.15); border: 1px solid rgba(0, 168, 255, 0.4); color: #fff; font-weight: 700; padding: 6px 12px; font-size: 12px; gap: 7px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+          <span>Project &amp; Tools ▾</span>
         </button>
-        <div id="importDropdownMenu" style="display: none; position: absolute; top: calc(100% + 6px); right: 0; background: #0f172a; border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 6px; box-shadow: 0 10px 25px rgba(0,0,0,0.85); z-index: 999; min-width: 220px; padding: 6px;">
-          <button type="button" class="project-btn" style="width: 100%; justify-content: flex-start; padding: 8px 10px; margin-bottom: 2px;" onclick="document.getElementById('communityZipInput').click(); toggleImportDropdown(false);">
-            📦 <span style="margin-left: 6px;">Import <strong>.ZIP Archive</strong></span>
+
+        <div id="mainProjectMenuDropdown" style="display: none; position: absolute; top: calc(100% + 8px); right: 0; background: #0c131f; border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 8px; box-shadow: 0 16px 36px rgba(0,0,0,0.85); z-index: 100100; min-width: 320px; padding: 6px; backdrop-filter: blur(8px);">
+          <!-- Section 1: File & Workspace -->
+          <div style="padding: 4px 8px 3px; font-size: 10px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px;">Workspace</div>
+          
+          <button type="button" class="project-btn" style="width: 100%; justify-content: flex-start; padding: 7px 10px; border-radius: 5px; margin-bottom: 2px;" onclick="openSaveModal(); toggleMainProjectMenu(false);" title="Save project or export asset (Ctrl+S)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="color: var(--primary);"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            <span style="font-weight: 600;">Save Asset / Project...</span>
+            <span style="margin-left: auto; font-size: 9.5px; color: var(--text-dim); font-family: monospace;">Ctrl+S</span>
           </button>
-          <button type="button" class="project-btn" style="width: 100%; justify-content: flex-start; padding: 8px 10px; margin-bottom: 2px;" onclick="document.getElementById('communityFolderInput').click(); toggleImportDropdown(false);">
-            📁 <span style="margin-left: 6px;">Import <strong>Extracted Folder</strong></span>
+
+          <button type="button" class="project-btn" style="width: 100%; justify-content: flex-start; padding: 7px 10px; border-radius: 5px; margin-bottom: 2px;" onclick="document.getElementById('projectFileInput').click(); toggleMainProjectMenu(false);" title="Load a saved .cs2asset project file">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="color: #38bdf8;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span style="font-weight: 600;">Load Saved Project (.cs2asset)</span>
           </button>
-          <button type="button" class="project-btn" style="width: 100%; justify-content: flex-start; padding: 8px 10px;" onclick="document.getElementById('communityFilesInput').click(); toggleImportDropdown(false);">
-            📄 <span style="margin-left: 6px;">Select <strong>Extracted Files</strong></span>
+
+          <button type="button" class="project-btn" style="width: 100%; justify-content: flex-start; padding: 7px 10px; border-radius: 5px; margin-bottom: 2px; color: #34d399;" onclick="openBackupAllDataModal(); toggleMainProjectMenu(false);" title="Backup &amp; Restore All Local Data (Sets, IndexedDB textures, and settings)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="color: #34d399;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            <span style="font-weight: 600;">Backup / Restore All Data...</span>
+            <span style="margin-left: auto; font-size: 9.5px; color: var(--accent-emerald); font-weight: bold; background: rgba(16, 185, 129, 0.15); padding: 1px 5px; border-radius: 3px;">Full Storage</span>
+          </button>
+
+          <button type="button" class="project-btn" style="width: 100%; justify-content: flex-start; padding: 7px 10px; border-radius: 5px; color: #f87171;" onclick="clearAllWorkspace(); toggleMainProjectMenu(false);" title="Clear workspace">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="color: #f87171;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+            <span style="font-weight: 600;">Clear All Workspace</span>
+          </button>
+
+          <!-- Divider -->
+          <div style="height: 1px; background: rgba(255,255,255,0.08); margin: 5px 4px;"></div>
+
+          <!-- Section: Presets & Templates (Toggleable Visibility) -->
+          <div id="samplePresetsSectionWrapper">
+            <div id="samplePresetsContainer">
+              <div style="padding: 4px 8px 3px; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span style="font-size: 13px;">⚡</span>
+                  <span style="font-size: 10px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px;">Sample Presets</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                  <div style="display: flex; gap: 2px; background: rgba(0,0,0,0.3); padding: 2px; border-radius: 5px; border: 1px solid rgba(255,255,255,0.07);">
+                    <button type="button" class="preset-tab-pill active" id="presetTabDecal" onclick="setMode('decal')">Decal</button>
+                    <button type="button" class="preset-tab-pill" id="presetTabSurface" onclick="setMode('surface')">Surface</button>
+                    <button type="button" class="preset-tab-pill" id="presetTabNetlane" onclick="setMode('netlane')">Net Lane</button>
+                  </div>
+                  <button type="button" class="preset-visibility-toggle-btn" onclick="toggleHideSamplePresets(true)" title="Hide sample presets from menus and workspace (unhide anytime)">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                    <span>Hide</span>
+                  </button>
+                </div>
+              </div>
+
+              <div id="presetButtonsGroup" style="padding: 2px 4px 4px;">
+                <div class="menu-preset-grid">
+                  <button type="button" class="menu-preset-btn" onclick="loadSample('manhole'); toggleMainProjectMenu(false);" title="Load circular utility manhole decal">
+                    <span class="menu-preset-icon">🕳️</span>
+                    <div class="menu-preset-text">
+                      <div class="menu-preset-name">Manhole Cover</div>
+                      <div class="menu-preset-desc">1:1 Cast Iron Utility</div>
+                    </div>
+                  </button>
+                  <button type="button" class="menu-preset-btn" onclick="loadSample('arrow'); toggleMainProjectMenu(false);" title="Load directional road turn arrow decal">
+                    <span class="menu-preset-icon">↗️</span>
+                    <div class="menu-preset-text">
+                      <div class="menu-preset-name">Turn Arrow</div>
+                      <div class="menu-preset-desc">Road Pavement Decal</div>
+                    </div>
+                  </button>
+                  <button type="button" class="menu-preset-btn" onclick="loadSample('poster'); toggleMainProjectMenu(false);" title="Load 2:3 vertical poster billboard decal">
+                    <span class="menu-preset-icon">🖼️</span>
+                    <div class="menu-preset-text">
+                      <div class="menu-preset-name">Poster (2:3)</div>
+                      <div class="menu-preset-desc">Wall Advertisement</div>
+                    </div>
+                  </button>
+                  <button type="button" class="menu-preset-btn" onclick="loadSample('crack'); toggleMainProjectMenu(false);" title="Load asphalt crack surface wear decal">
+                    <span class="menu-preset-icon">⚡</span>
+                    <div class="menu-preset-text">
+                      <div class="menu-preset-name">Asphalt Crack</div>
+                      <div class="menu-preset-desc">Road Wear &amp; Damage</div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Collapsed bar shown when sample presets are hidden -->
+            <div id="samplePresetsCollapsedBar" style="display: none; padding: 6px 10px; margin: 4px 2px; border-radius: 6px; background: rgba(15, 23, 42, 0.7); border: 1px dashed rgba(56, 189, 248, 0.3); justify-content: space-between; align-items: center;">
+              <div style="display: flex; align-items: center; gap: 7px;">
+                <span style="font-size: 13px; opacity: 0.7;">⚡</span>
+                <span style="font-size: 11px; font-weight: 600; color: var(--text-dim);">Sample Presets (Hidden)</span>
+              </div>
+              <button type="button" class="preset-unhide-btn" onclick="toggleHideSamplePresets(false)" title="Unhide sample presets">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <span>Unhide Presets</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Divider -->
+          <div style="height: 1px; background: rgba(255,255,255,0.08); margin: 5px 4px;"></div>
+
+          <!-- Section 2: Pack & Priority -->
+          <div style="padding: 4px 8px 3px; font-size: 10px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px;">Collections &amp; In-Game Order</div>
+
+          <button type="button" class="project-btn" style="width: 100%; justify-content: space-between; padding: 7px 10px; border-radius: 5px; margin-bottom: 2px;" onclick="openPackOrderModal('series'); toggleMainProjectMenu(false);">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 14px;">📁</span>
+              <span style="font-weight: 600;">Pack &amp; Series Collection</span>
+            </div>
+            <span id="topMenuSeriesBadge" style="font-size: 9.5px; color: var(--accent-cyan); background: rgba(0, 229, 255, 0.15); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(0, 229, 255, 0.3); font-weight: bold;">Road Markings</span>
+          </button>
+
+          <button type="button" class="project-btn" style="width: 100%; justify-content: space-between; padding: 7px 10px; border-radius: 5px;" onclick="openPackOrderModal('priority'); toggleMainProjectMenu(false);">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 14px;">🔢</span>
+              <span style="font-weight: 600;">UI Priority &amp; Menu Order</span>
+            </div>
+            <span id="topMenuPriorityBadge" style="font-size: 9.5px; color: var(--accent-purple); background: rgba(192, 132, 252, 0.15); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(192, 132, 252, 0.35); font-family: monospace; font-weight: bold;">41</span>
+          </button>
+
+          <!-- Divider -->
+          <div style="height: 1px; background: rgba(255,255,255,0.08); margin: 5px 4px;"></div>
+
+          <!-- Section 3: Creation & Import -->
+          <div style="padding: 4px 8px 3px; font-size: 10px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px;">Creation &amp; Community Import</div>
+
+          <button type="button" class="project-btn" style="width: 100%; justify-content: flex-start; padding: 7px 10px; border-radius: 5px; margin-bottom: 2px; color: var(--accent-cyan);" onclick="openNewStandaloneAssetWizard(); toggleMainProjectMenu(false);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <span style="font-weight: 600;">New Asset Wizard...</span>
+          </button>
+
+          <button type="button" class="project-btn" style="width: 100%; justify-content: flex-start; padding: 7px 10px; border-radius: 5px; margin-bottom: 2px;" onclick="document.getElementById('communityZipInput').click(); toggleMainProjectMenu(false);">
+            <span>📦</span>
+            <span style="margin-left: 7px; font-weight: 600;">Import .ZIP Archive</span>
+          </button>
+
+          <button type="button" class="project-btn" style="width: 100%; justify-content: flex-start; padding: 7px 10px; border-radius: 5px; margin-bottom: 2px;" onclick="document.getElementById('communityFolderInput').click(); toggleMainProjectMenu(false);">
+            <span>📁</span>
+            <span style="margin-left: 7px; font-weight: 600;">Import Extracted Folder</span>
+          </button>
+
+          <button type="button" class="project-btn" style="width: 100%; justify-content: flex-start; padding: 7px 10px; border-radius: 5px;" onclick="document.getElementById('communityFilesInput').click(); toggleMainProjectMenu(false);">
+            <span>📄</span>
+            <span style="margin-left: 7px; font-weight: 600;">Import Loose Texture Files</span>
+          </button>
+
+          <!-- Divider -->
+          <div style="height: 1px; background: rgba(255,255,255,0.08); margin: 5px 4px;"></div>
+
+          <!-- Section 4: Help & Guide -->
+          <div style="padding: 4px 8px 3px; font-size: 10px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px;">Help &amp; Documentation</div>
+
+          <button type="button" class="project-btn" style="width: 100%; justify-content: flex-start; padding: 7px 10px; border-radius: 5px; margin-bottom: 2px; color: #c084fc;" onclick="openWelcomeSplash(); toggleMainProjectMenu(false);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <span style="font-weight: 600;">Quick Start Guide &amp; Splash</span>
+          </button>
+
+          <button type="button" class="project-btn" style="width: 100%; justify-content: flex-start; padding: 7px 10px; border-radius: 5px; color: var(--primary);" onclick="openHelpModal(); toggleMainProjectMenu(false);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <span style="font-weight: 600;">Help, Modding Wiki &amp; FAQ</span>
+          </button>
+
+          <!-- Divider -->
+          <div style="height: 1px; background: rgba(255,255,255,0.08); margin: 5px 4px;"></div>
+
+          <!-- Section 5: View Preferences -->
+          <div style="padding: 4px 8px 3px; font-size: 10px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px;">View Preferences</div>
+
+          <button type="button" class="project-btn" id="btnMenuTogglePresets" style="width: 100%; justify-content: space-between; padding: 7px 10px; border-radius: 5px;" onclick="toggleHideSamplePresets();" title="Toggle sample presets on/off">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 13px;" id="menuTogglePresetsIcon">⚡</span>
+              <span style="font-weight: 600;">Sample Presets</span>
+            </div>
+            <span id="menuTogglePresetsBadge" class="pref-badge pref-badge-active">Visible</span>
           </button>
         </div>
       </div>
-
-
-      <button class="project-btn" style="background: rgba(168, 85, 247, 0.12); border-color: rgba(168, 85, 247, 0.4); color: #c084fc;" onclick="openWelcomeSplash()" title="Show Quick Start Guide & Splash Screen">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-        Quick Guide
-      </button>
-      <button class="project-btn" style="background: rgba(56, 189, 248, 0.12); border-color: rgba(56, 189, 248, 0.4); color: var(--primary);" onclick="openHelpModal()" title="Open Comprehensive Modding Guide & FAQ">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        Help & FAQ
-      </button>
     </div>
   </header>

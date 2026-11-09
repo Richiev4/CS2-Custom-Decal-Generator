@@ -518,17 +518,123 @@
           </div>
           <div>
             <div style="font-size: 15px; font-weight: 800; color: #ffffff; letter-spacing: 0.3px;">
-              Quick Start Guide: Cities: Skylines 2 Custom Asset Generator
+              Cities: Skylines 2 Custom Asset Generator
             </div>
             <div style="font-size: 11px; color: var(--accent-cyan); font-weight: 500;">
               ExtraAssetsImporter PBR Pipeline • Decals, Terrain Surfaces &amp; Road Net Lanes
             </div>
           </div>
         </div>
-        <button class="preset-btn" style="padding: 4px 8px; font-size: 14px;" onclick="closeWelcomeSplash()" title="Close Guide">✕</button>
+        <button class="preset-btn" style="padding: 4px 8px; font-size: 14px;" onclick="closeWelcomeSplash()" title="Close Splash Screen">✕</button>
       </div>
 
       <div class="modal-body splash-modal-body">
+        <!-- Prominent Launch Options Section: Continue Session, Start Wizard, Start Blank -->
+        <div class="splash-launch-section">
+          <div class="splash-launch-title-row">
+            <div class="splash-launch-section-label">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+              </svg>
+              <span>How would you like to start?</span>
+            </div>
+            <span class="splash-launch-section-sub">Choose a workflow to jump straight into creation:</span>
+          </div>
+
+          <div class="splash-launch-cards-grid">
+            <!-- 1. Continue Session -->
+            <button type="button" class="splash-launch-card splash-card-continue" onclick="continueSessionFromSplash()" title="Resume your most recent asset draft, maps, and settings">
+              <div class="splash-card-icon-wrap icon-cyan">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                  <polyline points="3 3 3 8 8 8"/>
+                  <polyline points="12 7 12 12 15 15"/>
+                </svg>
+              </div>
+              <div class="splash-card-content">
+                <div class="splash-card-header-line">
+                  <span class="splash-card-title">Continue Session</span>
+                  <span class="splash-card-badge badge-cyan" id="splashSessionStatusBadge">Resume Work</span>
+                </div>
+                <div class="splash-card-desc">
+                  Pick up where you left off. Restores your last edited asset, custom textures, PBR maps, and dimensions.
+                </div>
+                <div class="splash-session-live-info" id="splashSessionLiveInfo">
+                  <span class="splash-session-dot"></span>
+                  <span id="splashSessionInfoText">Active workspace draft ready to continue</span>
+                </div>
+              </div>
+              <div class="splash-card-arrow">➔</div>
+            </button>
+
+            <!-- 2. Start Wizard -->
+            <button type="button" class="splash-launch-card splash-card-wizard" onclick="startWizardFromSplash()" title="Launch guided 3-step asset setup wizard">
+              <div class="splash-card-icon-wrap icon-emerald">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <path d="M15 4V2"/>
+                  <path d="M15 16v-2"/>
+                  <path d="M8 9h2"/>
+                  <path d="M20 9h2"/>
+                  <path d="M17.8 11.8 19 13"/>
+                  <path d="M15 9h0"/>
+                  <path d="M17.8 6.2 19 5"/>
+                  <path d="m3 21 9-9"/>
+                  <path d="M12.2 6.2 11 5"/>
+                </svg>
+              </div>
+              <div class="splash-card-content">
+                <div class="splash-card-header-line">
+                  <span class="splash-card-title">Start Wizard</span>
+                  <span class="splash-card-badge badge-emerald">Guided 3-Step</span>
+                </div>
+                <div class="splash-card-desc">
+                  Step-by-step setup for asset mode (Decal, Surface, Net Lane), dimensions, graphic, and PBR normal maps.
+                </div>
+                <div class="splash-card-features-tag">
+                  <span>✦ Type &amp; Set</span>
+                  <span>✦ Dimensions</span>
+                  <span>✦ PBR &amp; Graphic</span>
+                </div>
+              </div>
+              <div class="splash-card-arrow">➔</div>
+            </button>
+
+            <!-- 3. Start Blank -->
+            <button type="button" class="splash-launch-card splash-card-blank" onclick="startBlankFromSplash()" title="Start with a fresh empty workspace without any sample presets">
+              <div class="splash-card-icon-wrap icon-purple">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="12" y1="18" x2="12" y2="12"/>
+                  <line x1="9" y1="15" x2="15" y2="15"/>
+                </svg>
+              </div>
+              <div class="splash-card-content">
+                <div class="splash-card-header-line">
+                  <span class="splash-card-title">Start Blank</span>
+                  <span class="splash-card-badge badge-purple">Clean Canvas</span>
+                </div>
+                <div class="splash-card-desc">
+                  Clean slate with empty dropzone and fresh settings ready for your own custom artwork and textures.
+                </div>
+                <div class="splash-card-features-tag">
+                  <span>✦ Zero Presets</span>
+                  <span>✦ Clean Canvases</span>
+                  <span>✦ Fresh Sliders</span>
+                </div>
+              </div>
+              <div class="splash-card-arrow">➔</div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Divider Bar leading into Quick Guide -->
+        <div class="splash-divider-bar">
+          <div class="splash-divider-line"></div>
+          <span class="splash-divider-label">📖 6-Step PBR Creation &amp; Export Pipeline Guide</span>
+          <div class="splash-divider-line"></div>
+        </div>
+
         <div class="splash-hero-banner">
           <p style="margin: 0; font-size: 12.5px; line-height: 1.5; color: #e2e8f0;">
             Follow this quick <strong>6-step pipeline</strong> to convert any 2D graphic or seamless texture into in-game ready decals, ground surfaces, or lane network markings.
@@ -558,7 +664,7 @@
             <div class="splash-step-desc">
               • In the left sidebar, navigate to <strong>Section 1: Source Image Input</strong>.<br>
               • Drag &amp; drop your image directly onto the drop zone, or click <em>"Browse File"</em>.<br>
-              • <em>Quick Test:</em> You can also click the quick presets (<span class="splash-inline-pill" onclick="loadSample('manhole'); closeWelcomeSplash();">Manhole</span>, <span class="splash-inline-pill" onclick="loadSample('arrow'); closeWelcomeSplash();">Turn Arrow</span>, <span class="splash-inline-pill" onclick="loadSample('crack'); closeWelcomeSplash();">Crack</span>) in the top header.
+              • <em>Quick Test:</em> You can also click the quick presets (<span class="splash-inline-pill" onclick="loadSample('manhole'); closeWelcomeSplash();">Manhole</span>, <span class="splash-inline-pill" onclick="loadSample('arrow'); closeWelcomeSplash();">Turn Arrow</span>, <span class="splash-inline-pill" onclick="loadSample('crack'); closeWelcomeSplash();">Crack</span>) in the Project &amp; Tools menu.
             </div>
           </div>
 
@@ -624,14 +730,17 @@
       <div class="modal-footer splash-modal-footer">
         <label class="splash-checkbox-label">
           <input type="checkbox" id="splashNeverShowCheckbox" onchange="toggleNeverShowSplashAgain(this.checked)">
-          <span>Don't show this guide automatically on launch</span>
+          <span>Don't show this splash automatically on launch</span>
         </label>
-        <div style="display: flex; gap: 8px; align-items: center;">
-          <button type="button" class="btn-secondary" style="width: auto; padding: 7px 12px; font-size: 12px;" onclick="loadSample('manhole'); closeWelcomeSplash();">
-            Load Sample Decal
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+          <button type="button" class="btn-secondary" style="width: auto; padding: 7px 12px; font-size: 12px;" onclick="startBlankFromSplash()" title="Start with an empty workspace and no loaded image">
+            Start Blank
           </button>
-          <button type="button" class="btn-primary" style="width: auto; padding: 8px 18px; font-size: 13px; font-weight: 700;" onclick="closeWelcomeSplash()">
-            Get Started
+          <button type="button" class="btn-secondary" style="width: auto; padding: 7px 12px; font-size: 12px; border-color: rgba(56, 189, 248, 0.4); color: var(--accent-cyan); font-weight: 600;" onclick="startWizardFromSplash()" title="Open guided new asset setup wizard">
+            ✨ Start Wizard
+          </button>
+          <button type="button" class="btn-primary" style="width: auto; padding: 8px 16px; font-size: 12.5px; font-weight: 700;" onclick="continueSessionFromSplash()" title="Resume your current active draft or saved session">
+            Continue Session →
           </button>
         </div>
       </div>
@@ -698,9 +807,9 @@
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               <span>Export Backup (.json)</span>
             </button>
-            <button type="button" class="btn-secondary" style="padding: 5px 10px; font-size: 11px; color: var(--accent-emerald); display: flex; align-items: center; gap: 5px;" onclick="document.getElementById('backupRestoreFileInput').click()" title="Restore sets, priorities, and assets from a previously saved backup file">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              <span>Restore Backup</span>
+            <button type="button" class="btn-secondary" style="padding: 5px 10px; font-size: 11px; color: var(--accent-emerald); display: flex; align-items: center; gap: 5px;" onclick="closeSetRegistryModal(); openBackupAllDataModal();" title="Open full Backup &amp; Restore manager for all sets, IndexedDB textures, and settings">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/></svg>
+              <span>Backup Manager ↗</span>
             </button>
           </div>
         </div>
@@ -711,6 +820,186 @@
             <button type="button" class="btn-secondary" style="padding: 6px 12px; font-size: 11px;" onclick="applySuggestedSafeRange(); closeSetRegistryModal();">⚡ Apply Next Safe Band</button>
             <button type="button" class="btn-primary" style="padding: 6px 16px; font-size: 11px;" onclick="closeSetRegistryModal()">Done</button>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Backup & Restore All Local Data Modal -->
+  <div class="modal-overlay" id="backupAllDataModal" onclick="closeBackupAllDataModalOnBackdrop(event)" style="display: none;">
+    <div class="modal-card backup-modal-card">
+      <div class="modal-header" style="background: linear-gradient(135deg, #0d1e17 0%, #112a20 100%); border-bottom: 1px solid rgba(16, 185, 129, 0.35);">
+        <div class="modal-title" style="color: #ffffff; display: flex; align-items: center; gap: 9px;">
+          <div style="width: 28px; height: 28px; border-radius: 6px; background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); display: flex; align-items: center; justify-content: center; color: var(--accent-emerald);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+              <polyline points="17 21 17 13 7 13 7 21"/>
+              <polyline points="7 3 7 8 15 8"/>
+            </svg>
+          </div>
+          <div>
+            <div style="font-size: 14px; font-weight: 700; color: #ffffff;">Backup &amp; Restore All Local Data</div>
+            <div style="font-size: 10.5px; color: #94a3b8; font-weight: normal;">Browser Storage Portability • IndexedDB Assets • Sets &amp; Priority Bands • Settings</div>
+          </div>
+        </div>
+        <button class="preset-btn" style="padding: 4px 8px;" onclick="closeBackupAllDataModal()">✕</button>
+      </div>
+
+      <div class="modal-body" style="padding: 16px 20px; gap: 14px;">
+        <!-- Live Storage Breakdown Strip -->
+        <div class="backup-stat-grid">
+          <div class="backup-stat-card">
+            <div class="backup-stat-title">
+              <span>📁</span>
+              <span>Asset Sets</span>
+            </div>
+            <div class="backup-stat-val" id="backupStatSetsCount">0 Sets</div>
+            <div class="backup-stat-sub" id="backupStatSetsSub">0 assets tracked</div>
+          </div>
+
+          <div class="backup-stat-card">
+            <div class="backup-stat-title">
+              <span>🗄️</span>
+              <span>IndexedDB Library</span>
+            </div>
+            <div class="backup-stat-val" id="backupStatAssetsCount">0 Assets</div>
+            <div class="backup-stat-sub" id="backupStatAssetsSub">High-res textures</div>
+          </div>
+
+          <div class="backup-stat-card">
+            <div class="backup-stat-title">
+              <span>⚙️</span>
+              <span>Settings</span>
+            </div>
+            <div class="backup-stat-val" style="color: var(--accent-cyan); font-size: 13.5px; font-weight: 700; padding-top: 2px;">Preserved</div>
+            <div class="backup-stat-sub">Badges &amp; Preferences</div>
+          </div>
+
+          <div class="backup-stat-card">
+            <div class="backup-stat-title">
+              <span>💾</span>
+              <span>Storage Size</span>
+            </div>
+            <div class="backup-stat-val" id="backupStatTotalSize" style="color: var(--accent-emerald);">0 B</div>
+            <div class="backup-stat-sub" id="backupStatHealthStatus" style="color: var(--accent-emerald); font-weight: 600;">Active</div>
+          </div>
+        </div>
+
+        <!-- Section 1: Export Backup -->
+        <div class="backup-panel" style="border-color: rgba(56, 189, 248, 0.25);">
+          <div class="backup-panel-header">
+            <div class="backup-panel-title">
+              <span style="font-size: 15px;">📥</span>
+              <span>Export Full Backup</span>
+              <span class="channel-pill pill-blue" style="font-size: 9px; padding: 1px 6px;">Recommended</span>
+            </div>
+          </div>
+          <p style="font-size: 12px; line-height: 1.5; color: #cbd5e1; margin: 0;">
+            Generates a self-contained <code>.json</code> backup containing all your sets, priority sequences, custom graphic textures in IndexedDB, icon badge presets, and tool preferences. Save it to your hard drive, flash drive, or cloud storage to safeguard against browser cache clearing or to transfer everything to a new computer.
+          </p>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" class="btn-primary" onclick="exportAllSetsAndStorageBackup()" style="display: flex; align-items: center; gap: 6px; padding: 7px 16px; font-size: 12px; font-weight: 700;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>Download Full Backup (.json)</span>
+            </button>
+            <button type="button" class="btn-secondary" onclick="copyBackupJsonToClipboard()" style="display: flex; align-items: center; gap: 5px; padding: 7px 12px; font-size: 11.5px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span>Copy Backup JSON</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Section 2: Restore Backup -->
+        <div class="backup-panel" style="border-color: rgba(16, 185, 129, 0.25);">
+          <div class="backup-panel-header">
+            <div class="backup-panel-title">
+              <span style="font-size: 15px;">📤</span>
+              <span>Restore from Backup File</span>
+            </div>
+          </div>
+          <p style="font-size: 12px; line-height: 1.5; color: #cbd5e1; margin: 0;">
+            Select or drag in a <code>.json</code> or <code>.cs2backup</code> file previously created by this generator.
+          </p>
+
+          <!-- Dropzone -->
+          <input type="file" id="backupModalFileInput" accept=".json,.cs2backup" style="display: none;" onchange="handleBackupModalFileSelect(event)">
+          <div class="new-asset-dropzone" id="backupModalDropzone" onclick="document.getElementById('backupModalFileInput').click()" ondragover="handleBackupDropzoneDragOver(event)" ondragleave="handleBackupDropzoneDragLeave(event)" ondrop="handleBackupDropzoneDrop(event)" style="padding: 14px;">
+            <!-- Empty View -->
+            <div id="backupDropEmptyView" style="display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center;">
+              <div style="font-size: 24px;">📁</div>
+              <div style="font-size: 12px; font-weight: 700; color: #f1f5f9;">Drag &amp; drop backup file here, or click to browse</div>
+              <div style="font-size: 10.5px; color: var(--text-dim);">Accepts .json and .cs2backup backup files</div>
+            </div>
+
+            <!-- Inspected File Preview (populated on file selection) -->
+            <div id="backupFileInspectCard" style="display: none; width: 100%; flex-direction: column; gap: 8px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 6px;">
+                <div style="display: flex; align-items: center; gap: 7px;">
+                  <span style="font-size: 18px;">📄</span>
+                  <div>
+                    <div id="inspectFileName" style="font-size: 12px; font-weight: 700; color: #ffffff;">cs2_backup.json</div>
+                    <div id="inspectFileSize" style="font-size: 10px; color: var(--text-dim);">0 KB</div>
+                  </div>
+                </div>
+                <button type="button" class="preset-btn" style="padding: 3px 8px; font-size: 10.5px; color: #f87171;" onclick="event.stopPropagation(); cancelPendingRestore();">Change File ✕</button>
+              </div>
+
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; font-size: 11px;">
+                <div style="background: rgba(0,0,0,0.3); padding: 5px 8px; border-radius: 4px;">
+                  <span style="color: var(--text-dim); display: block; font-size: 9.5px;">Sets Detected</span>
+                  <strong id="inspectSetsCount" style="color: #38bdf8;">0 Sets</strong>
+                </div>
+                <div style="background: rgba(0,0,0,0.3); padding: 5px 8px; border-radius: 4px;">
+                  <span style="color: var(--text-dim); display: block; font-size: 9.5px;">Textures / Assets</span>
+                  <strong id="inspectAssetsCount" style="color: var(--accent-emerald);">0 Assets</strong>
+                </div>
+                <div style="background: rgba(0,0,0,0.3); padding: 5px 8px; border-radius: 4px;">
+                  <span style="color: var(--text-dim); display: block; font-size: 9.5px;">Settings Included</span>
+                  <strong id="inspectSettingsNote" style="color: #c084fc; font-size: 10.5px;">Badges &amp; Preferences</strong>
+                </div>
+              </div>
+
+              <div style="font-size: 10px; color: var(--text-dim);">
+                Export Date: <span id="inspectExportDate" style="color: #cbd5e1; font-family: monospace;">Unknown</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Restore Strategy Options -->
+          <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 4px;">
+            <div style="font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px;">Restore Mode:</div>
+            
+            <label class="backup-strategy-choice" for="restoreModeMerge">
+              <input type="radio" id="restoreModeMerge" name="restoreModeStrategy" value="merge" checked style="margin-top: 2px;">
+              <div>
+                <div style="font-size: 11.5px; font-weight: 700; color: #ffffff;">Merge with Existing Data (Safe &amp; Recommended)</div>
+                <div style="font-size: 10.5px; color: var(--text-muted); line-height: 1.3;">Retains your current sets and assets. Imports new sets and assets from the backup, updating any items with matching names.</div>
+              </div>
+            </label>
+
+            <label class="backup-strategy-choice" for="restoreModeReplace">
+              <input type="radio" id="restoreModeReplace" name="restoreModeStrategy" value="replace" style="margin-top: 2px;">
+              <div>
+                <div style="font-size: 11.5px; font-weight: 700; color: #f87171;">Clean Restore (Replace All Local Data)</div>
+                <div style="font-size: 10.5px; color: var(--text-muted); line-height: 1.3;">Wipes current browser storage and replaces it entirely with the backup contents. Ideal when transferring to a new machine.</div>
+              </div>
+            </label>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; margin-top: 4px;">
+            <button type="button" id="btnConfirmRestoreBackup" class="btn-primary" onclick="confirmRestoreBackup()" disabled style="display: flex; align-items: center; gap: 6px; padding: 7px 18px; font-size: 12px; font-weight: 700; background: linear-gradient(135deg, #059669 0%, #10b981 100%);">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Restore Backup Now</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Footer row with emergency reset & close -->
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 10px; margin-top: 2px;">
+          <button type="button" class="preset-btn" style="color: #f87171; border-color: rgba(248, 113, 113, 0.3); font-size: 11px; padding: 4px 8px;" onclick="resetAllLocalDataWithConfirmation()" title="Erase all local sets and IndexedDB textures to return to starter presets">
+            ⚠️ Reset All Local Data to Factory Defaults
+          </button>
+          <button type="button" class="btn-secondary" style="padding: 6px 16px; font-size: 11.5px;" onclick="closeBackupAllDataModal()">Done</button>
         </div>
       </div>
     </div>
@@ -1634,6 +1923,176 @@
       </div>
     </div>
   </div>
+
+  <!-- Pack & Series and UI Priority Modal -->
+  <div class="modal-overlay" id="packPriorityModal" onclick="closePackPriorityModalOnBackdrop(event)" style="display: none;">
+    <div class="modal-card" style="max-width: 760px; width: 95%; max-height: 90vh; display: flex; flex-direction: column; border-color: rgba(0, 229, 255, 0.4); box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9);">
+      <div class="modal-header" style="background: #141c28; flex-shrink: 0; padding: 12px 18px; display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <!-- Tab Switchers -->
+          <button type="button" id="tabBtnPackSeries" onclick="switchPackOrderTab('series')" style="padding: 7px 16px; font-size: 12px; font-weight: 700; border-radius: 6px; border: 1px solid rgba(0, 229, 255, 0.4); background: rgba(0, 229, 255, 0.18); color: #fff; cursor: pointer; display: flex; align-items: center; gap: 7px; transition: all 0.15s ease;">
+            <span>📁</span>
+            <span>Pack &amp; Series Collection</span>
+          </button>
+          <button type="button" id="tabBtnUiPriority" onclick="switchPackOrderTab('priority')" style="padding: 7px 16px; font-size: 12px; font-weight: 700; border-radius: 6px; border: 1px solid transparent; background: transparent; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 7px; transition: all 0.15s ease;">
+            <span>🔢</span>
+            <span>UI Priority &amp; Menu Order</span>
+          </button>
+        </div>
+        <button class="preset-btn" style="padding: 4px 8px; font-size: 13px;" onclick="closePackPriorityModal()">✕</button>
+      </div>
+
+      <div class="modal-body" style="padding: 16px 20px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 14px;">
+        <!-- Tab 1: Pack & Series Collection -->
+        <div id="tabContentPackSeries">
+          <include src="/src/sections/section-pack-series.html" />
+        </div>
+
+        <!-- Tab 2: UI Priority & Menu Order -->
+        <div id="tabContentUiPriority" style="display: none;">
+          <include src="/src/sections/section-ui-priority.html" />
+        </div>
+      </div>
+
+      <div class="modal-footer" style="padding: 12px 20px; background: #0f172a; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
+        <div style="font-size: 11px; color: var(--text-dim);">
+          All set assignments, sequences, and priorities are saved live to the active asset.
+        </div>
+        <button type="button" class="btn-primary" style="padding: 6px 20px; font-size: 12px; font-weight: 700;" onclick="closePackPriorityModal()">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.toggleMainProjectMenu = function(event) {
+      if (event) {
+        if (typeof event === 'boolean') {
+          const m = document.getElementById('mainProjectMenuDropdown');
+          if (m) m.style.display = event ? 'block' : 'none';
+          return;
+        }
+        if (event.stopPropagation) event.stopPropagation();
+      }
+      const menu = document.getElementById('mainProjectMenuDropdown');
+      if (!menu) return;
+      const isHidden = (menu.style.display === 'none' || !menu.style.display);
+      menu.style.display = isHidden ? 'block' : 'none';
+      if (isHidden) window.syncTopMenuBadges();
+    };
+
+    window.togglePackOrderDropdown = function(event) {
+      if (event) {
+        if (typeof event === 'boolean') {
+          const m = document.getElementById('packOrderDropdownMenu');
+          if (m) m.style.display = event ? 'block' : 'none';
+          return;
+        }
+        if (event.stopPropagation) event.stopPropagation();
+      }
+      const menu = document.getElementById('packOrderDropdownMenu');
+      if (!menu) return;
+      const isHidden = (menu.style.display === 'none' || !menu.style.display);
+      menu.style.display = isHidden ? 'block' : 'none';
+    };
+
+    window.openPackOrderModal = function(tab) {
+      const modal = document.getElementById('packPriorityModal');
+      if (modal) modal.style.display = 'flex';
+      window.switchPackOrderTab(tab || 'series');
+      const sec1 = document.getElementById('secToolsSeries');
+      if (sec1) sec1.classList.remove('collapsed');
+      const sec2 = document.getElementById('secToolsPriority');
+      if (sec2) sec2.classList.remove('collapsed');
+      window.syncTopMenuBadges();
+    };
+
+    window.closePackPriorityModal = function() {
+      const modal = document.getElementById('packPriorityModal');
+      if (modal) modal.style.display = 'none';
+    };
+
+    window.closePackPriorityModalOnBackdrop = function(event) {
+      if (event && event.target && event.target.id === 'packPriorityModal') {
+        window.closePackPriorityModal();
+      }
+    };
+
+    window.switchPackOrderTab = function(tab) {
+      const tabSeries = document.getElementById('tabContentPackSeries');
+      const tabPriority = document.getElementById('tabContentUiPriority');
+      const btnSeries = document.getElementById('tabBtnPackSeries');
+      const btnPriority = document.getElementById('tabBtnUiPriority');
+      if (tab === 'priority') {
+        if (tabSeries) tabSeries.style.display = 'none';
+        if (tabPriority) tabPriority.style.display = 'block';
+        if (btnSeries) {
+          btnSeries.style.background = 'transparent';
+          btnSeries.style.color = 'var(--text-muted)';
+          btnSeries.style.borderColor = 'transparent';
+        }
+        if (btnPriority) {
+          btnPriority.style.background = 'rgba(192, 132, 252, 0.22)';
+          btnPriority.style.color = '#fff';
+          btnPriority.style.borderColor = 'rgba(192, 132, 252, 0.45)';
+        }
+      } else {
+        if (tabSeries) tabSeries.style.display = 'block';
+        if (tabPriority) tabPriority.style.display = 'none';
+        if (btnSeries) {
+          btnSeries.style.background = 'rgba(0, 229, 255, 0.2)';
+          btnSeries.style.color = '#fff';
+          btnSeries.style.borderColor = 'rgba(0, 229, 255, 0.45)';
+        }
+        if (btnPriority) {
+          btnPriority.style.background = 'transparent';
+          btnPriority.style.color = 'var(--text-muted)';
+          btnPriority.style.borderColor = 'transparent';
+        }
+      }
+    };
+
+    window.syncTopMenuBadges = function() {
+      try {
+        const seriesInput = document.getElementById('assetSeries');
+        const topSeriesBadge = document.getElementById('topMenuSeriesBadge');
+        if (seriesInput && topSeriesBadge) {
+          topSeriesBadge.textContent = seriesInput.value.trim() || 'None';
+        }
+        const prioInput = document.getElementById('uiPriorityInput');
+        const topPrioBadge = document.getElementById('topMenuPriorityBadge');
+        if (prioInput && topPrioBadge) {
+          topPrioBadge.textContent = prioInput.value || '41';
+        }
+      } catch (e) {}
+    };
+
+    document.addEventListener('input', function(e) {
+      if (e.target && (e.target.id === 'assetSeries' || e.target.id === 'uiPriorityInput')) {
+        window.syncTopMenuBadges();
+      }
+    });
+
+    document.addEventListener('click', function(e) {
+      const mainMenu = document.getElementById('mainProjectMenuDropdown');
+      if (mainMenu && mainMenu.style.display === 'block') {
+        if (!e.target.closest('#btnMainProjectMenu') && !mainMenu.contains(e.target)) {
+          mainMenu.style.display = 'none';
+        }
+      }
+
+      const packMenu = document.getElementById('packOrderDropdownMenu');
+      if (packMenu && packMenu.style.display === 'block') {
+        if (!e.target.closest('#btnPackOrderMenu') && !packMenu.contains(e.target)) {
+          packMenu.style.display = 'none';
+        }
+      }
+    });
+
+    // Initialize badges once DOM is ready
+    window.addEventListener('DOMContentLoaded', function() {
+      setTimeout(window.syncTopMenuBadges, 150);
+    });
+  </script>
 
   <!-- Toast Notification -->
   <div id="toast">Copied to clipboard!</div>

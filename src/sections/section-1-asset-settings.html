@@ -547,33 +547,78 @@
 
 
           <!-- JSON Output Preview (decal.json, surface.json, or netlane.json) -->
-          <div class="form-group" style="margin-top: 12px;">
-            <div class="form-label-row" style="align-items: center; justify-content: space-between;">
-              <div class="form-label-left">
-                <span id="jsonLabel">Generated decal.json</span>
-                <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'jsonSchemaFormat', event)" onmouseenter="showFieldHelp(this, 'jsonSchemaFormat', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for JSON Schema Format" title="Help for JSON Schema Format">?</button>
+          <!-- JSON Output Preview (decal.json, surface.json, or netlane.json) -->
+          <div class="form-group" style="margin-top: 12px;" id="jsonPreviewContainerWrapper">
+            <!-- Sidebar placeholder shown when floating -->
+            <div id="jsonDockPlaceholder" style="display: none; padding: 12px 14px; background: rgba(0, 168, 255, 0.08); border: 1px dashed rgba(0, 168, 255, 0.45); border-radius: 6px; text-align: center; font-size: 11px; color: var(--text-dim); margin-bottom: 8px;">
+              <div style="margin-bottom: 6px; color: var(--primary); font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                <span>JSON Preview is Floating</span>
               </div>
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <label for="jsonSchemaFormat" style="font-size: 10px; color: var(--text-dim);">Schema:</label>
-                <select id="jsonSchemaFormat" onchange="updateConfigJson()" style="font-size: 10px; padding: 2px 6px; height: 22px; width: auto; background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px;">
-                  <option value="extended" selected>Extended (Float/Vector)</option>
-                  <option value="simple">Simple (Flat)</option>
-                </select>
-              </div>
+              <p style="margin: 0 0 8px 0; font-size: 10.5px; color: var(--text-muted);">Window is detached for live inspection across other tabs &amp; tools.</p>
+              <button type="button" class="btn-secondary" onclick="dockJsonPreview()" style="padding: 4px 10px; font-size: 11px; margin: 0 auto; display: inline-flex; align-items: center; gap: 5px; cursor: pointer;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/></svg>
+                <span>Dock Back to Sidebar</span>
+              </button>
             </div>
 
-            <!-- Netlane JSON tab switcher (shown only when in netlane mode) -->
-            <div id="netlaneJsonTabStrip" style="display: none; margin-top: 7px; margin-bottom: 7px; gap: 5px; align-items: center; flex-wrap: wrap;">
-              <span style="font-size: 10px; color: var(--text-dim); margin-right: 2px;">Inspect:</span>
-              <button type="button" class="json-tab-btn" id="tabNetlaneDecal" onclick="setNetlaneJsonPreviewTab('decal')" style="padding: 3px 8px; font-size: 10.5px; border-radius: 4px; border: 1px solid var(--primary); background: rgba(0, 168, 255, 0.2); color: var(--primary); cursor: pointer; font-weight: 600;">decal.json</button>
-              <button type="button" class="json-tab-btn" id="tabNetlaneSurface" onclick="setNetlaneJsonPreviewTab('surface')" style="padding: 3px 8px; font-size: 10.5px; border-radius: 4px; border: 1px solid var(--border-color); background: rgba(255, 255, 255, 0.05); color: var(--text-dim); cursor: pointer;">surface.json</button>
-              <button type="button" class="json-tab-btn" id="tabNetlaneNetlane" onclick="setNetlaneJsonPreviewTab('netlane')" style="padding: 3px 8px; font-size: 10.5px; border-radius: 4px; border: 1px solid var(--border-color); background: rgba(255, 255, 255, 0.05); color: var(--text-dim); cursor: pointer;">netlane.json</button>
-              <span style="font-size: 9.5px; color: var(--accent-emerald); margin-left: auto; display: flex; align-items: center; gap: 4px;" title="Net Lane export includes both decal.json and surface.json">✓ Export includes both</span>
-            </div>
+            <div id="jsonFloatingCard" class="json-preview-card">
+              <div class="json-panel-header" id="jsonPanelDragHandle">
+                <div class="json-panel-title-area" style="display: flex; align-items: center; gap: 6px; min-width: 0;">
+                  <span class="json-drag-grip" title="Drag to reposition floating JSON window">⋮⋮</span>
+                  <span id="jsonLabel" style="font-weight: 600; font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Generated decal.json</span>
+                  <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'jsonSchemaFormat', event)" onmouseenter="showFieldHelp(this, 'jsonSchemaFormat', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for JSON Schema Format" title="Help for JSON Schema Format">?</button>
+                  <span class="live-indicator-badge" title="JSON updates in real-time as you tweak settings">LIVE</span>
+                </div>
+                <div class="json-panel-actions" style="display: flex; align-items: center; gap: 5px; flex-shrink: 0;">
+                  <div class="json-schema-group" style="display: flex; align-items: center; gap: 4px;">
+                    <label for="jsonSchemaFormat" style="font-size: 10px; color: var(--text-dim);">Schema:</label>
+                    <select id="jsonSchemaFormat" onchange="updateConfigJson()" style="font-size: 10px; padding: 2px 4px; height: 22px; width: auto; background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px;">
+                      <option value="extended" selected>Extended</option>
+                      <option value="simple">Simple</option>
+                    </select>
+                  </div>
+                  <!-- Minimize button (shown when floating) -->
+                  <button type="button" id="btnMinimizeJsonFloat" class="json-action-icon-btn" onclick="toggleMinimizeJsonFloat()" title="Minimize / Expand JSON window" style="display: none;">
+                    <svg id="minimizeIconMinus" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    <svg id="minimizeIconPlus" style="display: none;" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  </button>
+                  <!-- Float / Dock button -->
+                  <button type="button" id="btnToggleJsonFloat" class="btn-toggle-float" onclick="toggleJsonFloat()" title="Float JSON window out of sidebar">
+                    <svg class="icon-popout" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                    <svg class="icon-dock" style="display: none;" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/></svg>
+                    <span id="floatBtnLabel">Float</span>
+                  </button>
+                </div>
+              </div>
 
-            <div class="json-code" id="jsonPreview">
-              <button class="copy-json-btn" onclick="copyConfigJson()">Copy</button>
-              <span id="jsonCodeText">{ "width": 4.0, "height": 4.0, "depth": 1.0 }</span>
+              <div id="jsonFloatingBody">
+                <!-- Netlane JSON tab switcher (shown only when in netlane mode) -->
+                <div id="netlaneJsonTabStrip" style="display: none; margin-top: 7px; margin-bottom: 7px; gap: 5px; align-items: center; flex-wrap: wrap;">
+                  <span style="font-size: 10px; color: var(--text-dim); margin-right: 2px;">Inspect:</span>
+                  <button type="button" class="json-tab-btn" id="tabNetlaneDecal" onclick="setNetlaneJsonPreviewTab('decal')" style="padding: 3px 8px; font-size: 10.5px; border-radius: 4px; border: 1px solid var(--primary); background: rgba(0, 168, 255, 0.2); color: var(--primary); cursor: pointer; font-weight: 600;">decal.json</button>
+                  <button type="button" class="json-tab-btn" id="tabNetlaneSurface" onclick="setNetlaneJsonPreviewTab('surface')" style="padding: 3px 8px; font-size: 10.5px; border-radius: 4px; border: 1px solid var(--border-color); background: rgba(255, 255, 255, 0.05); color: var(--text-dim); cursor: pointer;">surface.json</button>
+                  <button type="button" class="json-tab-btn" id="tabNetlaneNetlane" onclick="setNetlaneJsonPreviewTab('netlane')" style="padding: 3px 8px; font-size: 10.5px; border-radius: 4px; border: 1px solid var(--border-color); background: rgba(255, 255, 255, 0.05); color: var(--text-dim); cursor: pointer;">netlane.json</button>
+                  <span style="font-size: 9.5px; color: var(--accent-emerald); margin-left: auto; display: flex; align-items: center; gap: 4px;" title="Net Lane export includes both decal.json and surface.json">✓ Export includes both</span>
+                </div>
+
+                <div class="json-code" id="jsonPreview">
+                  <button class="copy-json-btn" onclick="copyConfigJson()">Copy</button>
+                  <span id="jsonCodeText">{ "width": 4.0, "height": 4.0, "depth": 1.0 }</span>
+                </div>
+
+                <div class="json-floating-footer" id="jsonFloatingFooter" style="display: none; justify-content: space-between; align-items: center; margin-top: 8px; padding-top: 6px; border-top: 1px solid rgba(255, 255, 255, 0.08); font-size: 10px; color: var(--text-dim);">
+                  <span style="display: flex; align-items: center; gap: 5px;">
+                    <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--accent-emerald); display: inline-block;"></span>
+                    <span>Live synced</span>
+                  </span>
+                  <div style="display: flex; gap: 5px;">
+                    <button type="button" class="btn-secondary" style="padding: 2px 7px; font-size: 10px;" onclick="copyConfigJson()">Copy</button>
+                    <button type="button" class="btn-secondary" style="padding: 2px 7px; font-size: 10px;" onclick="downloadConfigJson()">Download</button>
+                    <button type="button" class="btn-secondary" style="padding: 2px 7px; font-size: 10px;" onclick="dockJsonPreview()">Dock</button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 

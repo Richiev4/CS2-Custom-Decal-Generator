@@ -13,6 +13,12 @@
           <button type="button" class="sidebar-tool-btn" onclick="collapseAllSections()" title="Collapse all sections">
             <span>▸ Collapse All</span>
           </button>
+          <button type="button" class="sidebar-tool-btn" id="sidebarPresetsToggleBtn" onclick="toggleHideSamplePresets()" title="Toggle sample presets on/off" style="color: #38bdf8; border-color: rgba(56, 189, 248, 0.3);">
+            <span id="sidebarPresetsToggleLabel">⚡ Presets: On</span>
+          </button>
+          <button type="button" class="sidebar-tool-btn" onclick="openBackupAllDataModal()" title="Backup &amp; Restore All Local Data (Sets &amp; IndexedDB)" style="color: #34d399; border-color: rgba(52, 211, 153, 0.3);">
+            <span>💾 Backup Data</span>
+          </button>
           <button type="button" class="sidebar-tool-btn" onclick="clearAllWorkspace()" title="Reset workspace and clear all inputs" style="color: #f87171; border-color: rgba(248, 113, 113, 0.25);">
             <span>✕ Clear All</span>
           </button>

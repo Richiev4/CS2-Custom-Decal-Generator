@@ -305,3 +305,97 @@ export async function resetLibraryToStarters() {
     } catch (e) {}
   }
 }
+
+/**
+ * Read all assets directly from IndexedDB (guaranteed fresh, non-cached)
+ */
+export async function getAllAssetsFromIndexedDB() {
+  const db = await openDB();
+  if (!db) return memoryLibrary || [];
+  try {
+    const items = await readAllFromDB(db);
+    if (items && items.length > 0) {
+      items.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+      memoryLibrary = items;
+      return items;
+    }
+  } catch (err) {
+    console.warn('Error reading fresh assets from IndexedDB:', err);
+  }
+  return memoryLibrary || [];
+}
+
+/**
+ * Completely wipe all records in IndexedDB
+ */
+export async function clearAllAssetsInIndexedDB() {
+  memoryLibrary = [];
+  const db = await openDB();
+  if (db) {
+    try {
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      tx.objectStore(STORE_NAME).clear();
+    } catch (e) {
+      console.warn('Error clearing IndexedDB:', e);
+    }
+  }
+}
+
+/**
+ * Bulk import assets into IndexedDB
+ * @param {Array} assets - Array of asset project objects
+ * @param {boolean} replaceAll - If true, clears the database before importing
+ */
+export async function importAssetsToIndexedDB(assets, replaceAll = false) {
+  if (!Array.isArray(assets) || assets.length === 0) return 0;
+  const db = await openDB();
+  if (!db) return 0;
+
+  if (replaceAll) {
+    await clearAllAssetsInIndexedDB();
+  }
+
+  let importedCount = 0;
+  for (const item of assets) {
+    if (item && item.assetName) {
+      try {
+        await writeRecordToDB(db, item);
+        importedCount++;
+      } catch (e) {
+        console.warn('Failed to write asset to IndexedDB:', item.assetName, e);
+      }
+    }
+  }
+
+  // Refresh in-memory cache
+  const refreshed = await readAllFromDB(db);
+  refreshed.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+  memoryLibrary = refreshed;
+  return importedCount;
+}
+
+/**
+ * Calculate approximate byte size of assets in IndexedDB
+ */
+export async function estimateIndexedDBSize() {
+  try {
+    const assets = await getAllAssetsFromIndexedDB();
+    const str = JSON.stringify(assets);
+    return str.length; // Approximate bytes (UTF-8 / ASCII)
+  } catch (_) {
+    return 0;
+  }
+}
+
+/**
+ * Get quick count and stats of IndexedDB storage
+ */
+export async function getDBStats() {
+  const assets = await getAllAssetsFromIndexedDB();
+  const byteSize = await estimateIndexedDBSize();
+  return {
+    count: assets.length,
+    byteSize,
+    assets
+  };
+}

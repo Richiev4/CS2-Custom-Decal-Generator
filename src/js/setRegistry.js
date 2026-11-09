@@ -1841,126 +1841,13 @@ window.confirmCreateNewSet = confirmCreateNewSet;
 
 // ==========================================
 // Storage Backup & Restore (Full Portability)
+// Delegated to comprehensive backupManager.js
 // ==========================================
 
-export async function exportAllSetsAndStorageBackup() {
-  const sets = getSetsRegistry();
-  let library = [];
-  if (typeof window.getSavedLibraryFromMemory === 'function') {
-    library = window.getSavedLibraryFromMemory() || [];
-  }
-
-  let badgeDefaults = null;
-  try {
-    const raw = localStorage.getItem('cs2_icon_badge_defaults');
-    if (raw) badgeDefaults = JSON.parse(raw);
-  } catch (_) {}
-
-  const backupPayload = {
-    format: 'cs2-asset-studio-full-backup',
-    version: '1.0',
-    exportTimestamp: Date.now(),
-    exportDate: new Date().toISOString(),
-    setsRegistry: sets,
-    libraryAssets: library,
-    badgeDefaults: badgeDefaults
-  };
-
-  const jsonStr = JSON.stringify(backupPayload, null, 2);
-  const blob = new Blob([jsonStr], { type: 'application/json' });
-  const dateStr = new Date().toISOString().slice(0, 10);
-  const filename = `cs2_asset_studio_backup_${dateStr}.json`;
-
-  if (typeof window.saveFileWithPicker === 'function') {
-    const res = await window.saveFileWithPicker(blob, filename, {
-      types: [
-        {
-          description: 'Cities: Skylines 2 Studio Backup (*.json)',
-          accept: { 'application/json': ['.json'] }
-        }
-      ]
-    });
-    if (res.cancelled) {
-      showToast('Backup save cancelled');
-      return;
-    }
-  } else {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }
-
-  showToast(`Backup exported (${sets.length} sets, ${library.length} cached assets saved)!`);
-}
-window.exportAllSetsAndStorageBackup = exportAllSetsAndStorageBackup;
-
-export function handleBackupFileSelect(event) {
-  const files = event?.target?.files;
-  if (!files || files.length === 0) return;
-  const file = files[0];
-  setTimeout(() => {
-    try { if (event?.target) event.target.value = ''; } catch (_) {}
-  }, 100);
-
-  importStorageBackupFromFile(file);
-}
-window.handleBackupFileSelect = handleBackupFileSelect;
-
-export async function importStorageBackupFromFile(file) {
-  if (!file) return;
-
-  try {
-    const text = await file.text();
-    const data = JSON.parse(text);
-
-    let sets = null;
-    if (Array.isArray(data.setsRegistry)) {
-      sets = data.setsRegistry;
-    } else if (Array.isArray(data)) {
-      sets = data;
-    }
-
-    if (!sets || sets.length === 0) {
-      showToast('No valid set profiles found in backup file');
-      return;
-    }
-
-    // 1. Save sets to localStorage
-    saveSetsRegistry(sets);
-
-    // 2. Restore library assets into IndexedDB if present
-    if (Array.isArray(data.libraryAssets) && typeof window.saveAssetToIndexedDB === 'function') {
-      for (const asset of data.libraryAssets) {
-        try {
-          await window.saveAssetToIndexedDB(asset);
-        } catch (_) {}
-      }
-    }
-
-    // 3. Restore badge defaults if present
-    if (data.badgeDefaults) {
-      try {
-        localStorage.setItem('cs2_icon_badge_defaults', JSON.stringify(data.badgeDefaults));
-      } catch (_) {}
-    }
-
-    // 4. Update UI
-    const activeSet = sets[0];
-    updateSetRegistryUI(activeSet?.id || '');
-    renderSetsTable();
-    renderSetThumbnailsStrip();
-    if (typeof window.renderSeriesChips === 'function') window.renderSeriesChips();
-    if (typeof window.updateRibbonSeriesDropdown === 'function') window.updateRibbonSeriesDropdown();
-
-    showToast(`Restored ${sets.length} sets from backup!`);
-  } catch (err) {
-    console.error('Failed to parse backup file:', err);
-    showToast('Failed to restore backup: Invalid JSON file');
-  }
-}
-window.importStorageBackupFromFile = importStorageBackupFromFile;
+export {
+  exportAllSetsAndStorageBackup,
+  handleBackupFileSelect,
+  importStorageBackupFromFile,
+  openBackupAllDataModal,
+  closeBackupAllDataModal
+} from './backupManager.js';

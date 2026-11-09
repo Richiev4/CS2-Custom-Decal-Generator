@@ -54,6 +54,10 @@ export function switchTab(tab) {
     initScaleViewInteractions();
     renderScaleView();
   }
+
+  if (window.updateEmptyPreviewIndicator) {
+    window.updateEmptyPreviewIndicator();
+  }
 }
 
 export const switchPreviewTab = switchTab;
@@ -908,17 +912,128 @@ export function initTabsScroll() {
   checkTabScrollButtons();
 }
 
+export function initDraggableFloatingControls() {
+  const pill = document.getElementById('floatingViewportControls');
+  const handle = document.getElementById('floatingDragHandle') || pill;
+  if (!pill || !handle) return;
+
+  const container = pill.closest('.preview-area') || pill.parentElement;
+  if (!container) return;
+
+  let isDragging = false;
+  let startX = 0;
+  let startY = 0;
+  let initialLeft = 0;
+  let initialTop = 0;
+
+  function onPointerDown(e) {
+    if (e.button !== undefined && e.button !== 0) return;
+    if (e.target.closest('button')) return;
+
+    isDragging = true;
+    pill.classList.add('is-dragging');
+
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+    startX = clientX;
+    startY = clientY;
+
+    const containerRect = container.getBoundingClientRect();
+    const pillRect = pill.getBoundingClientRect();
+
+    initialLeft = pillRect.left - containerRect.left;
+    initialTop = pillRect.top - containerRect.top;
+
+    pill.style.right = 'auto';
+    pill.style.bottom = 'auto';
+    pill.style.left = `${initialLeft}px`;
+    pill.style.top = `${initialTop}px`;
+
+    document.addEventListener('mousemove', onPointerMove, { passive: false });
+    document.addEventListener('mouseup', onPointerUp);
+    document.addEventListener('touchmove', onPointerMove, { passive: false });
+    document.addEventListener('touchend', onPointerUp);
+
+    e.preventDefault();
+  }
+
+  function onPointerMove(e) {
+    if (!isDragging) return;
+    if (e.cancelable) e.preventDefault();
+
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+    const deltaX = clientX - startX;
+    const deltaY = clientY - startY;
+
+    const containerRect = container.getBoundingClientRect();
+    const pillRect = pill.getBoundingClientRect();
+
+    const minLeft = 8;
+    const maxLeft = containerRect.width - pillRect.width - 8;
+    const minTop = 44; // Below view tabs
+    const maxTop = containerRect.height - pillRect.height - 8;
+
+    const newLeft = Math.min(Math.max(initialLeft + deltaX, minLeft), Math.max(minLeft, maxLeft));
+    const newTop = Math.min(Math.max(initialTop + deltaY, minTop), Math.max(minTop, maxTop));
+
+    pill.style.left = `${newLeft}px`;
+    pill.style.top = `${newTop}px`;
+  }
+
+  function onPointerUp() {
+    if (!isDragging) return;
+    isDragging = false;
+    pill.classList.remove('is-dragging');
+
+    document.removeEventListener('mousemove', onPointerMove);
+    document.removeEventListener('mouseup', onPointerUp);
+    document.removeEventListener('touchmove', onPointerMove);
+    document.removeEventListener('touchend', onPointerUp);
+  }
+
+  // Double-click handle to reset to top-right default
+  handle.addEventListener('dblclick', (e) => {
+    e.stopPropagation();
+    pill.style.left = 'auto';
+    pill.style.right = '18px';
+    pill.style.top = '50px';
+  });
+
+  handle.addEventListener('mousedown', onPointerDown);
+  handle.addEventListener('touchstart', onPointerDown, { passive: false });
+
+  window.addEventListener('resize', () => {
+    if (!pill.style.left || pill.style.left === 'auto') return;
+    const containerRect = container.getBoundingClientRect();
+    const pillRect = pill.getBoundingClientRect();
+    if (parseFloat(pill.style.left) + pillRect.width > containerRect.width - 8) {
+      pill.style.left = `${Math.max(8, containerRect.width - pillRect.width - 8)}px`;
+    }
+    if (parseFloat(pill.style.top) + pillRect.height > containerRect.height - 8) {
+      pill.style.top = `${Math.max(44, containerRect.height - pillRect.height - 8)}px`;
+    }
+  });
+}
+
 if (typeof document !== 'undefined') {
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initTabsScroll);
+    document.addEventListener('DOMContentLoaded', () => {
+      initTabsScroll();
+      initDraggableFloatingControls();
+    });
   } else {
     initTabsScroll();
+    initDraggableFloatingControls();
   }
 }
 
 if (typeof window !== 'undefined') {
   window.setPreviewScaleMode = setPreviewScaleMode;
   window.initTabsScroll = initTabsScroll;
+  window.initDraggableFloatingControls = initDraggableFloatingControls;
   window.scrollTabsNav = scrollTabsNav;
   window.checkTabScrollButtons = checkTabScrollButtons;
   window.renderSimulation = renderSimulation;

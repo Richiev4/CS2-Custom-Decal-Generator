@@ -12,6 +12,79 @@
           </div>
         </div>
         <div class="collapsible-content">
+          <!-- Complete 3-in-1 Set Export Card -->
+          <div class="set-export-card" id="setExportCard">
+            <div class="set-export-header">
+              <div class="set-export-badge-row">
+                <span class="set-export-pill">3-IN-1 MOD SET</span>
+                <span class="set-export-status" id="setExportOverallCount">3 / 3 Items Loaded</span>
+              </div>
+              <div class="set-export-title">Export Complete Set (.zip)</div>
+              <div class="set-export-desc">
+                Generates a single ExtraAssetsImporter archive containing all 3 assets in organized subdirectories (<code style="color:var(--accent-cyan); font-size:10px;">/Decals</code>, <code style="color:var(--accent-emerald); font-size:10px;">/Surfaces</code>, <code style="color:var(--accent-purple); font-size:10px;">/NetLanes</code>).
+              </div>
+            </div>
+
+            <!-- Set Items Summary Grid -->
+            <div class="set-items-summary-list">
+              <!-- Decal Row -->
+              <div class="set-item-row" id="setItemRowDecal" onclick="setMode('decal')">
+                <div class="set-item-thumb-box">
+                  <img id="setExportDecalThumb" class="set-item-thumb" alt="Decal Thumbnail" style="display:none;" />
+                  <span id="setExportDecalIcon" class="set-item-icon">🕳️</span>
+                </div>
+                <div class="set-item-meta">
+                  <div class="set-item-name" id="setExportDecalName">Manhole Cover</div>
+                  <div class="set-item-type">Decal • 1.2 × 1.2 m</div>
+                </div>
+                <div class="set-item-status-tag loaded" id="setExportDecalStatus">Ready</div>
+              </div>
+
+              <!-- Surface Row -->
+              <div class="set-item-row" id="setItemRowSurface" onclick="setMode('surface')">
+                <div class="set-item-thumb-box">
+                  <img id="setExportSurfaceThumb" class="set-item-thumb" alt="Surface Thumbnail" style="display:none;" />
+                  <span id="setExportSurfaceIcon" class="set-item-icon">🧱</span>
+                </div>
+                <div class="set-item-meta">
+                  <div class="set-item-name" id="setExportSurfaceName">Cobblestones</div>
+                  <div class="set-item-type">Surface • UV 2.0x</div>
+                </div>
+                <div class="set-item-status-tag loaded" id="setExportSurfaceStatus">Ready</div>
+              </div>
+
+              <!-- Net Lane Row -->
+              <div class="set-item-row" id="setItemRowNetlane" onclick="setMode('netlane')">
+                <div class="set-item-thumb-box">
+                  <img id="setExportNetlaneThumb" class="set-item-thumb" alt="Net Lane Thumbnail" style="display:none;" />
+                  <span id="setExportNetlaneIcon" class="set-item-icon">🛣️</span>
+                </div>
+                <div class="set-item-meta">
+                  <div class="set-item-name" id="setExportNetlaneName">Dashed Road Line</div>
+                  <div class="set-item-type">Net Lane • 0.3 × 3.0 m</div>
+                </div>
+                <div class="set-item-status-tag loaded" id="setExportNetlaneStatus">Ready</div>
+              </div>
+            </div>
+
+            <!-- Set Export Button -->
+            <button class="btn-primary set-export-btn" id="btnExportFullSet" onclick="exportCompleteSetZip()" title="Export all 3 loaded items (Decal, Surface, Net Lane) into one complete ZIP package">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                <line x1="12" y1="22.08" x2="12" y2="12"/>
+              </svg>
+              <span>Export Complete 3-in-1 Set (.zip)</span>
+            </button>
+          </div>
+
+          <!-- Divider for Single Item Export -->
+          <div style="display: flex; align-items: center; gap: 8px; margin: 4px 0 2px;">
+            <div style="flex: 1; height: 1px; background: rgba(255, 255, 255, 0.08);"></div>
+            <span style="font-size: 10px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px;">Or Export Single Active Asset</span>
+            <div style="flex: 1; height: 1px; background: rgba(255, 255, 255, 0.08);"></div>
+          </div>
+
           <div style="display: flex; flex-direction: column; gap: 8px;">
             <button class="btn-primary" id="btnExportZip" onclick="exportZipPackage()" title="Asks where to save the .zip mod package on your computer">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">

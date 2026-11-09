@@ -2,6 +2,75 @@
 // Global Application State & Shared Utilities
 // ==========================================
 
+export function createDefaultSlot(mode) {
+  const defaultNames = {
+    decal: 'CityUtility_Manhole_01',
+    surface: 'CustomSurface_Pavement_01',
+    netlane: 'CustomNetLane_DashedLine_01'
+  };
+  const defaultCategories = {
+    decal: 'Utilities',
+    surface: 'Surfaces',
+    netlane: 'RoadMarkings'
+  };
+  return {
+    mode,
+    image: null,
+    imageSrc: '',
+    fileName: '',
+    isCustomImageLoaded: false,
+    hasUnsavedChanges: false,
+    assetName: defaultNames[mode] || `Custom${mode.charAt(0).toUpperCase() + mode.slice(1)}_01`,
+    category: defaultCategories[mode] || 'RoadMarkings',
+    seriesName: 'City Utilities',
+    targetResolution: 1024,
+    fitStrategy: mode === 'surface' ? 'stretch' : 'fill',
+    textureRotation: 0,
+    flipH: false,
+    flipV: false,
+    originalNameBeforeTransform: '',
+    customNormalImg: null,
+    customNormalFileName: '',
+    customMaskImg: null,
+    customMaskFileName: '',
+    bumpIntensity: mode === 'surface' ? 2.5 : 3.5,
+    normalBlur: 0,
+    invertBump: false,
+    flipNormalY: false,
+    metallic: mode === 'surface' ? 0 : 180,
+    smoothness: mode === 'surface' ? 30 : 80,
+    maskWithDecalAlpha: mode !== 'surface',
+    maskVariation: 0,
+    dimensions: {
+      width: mode === 'decal' ? 1.8 : 2.0,
+      height: mode === 'decal' ? 1.8 : 2.0,
+      depth: 0.5,
+      aspectLocked: false,
+      lockedRatio: 1.0
+    },
+    layerMask: {
+      terrain: true,
+      roads: true,
+      buildings: false,
+      vehicles: false
+    },
+    normalOpacity: 1.0,
+    baseOpacity: 1.0,
+    metallicOpacity: 0.0,
+    uvScale: 1.0,
+    surfaceTiling: 4,
+    netlane: {
+      width: 1.0,
+      length: 2.0
+    },
+    drawOrder: mode === 'surface' ? -50 : (mode === 'netlane' ? 60 : 50),
+    uiPriority: mode === 'decal' ? 52010 : (mode === 'surface' ? 52020 : 52030),
+    uiPriorityBase: 52000,
+    uiPriorityStep: 10,
+    thumbnail: ''
+  };
+}
+
 export const state = {
   appMode: 'decal', // 'decal' | 'surface' | 'netlane'
   netlaneJsonTab: 'decal', // 'decal' | 'surface' | 'netlane'
@@ -10,6 +79,14 @@ export const state = {
   lightPos: { x: 0.35, y: -0.6, z: 0.7 },
   activeTab: 'grid',
   activeSingleMap: 'base',
+
+  // 3-in-1 Set Slots: Decal + Surface + Net Lane loaded concurrently
+  setName: 'City Utilities',
+  setSlots: {
+    decal: createDefaultSlot('decal'),
+    surface: createDefaultSlot('surface'),
+    netlane: createDefaultSlot('netlane')
+  },
 
   // Transforms
   textureRotation: 0,
@@ -59,6 +136,7 @@ export const state = {
   hasUnsavedChanges: false,
   pendingGuardAction: null,
   askWhereToSave: (typeof localStorage !== 'undefined' ? localStorage.getItem('cs2_ask_where_to_save') !== 'false' : true),
+  hideSamplePresets: (typeof localStorage !== 'undefined' ? localStorage.getItem('cs2_hide_sample_presets') === 'true' : false),
 
   // Library & Series state
   currentLoadedAssetName: 'CityUtility_Manhole_01',
@@ -657,3 +735,57 @@ export function toggleAlwaysAskWhereToSave(enabled) {
     ? 'Save prompt: Native "Save As" file dialog active' 
     : 'Save prompt: Direct browser downloads active');
 }
+
+export function setHideSamplePresets(hide, triggerToast = true) {
+  state.hideSamplePresets = !!hide;
+  try {
+    localStorage.setItem('cs2_hide_sample_presets', state.hideSamplePresets ? 'true' : 'false');
+  } catch (_) {}
+  if (typeof window.applySamplePresetsVisibilityUI === 'function') {
+    window.applySamplePresetsVisibilityUI();
+  }
+  if (triggerToast) {
+    showToast(state.hideSamplePresets 
+      ? 'Sample presets hidden (unhide anytime via menu or sidebar)' 
+      : 'Sample presets restored and visible');
+  }
+}
+
+export function toggleHideSamplePresets(forceState) {
+  const next = typeof forceState === 'boolean' ? forceState : !state.hideSamplePresets;
+  setHideSamplePresets(next, true);
+  return next;
+}
+
+// ==========================================
+// 3-in-1 Set Slots Helpers
+// ==========================================
+export function getSlot(mode) {
+  if (!state.setSlots) return null;
+  return state.setSlots[mode] || null;
+}
+
+export function isSlotLoaded(mode) {
+  const slot = getSlot(mode);
+  if (!slot) return false;
+  return Boolean(slot.image || slot.isCustomImageLoaded || (slot.thumbnail && slot.thumbnail.length > 50));
+}
+
+export function getLoadedSlotsCount() {
+  let count = 0;
+  if (isSlotLoaded('decal')) count++;
+  if (isSlotLoaded('surface')) count++;
+  if (isSlotLoaded('netlane')) count++;
+  return count;
+}
+
+export function getLoadedSlots() {
+  const loaded = [];
+  ['decal', 'surface', 'netlane'].forEach(mode => {
+    if (isSlotLoaded(mode)) {
+      loaded.push(state.setSlots[mode]);
+    }
+  });
+  return loaded;
+}
+
