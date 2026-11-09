@@ -37,6 +37,7 @@ function htmlSectionsPlugin(): Plugin {
 
 export default defineConfig(() => {
   return {
+    base: './',
     plugins: [htmlSectionsPlugin(), react(), tailwindcss()],
     resolve: {
       alias: {
