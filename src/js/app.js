@@ -1594,6 +1594,521 @@ export function clearAllWorkspace(force = false) {
 }
 
 // ==========================================
+// Selective Clear Workspace Modal Controllers
+// ==========================================
+
+export function openClearModal() {
+  const modal = document.getElementById('clearWorkspaceModal');
+  if (!modal) return;
+
+  // Make sure current changes are captured in slot
+  if (typeof saveCurrentSlotState === 'function') {
+    try { saveCurrentSlotState(); } catch (_) {}
+  }
+
+  // Update labels and active status badges
+  updateClearModalStatus();
+
+  // Reset checkboxes to default
+  const defaultChecked = ['chkClearSourceGraphic', 'chkClearNormalMap', 'chkClearMaskMap', 'chkClearBadges', 'chkClearMetadata', 'chkClearTransforms'];
+  defaultChecked.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.checked = true;
+  });
+  const chkAllSlots = document.getElementById('chkClearAllSlots');
+  if (chkAllSlots) chkAllSlots.checked = false;
+
+  onClearOptionChange();
+
+  modal.style.display = 'flex';
+  modal.classList.add('active');
+}
+
+export function closeClearModal() {
+  const modal = document.getElementById('clearWorkspaceModal');
+  if (modal) {
+    modal.style.display = 'none';
+    modal.classList.remove('active');
+  }
+}
+
+export function closeClearModalOnBackdrop(e) {
+  if (e.target && e.target.id === 'clearWorkspaceModal') {
+    closeClearModal();
+  }
+}
+
+export function updateClearModalStatus() {
+  const mode = state.appMode || 'decal';
+  const modeLabel = mode.charAt(0).toUpperCase() + mode.slice(1);
+
+  // Label for active slot
+  const activeLabel = document.getElementById('clearLabelActiveSlot');
+  if (activeLabel) {
+    activeLabel.textContent = `Active Slot Graphic (${modeLabel})`;
+  }
+
+  // Status for Active Slot Graphic
+  const statusSource = document.getElementById('clearStatusSourceGraphic');
+  if (statusSource) {
+    const slot = state.setSlots ? state.setSlots[mode] : null;
+    const hasImage = Boolean(state.currentImage || (slot && (slot.image || slot.isCustomImageLoaded)));
+    if (hasImage) {
+      const fileName = slot?.fileName || 'Image Loaded';
+      statusSource.textContent = `✓ ${fileName.length > 18 ? fileName.slice(0, 16) + '...' : fileName}`;
+      statusSource.className = 'clear-badge-pill active';
+    } else {
+      statusSource.textContent = 'None loaded';
+      statusSource.className = 'clear-badge-pill empty';
+    }
+  }
+
+  // Status for All 3-in-1 Slots
+  const statusAllSlots = document.getElementById('clearStatusAllSlots');
+  if (statusAllSlots) {
+    let count = 0;
+    ['decal', 'surface', 'netlane'].forEach(m => {
+      const s = state.setSlots ? state.setSlots[m] : null;
+      if (s && (s.image || s.isCustomImageLoaded || (s.thumbnail && s.thumbnail.length > 50))) {
+        count++;
+      }
+    });
+    if (count > 0) {
+      statusAllSlots.textContent = `${count} of 3 loaded`;
+      statusAllSlots.className = 'clear-badge-pill active';
+    } else {
+      statusAllSlots.textContent = 'All empty';
+      statusAllSlots.className = 'clear-badge-pill empty';
+    }
+  }
+
+  // Status for Normal Map
+  const statusNormal = document.getElementById('clearStatusNormalMap');
+  if (statusNormal) {
+    const slot = state.setSlots ? state.setSlots[mode] : null;
+    const bumpVal = document.getElementById('bumpIntensity')?.value;
+    const isCustom = Boolean(state.customNormalImg || slot?.customNormalImg);
+    const isCustomParams = (bumpVal && bumpVal !== '1.0' && bumpVal !== '1') || (document.getElementById('blurRadius')?.value !== '0');
+    if (isCustom) {
+      statusNormal.textContent = 'Custom upload active';
+      statusNormal.className = 'clear-badge-pill active';
+    } else if (isCustomParams) {
+      statusNormal.textContent = `Modified (${bumpVal || '1.0'}×)`;
+      statusNormal.className = 'clear-badge-pill active';
+    } else {
+      statusNormal.textContent = 'Default (1.0×)';
+      statusNormal.className = 'clear-badge-pill empty';
+    }
+  }
+
+  // Status for Mask Map
+  const statusMask = document.getElementById('clearStatusMaskMap');
+  if (statusMask) {
+    const slot = state.setSlots ? state.setSlots[mode] : null;
+    const metalVal = document.getElementById('metallic')?.value || '0';
+    const smoothVal = document.getElementById('smoothness')?.value || '0';
+    const isCustom = Boolean(state.customMaskImg || slot?.customMaskImg);
+    const isCustomParams = metalVal !== '0' || smoothVal !== '0';
+    if (isCustom) {
+      statusMask.textContent = 'Custom upload active';
+      statusMask.className = 'clear-badge-pill active';
+    } else if (isCustomParams) {
+      statusMask.textContent = `Met: ${metalVal}, Sm: ${smoothVal}`;
+      statusMask.className = 'clear-badge-pill active';
+    } else {
+      statusMask.textContent = 'Default (0 / 0)';
+      statusMask.className = 'clear-badge-pill empty';
+    }
+  }
+
+  // Status for Badges
+  const statusBadges = document.getElementById('clearStatusBadges');
+  if (statusBadges) {
+    let badgeCount = 0;
+    if (state.badge1Enabled || document.getElementById('badge1TextInput')?.value?.trim() || state.designerLogoImg) badgeCount++;
+    if (state.badge2Enabled || document.getElementById('seriesTextInput')?.value?.trim() || state.badge2Img) badgeCount++;
+    if (state.badge3Enabled || document.getElementById('extra1TextInput')?.value?.trim() || state.badge3Img) badgeCount++;
+    if (state.badge4Enabled || document.getElementById('extra2TextInput')?.value?.trim() || state.badge4Img) badgeCount++;
+    if (badgeCount > 0) {
+      statusBadges.textContent = `${badgeCount} badge${badgeCount > 1 ? 's' : ''} active`;
+      statusBadges.className = 'clear-badge-pill active';
+    } else {
+      statusBadges.textContent = 'None active';
+      statusBadges.className = 'clear-badge-pill empty';
+    }
+  }
+
+  // Status for Metadata
+  const statusMetadata = document.getElementById('clearStatusMetadata');
+  if (statusMetadata) {
+    const nameVal = document.getElementById('assetName')?.value?.trim();
+    const seriesVal = document.getElementById('assetSeries')?.value?.trim();
+    if (nameVal || seriesVal) {
+      statusMetadata.textContent = nameVal || seriesVal || 'Custom Name';
+      statusMetadata.className = 'clear-badge-pill active';
+    } else {
+      statusMetadata.textContent = 'Default';
+      statusMetadata.className = 'clear-badge-pill empty';
+    }
+  }
+
+  // Status for Transforms
+  const statusTransforms = document.getElementById('clearStatusTransforms');
+  if (statusTransforms) {
+    const rot = state.textureRotation || 0;
+    const fh = Boolean(state.flipH);
+    const fv = Boolean(state.flipV);
+    if (rot !== 0 || fh || fv) {
+      const parts = [];
+      if (rot !== 0) parts.push(`${rot}°`);
+      if (fh) parts.push('Flip H');
+      if (fv) parts.push('Flip V');
+      statusTransforms.textContent = parts.join(', ');
+      statusTransforms.className = 'clear-badge-pill active';
+    } else {
+      statusTransforms.textContent = 'Default (0°)';
+      statusTransforms.className = 'clear-badge-pill empty';
+    }
+  }
+}
+
+export function onClearOptionChange() {
+  const ids = [
+    { chk: 'chkClearSourceGraphic', row: 'rowClearSourceGraphic' },
+    { chk: 'chkClearAllSlots', row: 'rowClearAllSlots' },
+    { chk: 'chkClearNormalMap', row: 'rowClearNormalMap' },
+    { chk: 'chkClearMaskMap', row: 'rowClearMaskMap' },
+    { chk: 'chkClearBadges', row: 'rowClearBadges' },
+    { chk: 'chkClearMetadata', row: 'rowClearMetadata' },
+    { chk: 'chkClearTransforms', row: 'rowClearTransforms' }
+  ];
+
+  let selectedCount = 0;
+  ids.forEach(({ chk, row }) => {
+    const chkEl = document.getElementById(chk);
+    const rowEl = document.getElementById(row);
+    if (chkEl && rowEl) {
+      if (chkEl.checked) {
+        rowEl.classList.add('selected');
+        selectedCount++;
+      } else {
+        rowEl.classList.remove('selected');
+      }
+    }
+  });
+
+  const btnExecute = document.getElementById('btnClearSelectedExecute');
+  if (btnExecute) {
+    btnExecute.textContent = selectedCount === 0 ? 'Clear Selected (0)' : `Clear Selected (${selectedCount})`;
+    btnExecute.disabled = selectedCount === 0;
+    btnExecute.style.opacity = selectedCount === 0 ? '0.5' : '1';
+    btnExecute.style.cursor = selectedCount === 0 ? 'not-allowed' : 'pointer';
+  }
+}
+
+export function onClearAllSlotsToggle() {
+  const chkAll = document.getElementById('chkClearAllSlots');
+  const chkActive = document.getElementById('chkClearSourceGraphic');
+  if (chkAll && chkAll.checked && chkActive) {
+    chkActive.checked = true;
+  }
+  onClearOptionChange();
+}
+
+export function setClearModalPreset(preset) {
+  const mapping = {
+    all: ['chkClearSourceGraphic', 'chkClearAllSlots', 'chkClearNormalMap', 'chkClearMaskMap', 'chkClearBadges', 'chkClearMetadata', 'chkClearTransforms'],
+    textures: ['chkClearSourceGraphic', 'chkClearAllSlots', 'chkClearNormalMap', 'chkClearMaskMap'],
+    badges: ['chkClearBadges'],
+    none: []
+  };
+
+  const toCheck = new Set(mapping[preset] || []);
+  const allIds = ['chkClearSourceGraphic', 'chkClearAllSlots', 'chkClearNormalMap', 'chkClearMaskMap', 'chkClearBadges', 'chkClearMetadata', 'chkClearTransforms'];
+  allIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.checked = toCheck.has(id);
+  });
+
+  onClearOptionChange();
+}
+
+export function executeClearAllEverything() {
+  closeClearModal();
+  clearAllWorkspace(true);
+}
+
+export function executeClearSelected() {
+  const chkSource = document.getElementById('chkClearSourceGraphic')?.checked;
+  const chkAllSlots = document.getElementById('chkClearAllSlots')?.checked;
+  const chkNormal = document.getElementById('chkClearNormalMap')?.checked;
+  const chkMask = document.getElementById('chkClearMaskMap')?.checked;
+  const chkBadges = document.getElementById('chkClearBadges')?.checked;
+  const chkMetadata = document.getElementById('chkClearMetadata')?.checked;
+  const chkTransforms = document.getElementById('chkClearTransforms')?.checked;
+
+  const clearedSummary = [];
+  const mode = state.appMode || 'decal';
+
+  // If literally all options are checked, do a pristine full wipe
+  if ((chkSource || chkAllSlots) && chkNormal && chkMask && chkBadges && chkMetadata && chkTransforms) {
+    closeClearModal();
+    clearAllWorkspace(true);
+    return;
+  }
+
+  // 1. Clear All Slots OR Active Slot Graphic
+  if (chkAllSlots) {
+    ['decal', 'surface', 'netlane'].forEach(m => {
+      if (state.setSlots && state.setSlots[m]) {
+        const slot = state.setSlots[m];
+        slot.image = null;
+        slot.imageSrc = '';
+        slot.fileName = '';
+        slot.thumbnail = '';
+        slot.isCustomImageLoaded = false;
+        slot.hasUnsavedChanges = false;
+      }
+    });
+    state.currentImage = null;
+    state.isCustomImageLoaded = false;
+    state.hasUnsavedChanges = false;
+    const fileInput = document.getElementById('fileInput');
+    if (fileInput) fileInput.value = '';
+
+    const dropTitle = document.getElementById('dropTitleText');
+    if (dropTitle) dropTitle.textContent = 'Drop PNG or JPG decal texture';
+    const dropHint = document.getElementById('dropHintText');
+    if (dropHint) dropHint.textContent = 'Square 1:1 ratio • Transparent or solid';
+    const sourceBadge = document.getElementById('sourceImageStatusBadge');
+    if (sourceBadge) sourceBadge.textContent = 'No Image Loaded';
+
+    clearedSummary.push('All Slot Graphics');
+  } else if (chkSource) {
+    if (state.setSlots && state.setSlots[mode]) {
+      const slot = state.setSlots[mode];
+      slot.image = null;
+      slot.imageSrc = '';
+      slot.fileName = '';
+      slot.thumbnail = '';
+      slot.isCustomImageLoaded = false;
+      slot.hasUnsavedChanges = false;
+    }
+    state.currentImage = null;
+    state.isCustomImageLoaded = false;
+    state.hasUnsavedChanges = false;
+    const fileInput = document.getElementById('fileInput');
+    if (fileInput) fileInput.value = '';
+
+    const dropTitle = document.getElementById('dropTitleText');
+    if (dropTitle) dropTitle.textContent = 'Drop PNG or JPG decal texture';
+    const dropHint = document.getElementById('dropHintText');
+    if (dropHint) dropHint.textContent = 'Square 1:1 ratio • Transparent or solid';
+    const sourceBadge = document.getElementById('sourceImageStatusBadge');
+    if (sourceBadge) sourceBadge.textContent = 'No Image Loaded';
+
+    clearedSummary.push(`${mode.toUpperCase()} Graphic`);
+  }
+
+  // 2. Clear Normal Map
+  if (chkNormal) {
+    clearCustomNormal(false);
+    const customNormalInput = document.getElementById('customNormalInput');
+    if (customNormalInput) customNormalInput.value = '';
+
+    const defaultBump = mode === 'surface' ? '2.5' : '3.5';
+    const bumpSlider = document.getElementById('bumpIntensity');
+    if (bumpSlider) {
+      bumpSlider.value = defaultBump;
+      const val = document.getElementById('bumpVal');
+      if (val) val.textContent = `${defaultBump}×`;
+    }
+    const blurSlider = document.getElementById('blurRadius');
+    if (blurSlider) {
+      blurSlider.value = '0';
+      const val = document.getElementById('blurVal');
+      if (val) val.textContent = '0 px';
+    }
+    const invertBump = document.getElementById('invertBump');
+    if (invertBump) invertBump.checked = false;
+    const flipNormalY = document.getElementById('flipNormalY');
+    if (flipNormalY) flipNormalY.checked = false;
+
+    if (state.setSlots && state.setSlots[mode]) {
+      state.setSlots[mode].customNormalImg = null;
+      state.setSlots[mode].customNormalFileName = '';
+      state.setSlots[mode].bumpIntensity = parseFloat(defaultBump);
+      state.setSlots[mode].normalBlur = 0;
+      state.setSlots[mode].invertBump = false;
+      state.setSlots[mode].flipNormalY = false;
+    }
+
+    const cardNormalBadge = document.getElementById('cardNormalBadge');
+    if (cardNormalBadge) {
+      cardNormalBadge.textContent = 'None';
+      cardNormalBadge.style.background = 'rgba(148, 163, 184, 0.15)';
+      cardNormalBadge.style.color = 'var(--text-muted)';
+    }
+    const cardNormalFooter = document.getElementById('cardNormalFooter');
+    if (cardNormalFooter) cardNormalFooter.textContent = 'No normal map generated';
+
+    clearedSummary.push('Normal Map');
+  }
+
+  // 3. Clear Mask Map
+  if (chkMask) {
+    clearCustomMask(false);
+    const customMaskInput = document.getElementById('customMaskInput');
+    if (customMaskInput) customMaskInput.value = '';
+
+    const defaultMetal = mode === 'surface' ? '0' : '180';
+    const defaultSmooth = mode === 'surface' ? '30' : '80';
+
+    const metalSlider = document.getElementById('metallic');
+    if (metalSlider) {
+      metalSlider.value = defaultMetal;
+      const val = document.getElementById('metalVal');
+      if (val) val.textContent = defaultMetal;
+    }
+    const smoothSlider = document.getElementById('smoothness');
+    if (smoothSlider) {
+      smoothSlider.value = defaultSmooth;
+      const val = document.getElementById('smoothVal');
+      if (val) val.textContent = defaultSmooth;
+    }
+    state.maskVariation = 0;
+
+    if (state.setSlots && state.setSlots[mode]) {
+      state.setSlots[mode].customMaskImg = null;
+      state.setSlots[mode].customMaskFileName = '';
+      state.setSlots[mode].metallic = parseInt(defaultMetal, 10);
+      state.setSlots[mode].smoothness = parseInt(defaultSmooth, 10);
+      state.setSlots[mode].maskVariation = 0;
+    }
+
+    clearedSummary.push('Mask Map');
+  }
+
+  // 4. Clear Badges & Overlays
+  if (chkBadges) {
+    ['badge1TextInput', 'seriesTextInput', 'extra1TextInput', 'extra2TextInput'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    ['designerLogoInput', 'seriesLogoInput', 'extra1LogoInput', 'extra2LogoInput'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+
+    state.badge1Enabled = false;
+    state.badge2Enabled = false;
+    state.badge3Enabled = false;
+    state.badge4Enabled = false;
+    state.designerLogoImg = null;
+    state.badge2Img = null;
+    state.badge3Img = null;
+    state.badge4Img = null;
+    state.badge1FileName = '';
+    state.badge2FileName = '';
+    state.badge3FileName = '';
+    state.badge4FileName = '';
+
+    if (typeof clearDesignerLogo === 'function') clearDesignerLogo();
+    if (typeof clearSeriesLogo === 'function') clearSeriesLogo();
+    if (typeof clearExtra1Logo === 'function') clearExtra1Logo();
+    if (typeof clearExtra2Logo === 'function') clearExtra2Logo();
+    if (typeof clearIconBgImage === 'function') clearIconBgImage();
+    if (typeof window.syncAllBadgeCheckboxes === 'function') {
+      window.syncAllBadgeCheckboxes();
+    }
+
+    const cardIconBadge = document.getElementById('cardIconBadge');
+    if (cardIconBadge) {
+      cardIconBadge.textContent = 'None';
+      cardIconBadge.style.background = 'rgba(148, 163, 184, 0.15)';
+      cardIconBadge.style.color = 'var(--text-muted)';
+    }
+    const cardIconFooter = document.getElementById('cardIconFooter');
+    if (cardIconFooter) cardIconFooter.textContent = 'No icon generated';
+
+    clearedSummary.push('Badges & Overlays');
+  }
+
+  // 5. Clear Metadata & Dimensions
+  if (chkMetadata) {
+    const defaultNames = {
+      decal: 'CustomDecal_01',
+      surface: 'CustomSurface_01',
+      netlane: 'CustomNetLane_01'
+    };
+    const assetNameInput = document.getElementById('assetName');
+    if (assetNameInput) assetNameInput.value = defaultNames[mode] || 'CustomAsset_01';
+
+    const seriesInput = document.getElementById('assetSeries');
+    if (seriesInput) seriesInput.value = '';
+
+    const activeSeriesBadge = document.getElementById('activeSeriesBadge');
+    if (activeSeriesBadge) activeSeriesBadge.textContent = 'None';
+
+    const dimW = document.getElementById('dimWidth'); if (dimW) dimW.value = mode === 'decal' ? '1.8' : '2.0';
+    const dimH = document.getElementById('dimHeight'); if (dimH) dimH.value = mode === 'decal' ? '1.8' : '2.0';
+    const dimD = document.getElementById('dimDepth'); if (dimD) dimD.value = '0.5';
+
+    if (state.setSlots && state.setSlots[mode]) {
+      state.setSlots[mode].assetName = defaultNames[mode] || 'CustomAsset_01';
+      state.setSlots[mode].seriesName = '';
+      state.setSlots[mode].dimensions = {
+        width: mode === 'decal' ? 1.8 : 2.0,
+        height: mode === 'decal' ? 1.8 : 2.0,
+        depth: 0.5,
+        aspectLocked: false,
+        lockedRatio: 1.0
+      };
+    }
+
+    clearedSummary.push('Asset Metadata');
+  }
+
+  // 6. Clear Transforms
+  if (chkTransforms) {
+    setTextureRotation(0);
+    if (state.flipH) toggleFlipHorizontal();
+    if (state.flipV) toggleFlipVertical();
+    state.originalNameBeforeTransform = '';
+    state.isReminderDismissed = false;
+    dismissRotationReminder();
+    const rotFlag = document.getElementById('rotationNameFlag');
+    if (rotFlag) rotFlag.style.display = 'none';
+
+    if (state.setSlots && state.setSlots[mode]) {
+      state.setSlots[mode].textureRotation = 0;
+      state.setSlots[mode].flipH = false;
+      state.setSlots[mode].flipV = false;
+    }
+
+    clearedSummary.push('Transforms');
+  }
+
+  // Post-clear view & map synchronizations
+  if (!state.currentImage && (chkSource || chkAllSlots)) {
+    clearCanvases();
+  } else {
+    renderAllMaps();
+  }
+
+  updateConfigJson();
+  updateEmptyPreviewIndicator();
+  updateSetSlotsUI();
+  closeClearModal();
+
+  if (clearedSummary.length > 0) {
+    showToast(`✓ Cleared: ${clearedSummary.join(', ')}`);
+  } else {
+    showToast('No items were selected to clear');
+  }
+}
+
+// ==========================================
 // Mount Functions to window for inline HTML onclick attributes
 // ==========================================
 Object.assign(window, {
@@ -1610,6 +2125,15 @@ Object.assign(window, {
   handleFileSelect,
   processUploadedFile,
   clearAllWorkspace,
+  openClearModal,
+  closeClearModal,
+  closeClearModalOnBackdrop,
+  updateClearModalStatus,
+  onClearOptionChange,
+  onClearAllSlotsToggle,
+  setClearModalPreset,
+  executeClearSelected,
+  executeClearAllEverything,
   onResolutionChange,
   onAssetNameInput,
   onNormalOpacityChange,
@@ -2228,6 +2752,33 @@ window.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  // Also support drag-and-drop onto the preview area directly
+  const previewArea = document.querySelector('.preview-area');
+  if (previewArea) {
+    ['dragenter', 'dragover'].forEach(eventName => {
+      previewArea.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }, false);
+    });
+
+    previewArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const dt = e.dataTransfer;
+      const files = dt ? dt.files : null;
+      if (!files || files.length === 0) return;
+
+      if (files.length === 1 && files[0].name.toLowerCase().endsWith('.zip')) {
+        importCommunityAssetFromZip(files[0]);
+      } else if (files.length > 1) {
+        importCommunityAssetFromFiles(files);
+      } else {
+        processUploadedFile(files[0]);
+      }
+    });
+  }
+
   document.addEventListener('click', (e) => {
     const importMenu = document.getElementById('importDropdownMenu');
     if (importMenu && importMenu.style.display === 'block') {
@@ -2252,6 +2803,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
     if (e.key === 'Escape') {
       closeSaveModal();
+      closeClearModal();
       toggleImportDropdown(false);
       hideFieldHelp(true);
       closeWelcomeSplash();

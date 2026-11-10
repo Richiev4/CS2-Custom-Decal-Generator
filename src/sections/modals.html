@@ -288,6 +288,163 @@
     </div>
   </div>
 
+  <!-- Clear Workspace Options Modal ("Choose What to Clear") -->
+  <div class="modal-overlay" id="clearWorkspaceModal" onclick="closeClearModalOnBackdrop(event)" style="display: none;">
+    <div class="modal-card" style="max-width: 580px; width: 95%; border-color: rgba(244, 63, 94, 0.4); box-shadow: 0 25px 65px rgba(0, 0, 0, 0.9);">
+      <div class="modal-header" style="background: #141c28; border-bottom: 1px solid rgba(244, 63, 94, 0.25);">
+        <div class="modal-title" style="color: #fb7185; display: flex; align-items: center; gap: 8px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fb7185" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            <line x1="10" y1="11" x2="10" y2="17"/>
+            <line x1="14" y1="11" x2="14" y2="17"/>
+          </svg>
+          <span style="font-size: 15px; font-weight: 700;">Clear Workspace</span>
+          <span style="font-size: 10px; font-weight: 700; color: #fb7185; background: rgba(244, 63, 94, 0.15); border: 1px solid rgba(244, 63, 94, 0.3); padding: 1px 7px; border-radius: 9999px; text-transform: uppercase;">Selective Reset</span>
+        </div>
+        <button type="button" class="preset-btn" style="padding: 4px 8px; font-size: 13px;" onclick="closeClearModal()" aria-label="Close">✕</button>
+      </div>
+
+      <div class="modal-body" style="padding: 18px 20px; gap: 14px;">
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <p style="font-size: 13px; line-height: 1.45; color: #e2e8f0; margin: 0;">
+            Choose what you want to clear from your active workspace:
+          </p>
+          <div style="font-size: 11px; color: var(--text-dim);">
+            Select individual elements to reset, or click a quick filter below.
+          </div>
+        </div>
+
+        <!-- Quick Filter / Selection Pills -->
+        <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+          <span style="font-size: 10.5px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.4px;">Presets:</span>
+          <button type="button" class="btn-secondary" style="font-size: 10.5px; padding: 3px 9px; border-radius: 5px;" onclick="setClearModalPreset('all')">✓ Select All</button>
+          <button type="button" class="btn-secondary" style="font-size: 10.5px; padding: 3px 9px; border-radius: 5px;" onclick="setClearModalPreset('textures')">🖼️ Textures &amp; Maps</button>
+          <button type="button" class="btn-secondary" style="font-size: 10.5px; padding: 3px 9px; border-radius: 5px;" onclick="setClearModalPreset('badges')">🏷️ Badges &amp; Overlays</button>
+          <button type="button" class="btn-secondary" style="font-size: 10.5px; padding: 3px 9px; border-radius: 5px;" onclick="setClearModalPreset('none')">✕ Deselect All</button>
+        </div>
+
+        <!-- Options Container -->
+        <div style="display: flex; flex-direction: column; gap: 7px; max-height: 50vh; overflow-y: auto; padding-right: 4px;">
+
+          <!-- Option 1: Active Slot Graphic -->
+          <label class="clear-opt-row" id="rowClearSourceGraphic" for="chkClearSourceGraphic">
+            <input type="checkbox" id="chkClearSourceGraphic" checked onchange="onClearOptionChange()">
+            <div style="font-size: 17px; width: 22px; text-align: center; flex-shrink: 0;">🖼️</div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                <span style="font-size: 12.5px; font-weight: 700; color: #fff;" id="clearLabelActiveSlot">Active Slot Graphic</span>
+                <span class="clear-badge-pill" id="clearStatusSourceGraphic">Loading...</span>
+              </div>
+              <div style="font-size: 11px; color: var(--text-dim); margin-top: 2px;">Removes the image from the currently selected slot and clears canvas.</div>
+            </div>
+          </label>
+
+          <!-- Option 2: All 3-in-1 Slot Graphics -->
+          <label class="clear-opt-row" id="rowClearAllSlots" for="chkClearAllSlots">
+            <input type="checkbox" id="chkClearAllSlots" onchange="onClearAllSlotsToggle()">
+            <div style="font-size: 17px; width: 22px; text-align: center; flex-shrink: 0;">📦</div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                <span style="font-size: 12.5px; font-weight: 700; color: #fff;">All 3-in-1 Slot Graphics</span>
+                <span class="clear-badge-pill" id="clearStatusAllSlots">Loading...</span>
+              </div>
+              <div style="font-size: 11px; color: var(--text-dim); margin-top: 2px;">Wipes graphics across Decal, Surface, and Net Lane slots at once.</div>
+            </div>
+          </label>
+
+          <!-- Option 3: Normal Map & Bump Settings -->
+          <label class="clear-opt-row" id="rowClearNormalMap" for="chkClearNormalMap">
+            <input type="checkbox" id="chkClearNormalMap" checked onchange="onClearOptionChange()">
+            <div style="font-size: 17px; width: 22px; text-align: center; flex-shrink: 0;">⛰️</div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                <span style="font-size: 12.5px; font-weight: 700; color: #fff;">Normal Map &amp; Bump Settings</span>
+                <span class="clear-badge-pill" id="clearStatusNormalMap">Loading...</span>
+              </div>
+              <div style="font-size: 11px; color: var(--text-dim); margin-top: 2px;">Removes custom normal map upload and resets bump intensity and blur.</div>
+            </div>
+          </label>
+
+          <!-- Option 4: Mask Map & PBR Values -->
+          <label class="clear-opt-row" id="rowClearMaskMap" for="chkClearMaskMap">
+            <input type="checkbox" id="chkClearMaskMap" checked onchange="onClearOptionChange()">
+            <div style="font-size: 17px; width: 22px; text-align: center; flex-shrink: 0;">🎛️</div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                <span style="font-size: 12.5px; font-weight: 700; color: #fff;">Mask Map &amp; PBR Properties</span>
+                <span class="clear-badge-pill" id="clearStatusMaskMap">Loading...</span>
+              </div>
+              <div style="font-size: 11px; color: var(--text-dim); margin-top: 2px;">Removes custom mask upload and resets metallic &amp; smoothness sliders to 0.</div>
+            </div>
+          </label>
+
+          <!-- Option 5: Badges, Logos & Overlays -->
+          <label class="clear-opt-row" id="rowClearBadges" for="chkClearBadges">
+            <input type="checkbox" id="chkClearBadges" checked onchange="onClearOptionChange()">
+            <div style="font-size: 17px; width: 22px; text-align: center; flex-shrink: 0;">🏷️</div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                <span style="font-size: 12.5px; font-weight: 700; color: #fff;">Badges, Logos &amp; Overlays</span>
+                <span class="clear-badge-pill" id="clearStatusBadges">Loading...</span>
+              </div>
+              <div style="font-size: 11px; color: var(--text-dim); margin-top: 2px;">Clears creator text, designer logo, series seal, extra badges, and custom icon bg.</div>
+            </div>
+          </label>
+
+          <!-- Option 6: Asset Name & Metadata -->
+          <label class="clear-opt-row" id="rowClearMetadata" for="chkClearMetadata">
+            <input type="checkbox" id="chkClearMetadata" checked onchange="onClearOptionChange()">
+            <div style="font-size: 17px; width: 22px; text-align: center; flex-shrink: 0;">📝</div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                <span style="font-size: 12.5px; font-weight: 700; color: #fff;">Asset Name &amp; Dimensions</span>
+                <span class="clear-badge-pill" id="clearStatusMetadata">Loading...</span>
+              </div>
+              <div style="font-size: 11px; color: var(--text-dim); margin-top: 2px;">Resets asset name, series name, dimensions (width/height/depth), and UI priority.</div>
+            </div>
+          </label>
+
+          <!-- Option 7: Transforms (Rotation & Flips) -->
+          <label class="clear-opt-row" id="rowClearTransforms" for="chkClearTransforms">
+            <input type="checkbox" id="chkClearTransforms" checked onchange="onClearOptionChange()">
+            <div style="font-size: 17px; width: 22px; text-align: center; flex-shrink: 0;">🔄</div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                <span style="font-size: 12.5px; font-weight: 700; color: #fff;">Transforms (Rotation &amp; Flips)</span>
+                <span class="clear-badge-pill" id="clearStatusTransforms">Loading...</span>
+              </div>
+              <div style="font-size: 11px; color: var(--text-dim); margin-top: 2px;">Resets rotation angle to 0° and clears horizontal &amp; vertical flips.</div>
+            </div>
+          </label>
+
+        </div>
+
+        <!-- Info notice -->
+        <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 6px; padding: 9px 12px; font-size: 11px; color: var(--text-dim); display: flex; align-items: center; gap: 7px;">
+          <span style="color: #38bdf8; font-size: 13px;">💡</span>
+          <span>Clearing only resets the current editing workspace. Saved library assets and backup files are unaffected.</span>
+        </div>
+
+        <!-- Footer Actions -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.08); flex-wrap: wrap; gap: 8px;">
+          <button type="button" class="btn-secondary" style="font-size: 11.5px; padding: 7px 12px; color: #f87171; border-color: rgba(248, 113, 113, 0.35); background: rgba(239, 68, 68, 0.08);" onclick="executeClearAllEverything()" title="Wipe entire workspace to blank slate">
+            💥 Wipe Everything
+          </button>
+
+          <div style="display: flex; align-items: center; gap: 8px; margin-left: auto;">
+            <button type="button" class="btn-secondary" style="font-size: 12px; padding: 7px 14px;" onclick="closeClearModal()">
+              Cancel
+            </button>
+            <button type="button" class="btn-primary" id="btnClearSelectedExecute" style="background: linear-gradient(135deg, #e11d48 0%, #be123c 100%); box-shadow: 0 4px 12px rgba(225, 29, 72, 0.35); font-size: 12.5px; font-weight: 700; padding: 7px 16px;" onclick="executeClearSelected()">
+              Clear Selected (6)
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Unsaved Changes Guard Confirmation Modal -->
   <div class="modal-overlay" id="unsavedGuardModal" onclick="closeUnsavedModalOnBackdrop(event)">
     <div class="modal-card" style="max-width: 480px; border-color: rgba(245, 158, 11, 0.45); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);">

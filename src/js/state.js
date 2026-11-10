@@ -684,11 +684,12 @@ export function restoreSidebarSectionsState() {
 
     const saved = localStorage.getItem(SIDEBAR_SECTIONS_STORAGE_KEY);
     if (!saved) {
-      // Default: ensure all tool sections start collapsed
+      // Default: ensure Section 1 (Source Image Input) is open so user can immediately drop/pick images
       document.querySelectorAll('.collapsible-section').forEach(sec => {
-        sec.classList.add('collapsed');
+        const isOpen = sec.id === 'secToolsSource';
+        sec.classList.toggle('collapsed', !isOpen);
         const header = sec.querySelector('.collapsible-header');
-        if (header) header.setAttribute('aria-expanded', 'false');
+        if (header) header.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
       });
       return;
     }
@@ -709,9 +710,7 @@ export function restoreSidebarSectionsState() {
 // Unsaved Modal
 export function hasActiveWork() {
   return Boolean(
-    state.currentImage ||
-    state.isCustomImageLoaded ||
-    state.hasUnsavedChanges ||
+    (state.isCustomImageLoaded && state.hasUnsavedChanges) ||
     state.customNormalImg ||
     state.customMaskImg
   );
