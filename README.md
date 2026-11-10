@@ -1,10 +1,12 @@
-A complete web-based texture packing and asset creation suite for Cities: Skylines II. Generate custom Decals, Surfaces, and Net Lanes with PBR channel packing (BaseColor, OpenGL Normal, Mask Map), 3D preview, and instant ExtraAssetsImporter export.
+A complete vibe codded web-based texture packing and asset creation suite for Cities: Skylines II. Generate custom Decals, Surfaces, and Net Lanes with PBR channel packing (BaseColor, OpenGL Normal, Mask Map), 3D preview, and instant ExtraAssetsImporter export.
 
 # Cities: Skylines II Custom Asset Generator
 
 A browser-based modding suite and PBR texture-packing pipeline designed specifically for **Cities: Skylines II** and the **ExtraAssetsImporter** framework. 
 
 Create, configure, and package custom **Decals**, **Surfaces**, and **Net Lanes** with real-time 3D PBR preview, automated normal and mask map generation, in-game icon styling, and one-click export into ready-to-load game packages.
+
+Created with Google AI Studio
 
 ---
 
