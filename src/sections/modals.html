@@ -2055,11 +2055,85 @@
   </div>
 
   <script>
+    window.positionMainProjectMenu = function() {
+      const menu = document.getElementById('mainProjectMenuDropdown');
+      const btn = document.getElementById('btnMainProjectMenu');
+      if (!menu || !btn) return;
+      if (menu.style.display === 'none') return;
+
+      const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+      const padding = 10;
+
+      // Reset positioning styles first to accurately calculate dimensions
+      menu.style.left = '0px';
+      menu.style.right = 'auto';
+
+      const btnRect = btn.getBoundingClientRect();
+      const menuRect = menu.getBoundingClientRect();
+      const menuWidth = menuRect.width || 320;
+
+      // Determine available horizontal space:
+      // If anchored to right of button (menu.right = btn.right), menu.left = btn.right - menuWidth.
+      const leftWhenAnchoredRight = btnRect.right - menuWidth;
+      // If anchored to left of button (menu.left = btn.left), menu.right = btn.left + menuWidth.
+      const rightWhenAnchoredLeft = btnRect.left + menuWidth;
+
+      if (leftWhenAnchoredRight < padding) {
+        // Anchoring right pushes left edge offscreen! Anchor to left of button:
+        menu.style.left = '0';
+        menu.style.right = 'auto';
+
+        // Check if anchoring left pushes it off right screen edge
+        if (rightWhenAnchoredLeft > viewportWidth - padding) {
+          const shift = (viewportWidth - padding) - rightWhenAnchoredLeft;
+          menu.style.left = `${shift}px`;
+        }
+      } else if (rightWhenAnchoredLeft > viewportWidth - padding) {
+        // Anchoring left would overflow right, but anchored right fits!
+        menu.style.left = 'auto';
+        menu.style.right = '0';
+      } else {
+        // Both fit nicely; choose anchor according to button's position relative to screen center
+        if (btnRect.left + btnRect.width / 2 < viewportWidth / 2) {
+          menu.style.left = '0';
+          menu.style.right = 'auto';
+        } else {
+          menu.style.left = 'auto';
+          menu.style.right = '0';
+        }
+      }
+
+      // Final safety clamp: Ensure menu rect never bleeds outside viewport
+      const finalRect = menu.getBoundingClientRect();
+      if (finalRect.left < padding) {
+        const delta = padding - finalRect.left;
+        const curLeft = parseFloat(menu.style.left) || 0;
+        menu.style.left = `${curLeft + delta}px`;
+        menu.style.right = 'auto';
+      } else if (finalRect.right > viewportWidth - padding) {
+        const delta = finalRect.right - (viewportWidth - padding);
+        if (menu.style.left && menu.style.left !== 'auto') {
+          const curLeft = parseFloat(menu.style.left) || 0;
+          menu.style.left = `${curLeft - delta}px`;
+        } else {
+          const curRight = parseFloat(menu.style.right) || 0;
+          menu.style.right = `${curRight + delta}px`;
+        }
+      }
+    };
+
     window.toggleMainProjectMenu = function(event) {
       if (event) {
         if (typeof event === 'boolean') {
           const m = document.getElementById('mainProjectMenuDropdown');
-          if (m) m.style.display = event ? 'block' : 'none';
+          if (m) {
+            m.style.display = event ? 'block' : 'none';
+            if (event) {
+              window.positionMainProjectMenu();
+              requestAnimationFrame(window.positionMainProjectMenu);
+              if (window.syncTopMenuBadges) window.syncTopMenuBadges();
+            }
+          }
           return;
         }
         if (event.stopPropagation) event.stopPropagation();
@@ -2068,8 +2142,26 @@
       if (!menu) return;
       const isHidden = (menu.style.display === 'none' || !menu.style.display);
       menu.style.display = isHidden ? 'block' : 'none';
-      if (isHidden) window.syncTopMenuBadges();
+      if (isHidden) {
+        window.positionMainProjectMenu();
+        requestAnimationFrame(window.positionMainProjectMenu);
+        if (window.syncTopMenuBadges) window.syncTopMenuBadges();
+      }
     };
+
+    window.addEventListener('resize', function() {
+      const m = document.getElementById('mainProjectMenuDropdown');
+      if (m && m.style.display === 'block') {
+        window.positionMainProjectMenu();
+      }
+    });
+
+    window.addEventListener('scroll', function() {
+      const m = document.getElementById('mainProjectMenuDropdown');
+      if (m && m.style.display === 'block') {
+        window.positionMainProjectMenu();
+      }
+    }, { passive: true });
 
     window.togglePackOrderDropdown = function(event) {
       if (event) {

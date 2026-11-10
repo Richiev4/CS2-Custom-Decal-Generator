@@ -43,5 +43,26 @@
             <div class="drop-title" id="dropTitleText">Drop PNG or JPG decal texture</div>
             <div class="drop-hint" id="dropHintText">All ratios supported • 2:3 / 3:4 Posters, 16:9 Billboards, or 1:1 Square</div>
           </div>
+
+          <!-- Quick Shortcut to Normal Map Area -->
+          <div class="source-normal-shortcut-bar" id="sourceNormalShortcutBar">
+            <div class="source-normal-shortcut-info">
+              <div class="source-normal-shortcut-title-row">
+                <span class="source-normal-shortcut-title">
+                  <span style="font-size: 13px;">🗺️</span>
+                  <span>Normal Map</span>
+                </span>
+                <span class="form-val-badge" id="sourceNormalMapStatusBadge" style="background: rgba(56, 189, 248, 0.15); color: var(--primary);">Auto-Generated</span>
+              </div>
+              <div class="source-normal-shortcut-sub">
+                Want to supply your own <code class="normal-filename-tag">_NormalMap</code>?
+              </div>
+            </div>
+            <button type="button" class="btn-secondary btn-goto-normal" id="btnGoToNormalMap" onclick="scrollToNormalMapArea()" title="Open and scroll to the Normal Map section to add your custom normal map">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+              <span id="btnGoToNormalMapText">Add Custom Normal Map ↓</span>
+            </button>
+          </div>
         </div>
       </div>
+

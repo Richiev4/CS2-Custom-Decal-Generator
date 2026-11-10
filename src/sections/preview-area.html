@@ -39,10 +39,20 @@
         <button type="button" class="tab-scroll-btn tab-scroll-right" id="tabScrollRight" onclick="scrollTabsNav(120)" style="display: none;" title="Scroll tabs right">
           ›
         </button>
+        <div class="tabs-addon-group" id="tabsAddonGroup">
+          <div class="preview-scale-inline-toggle" id="tabScaleInlineControls" title="Canvas Display Mode">
+            <button type="button" class="tab-addon-btn active" id="btnTabScaleFit" onclick="setPreviewScaleMode('fit')" title="Scale preview to fit viewport">Fit</button>
+            <button type="button" class="tab-addon-btn" id="btnTabScaleActual" onclick="setPreviewScaleMode('actual')" title="Display preview at 100% native resolution">100%</button>
+          </div>
+          <button type="button" class="tab-addon-btn" id="btnToggleFloatingScale" onclick="toggleFloatingViewportControls()" title="Toggle Floating Size &amp; Zoom Bar">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+            <span class="tab-addon-label">Float Bar</span>
+          </button>
+        </div>
       </div>
 
-      <!-- Floating Moveable Viewport Scale Controls -->
-      <div class="preview-scale-controls floating-viewport-controls" id="floatingViewportControls" title="Toggle Scale Mode (Click and drag grip handle to move anywhere)">
+      <!-- Floating Moveable Viewport Scale Controls (Can be hidden or toggled) -->
+      <div class="preview-scale-controls floating-viewport-controls" id="floatingViewportControls" title="Toggle Scale Mode (Click and drag grip handle to move anywhere, click ✕ to hide)">
         <div class="floating-drag-handle" id="floatingDragHandle" title="Click and drag to reposition controls anywhere (Double-click to reset)">
           <svg width="8" height="13" viewBox="0 0 8 13" fill="currentColor">
             <circle cx="2" cy="2" r="1.2"/>
@@ -64,6 +74,9 @@
         <div style="width: 1px; height: 14px; background: rgba(255, 255, 255, 0.15); margin: 0 2px;"></div>
         <button type="button" class="preview-scale-btn active" id="btnToggleAspectBadge" onclick="toggleGlobalAspectOverlay()" title="Click to toggle in-game 3D decal size & aspect ratio overlay across previews">
           <span id="floatingAspectBadgeText" style="color: var(--accent-cyan);">📐 2.0×2.0m (1:1)</span>
+        </button>
+        <button type="button" class="preview-scale-close-btn" id="btnCloseFloatingScale" onclick="toggleFloatingViewportControls(false)" title="Hide size/zoom bar" aria-label="Hide floating size/zoom bar">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
       </div>
 

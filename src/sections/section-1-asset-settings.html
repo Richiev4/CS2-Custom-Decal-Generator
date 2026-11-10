@@ -563,9 +563,9 @@
             </div>
 
             <div id="jsonFloatingCard" class="json-preview-card">
-              <div class="json-panel-header" id="jsonPanelDragHandle">
+              <div class="json-panel-header" id="jsonPanelDragHandle" title="Click and drag to reposition floating JSON window (Double-click to reset position)">
                 <div class="json-panel-title-area" style="display: flex; align-items: center; gap: 6px; min-width: 0;">
-                  <span class="json-drag-grip" title="Drag to reposition floating JSON window">⋮⋮</span>
+                  <span class="json-drag-grip" title="Drag to reposition floating JSON window (Double-click to reset position)">⋮⋮</span>
                   <span id="jsonLabel" style="font-weight: 600; font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Generated decal.json</span>
                   <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'jsonSchemaFormat', event)" onmouseenter="showFieldHelp(this, 'jsonSchemaFormat', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for JSON Schema Format" title="Help for JSON Schema Format">?</button>
                   <span class="live-indicator-badge" title="JSON updates in real-time as you tweak settings">LIVE</span>
@@ -588,6 +588,10 @@
                     <svg class="icon-popout" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                     <svg class="icon-dock" style="display: none;" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/></svg>
                     <span id="floatBtnLabel">Float</span>
+                  </button>
+                  <!-- Quick Dock / Close button (shown when floating) -->
+                  <button type="button" id="btnCloseJsonFloat" class="json-action-icon-btn" onclick="dockJsonPreview()" title="Dock window back to sidebar" style="display: none;" aria-label="Dock back to sidebar">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                   </button>
                 </div>
               </div>

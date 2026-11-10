@@ -14,7 +14,7 @@
         <div class="collapsible-content">
           <div class="panel-box">
           <!-- Custom Normal Map Upload / Switch -->
-          <div class="form-group">
+          <div class="form-group" id="groupCustomNormalMap" style="border: 1px solid transparent; border-radius: 8px; padding: 4px; transition: border-color 0.3s, box-shadow 0.3s;">
             <div class="form-label-row">
               <div class="form-label-left">
                 <span>Normal Map Source</span>
@@ -24,7 +24,7 @@
             </div>
             <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px;">
               <input type="file" id="customNormalInput" accept="image/png, image/jpeg, image/webp" style="display:none;" onchange="handleCustomNormalSelect(event)">
-              <button type="button" class="btn-secondary" style="flex: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: flex; align-items: center; gap: 6px;" onclick="document.getElementById('customNormalInput').click()">
+              <button type="button" class="btn-secondary" id="btnInsertCustomNormal" style="flex: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: flex; align-items: center; gap: 6px;" onclick="document.getElementById('customNormalInput').click()">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                 <span id="customNormalBtnText">Insert Custom _NormalMap...</span>
               </button>

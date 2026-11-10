@@ -88,7 +88,7 @@
       </button>
 
       <!-- Unified Project & Tools Menu Dropdown -->
-      <div style="position: relative; display: inline-block; z-index: 100100;">
+      <div class="main-project-menu-wrapper" style="position: relative; display: inline-block; z-index: 100100;">
         <button class="project-btn" id="btnMainProjectMenu" onclick="toggleMainProjectMenu(event)" title="Open project actions, presets, pack collection, import, and tools menu" style="background: rgba(0, 168, 255, 0.15); border: 1px solid rgba(0, 168, 255, 0.4); color: #fff; font-weight: 700; padding: 6px 12px; font-size: 12px; gap: 7px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -98,7 +98,7 @@
           <span>Project &amp; Tools ▾</span>
         </button>
 
-        <div id="mainProjectMenuDropdown" style="display: none; position: absolute; top: calc(100% + 8px); right: 0; background: #0c131f; border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 8px; box-shadow: 0 16px 36px rgba(0,0,0,0.85); z-index: 100100; min-width: 320px; padding: 6px; backdrop-filter: blur(8px);">
+        <div id="mainProjectMenuDropdown" class="main-project-menu-dropdown" style="display: none; position: absolute; top: calc(100% + 8px); background: #0c131f; border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 8px; box-shadow: 0 16px 36px rgba(0,0,0,0.85); z-index: 100100; min-width: 320px; max-width: calc(100vw - 20px); padding: 6px; backdrop-filter: blur(8px); box-sizing: border-box;">
           <!-- Section 1: File & Workspace -->
           <div style="padding: 4px 8px 3px; font-size: 10px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px;">Workspace</div>
           

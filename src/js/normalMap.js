@@ -60,12 +60,26 @@ export function updateCustomNormalUI() {
   const blurGroup = document.getElementById('groupNormalBlur');
   const sliderLabel = document.getElementById('bumpSliderLabel');
   const sliderHint = document.getElementById('bumpSliderHint');
+  const sourceNormalBadge = document.getElementById('sourceNormalMapStatusBadge');
+  const btnGoToNormalText = document.getElementById('btnGoToNormalMapText');
+  const btnGoToNormal = document.getElementById('btnGoToNormalMap');
 
   if (state.customNormalImg) {
     if (badge) {
       badge.textContent = 'Custom Normal';
       badge.style.background = 'rgba(16, 185, 129, 0.2)';
       badge.style.color = 'var(--accent-emerald)';
+    }
+    if (sourceNormalBadge) {
+      sourceNormalBadge.textContent = 'Custom Active';
+      sourceNormalBadge.style.background = 'rgba(16, 185, 129, 0.2)';
+      sourceNormalBadge.style.color = 'var(--accent-emerald)';
+    }
+    if (btnGoToNormalText) {
+      btnGoToNormalText.textContent = 'Manage Custom Normal ↓';
+    }
+    if (btnGoToNormal) {
+      btnGoToNormal.title = 'Open and scroll to the Normal Map section (Custom _NormalMap is currently active)';
     }
     if (btnText) {
       const nameStr = state.customNormalFileName || 'Custom Normal';
@@ -91,6 +105,17 @@ export function updateCustomNormalUI() {
       badge.textContent = 'Auto (From Color)';
       badge.style.background = 'rgba(56, 189, 248, 0.15)';
       badge.style.color = 'var(--primary)';
+    }
+    if (sourceNormalBadge) {
+      sourceNormalBadge.textContent = 'Auto-Generated';
+      sourceNormalBadge.style.background = 'rgba(56, 189, 248, 0.15)';
+      sourceNormalBadge.style.color = 'var(--primary)';
+    }
+    if (btnGoToNormalText) {
+      btnGoToNormalText.textContent = 'Add Custom Normal Map ↓';
+    }
+    if (btnGoToNormal) {
+      btnGoToNormal.title = 'Open and scroll to the Normal Map section to add your own _normalmap';
     }
     if (btnText) btnText.textContent = 'Insert Custom _NormalMap...';
     if (btnClear) btnClear.style.display = 'none';

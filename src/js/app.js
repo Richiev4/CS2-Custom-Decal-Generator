@@ -20,6 +20,8 @@ import {
   toggleFlipHorizontal,
   toggleFlipVertical,
   toggleSection,
+  openAndScrollToSection,
+  scrollToNormalMapArea,
   expandAllSections,
   collapseAllSections,
   restoreSidebarSectionsState,
@@ -161,6 +163,7 @@ import {
   onSeamToggleChange,
   onTiledSeamChange,
   setPreviewScaleMode,
+  toggleFloatingViewportControls,
   scrollTabsNav,
   checkTabScrollButtons,
   initSimulationInteraction
@@ -264,7 +267,12 @@ import {
   toggleAutoSyncAspect,
   syncDecalDimensionsToImage,
   getAspectFormatName,
-  updateSourceImageBadge
+  updateSourceImageBadge,
+  floatJsonPreview,
+  dockJsonPreview,
+  toggleJsonFloat,
+  toggleMinimizeJsonFloat,
+  resetJsonFloatingPosition
 } from './exporter.js';
 
 import { getSavedLibraryFromMemory, saveAssetToIndexedDB } from './db.js';
@@ -1661,6 +1669,7 @@ Object.assign(window, {
   onSeamToggleChange,
   onTiledSeamChange,
   setPreviewScaleMode,
+  toggleFloatingViewportControls,
   scrollTabsNav,
   checkTabScrollButtons,
   setAssetCategory,
@@ -1696,6 +1705,8 @@ Object.assign(window, {
   toggleFlipHorizontal,
   toggleFlipVertical,
   toggleSection,
+  openAndScrollToSection,
+  scrollToNormalMapArea,
   expandAllSections,
   collapseAllSections,
   openUnsavedModal,
@@ -1722,6 +1733,11 @@ Object.assign(window, {
   syncDecalDimensionsToImage,
   getAspectFormatName,
   updateSourceImageBadge,
+  floatJsonPreview,
+  dockJsonPreview,
+  toggleJsonFloat,
+  toggleMinimizeJsonFloat,
+  resetJsonFloatingPosition,
   onUiPriorityChange,
   onUiPriorityInputChange,
   applyUiPriorityPreset,

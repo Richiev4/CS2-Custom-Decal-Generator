@@ -1627,35 +1627,59 @@ let cardStartX = 0;
 let cardStartY = 0;
 let dragInitialized = false;
 
+/**
+ * Computes safe Y offset below the application header bar so floating windows never
+ * slip behind or get covered by the top navigation/header.
+ */
+export function getFloatingHeaderSafeTop() {
+  const headerEl = document.querySelector('header');
+  if (headerEl) {
+    const rect = headerEl.getBoundingClientRect();
+    return Math.max(16, Math.round(rect.bottom) + 14);
+  }
+  return 85;
+}
+
 export function floatJsonPreview() {
   const card = document.getElementById('jsonFloatingCard');
   const placeholder = document.getElementById('jsonDockPlaceholder');
   const floatBtnLabel = document.getElementById('floatBtnLabel');
   const minBtn = document.getElementById('btnMinimizeJsonFloat');
+  const closeBtn = document.getElementById('btnCloseJsonFloat');
   if (!card) return;
 
   isJsonFloating = true;
   card.classList.add('is-floating');
   if (placeholder) placeholder.style.display = 'block';
   if (minBtn) minBtn.style.display = 'inline-flex';
+  if (closeBtn) closeBtn.style.display = 'inline-flex';
   if (floatBtnLabel) floatBtnLabel.textContent = 'Dock';
 
-  if (jsonFloatPos && jsonFloatPos.x !== undefined && jsonFloatPos.y !== undefined) {
+  // Move card to document.body so sidebar scrolling, collapsible sections, or overflow can never trap or clip it
+  if (card.parentNode !== document.body) {
+    document.body.appendChild(card);
+  }
+
+  const safeTop = getFloatingHeaderSafeTop();
+  const maxAvailableHeight = Math.max(220, window.innerHeight - safeTop - 24);
+  card.style.maxHeight = `${maxAvailableHeight}px`;
+
+  if (jsonFloatPos && typeof jsonFloatPos.x === 'number' && typeof jsonFloatPos.y === 'number') {
     const maxX = Math.max(10, window.innerWidth - 300);
-    const maxY = Math.max(10, window.innerHeight - 100);
+    const maxY = Math.max(safeTop, window.innerHeight - 80);
     const clampedX = Math.min(Math.max(10, jsonFloatPos.x), maxX);
-    const clampedY = Math.min(Math.max(10, jsonFloatPos.y), maxY);
+    const clampedY = Math.min(Math.max(safeTop, jsonFloatPos.y), maxY);
     card.style.left = `${clampedX}px`;
     card.style.top = `${clampedY}px`;
     card.style.right = 'auto';
     card.style.bottom = 'auto';
   } else {
     card.style.right = '24px';
-    card.style.top = '72px';
+    card.style.top = `${safeTop}px`;
     card.style.left = 'auto';
     card.style.bottom = 'auto';
-    card.style.width = '400px';
-    card.style.height = '380px';
+    card.style.width = '420px';
+    card.style.height = `${Math.min(420, maxAvailableHeight)}px`;
   }
 
   initJsonDrag();
@@ -1667,6 +1691,7 @@ export function dockJsonPreview() {
   const placeholder = document.getElementById('jsonDockPlaceholder');
   const floatBtnLabel = document.getElementById('floatBtnLabel');
   const minBtn = document.getElementById('btnMinimizeJsonFloat');
+  const closeBtn = document.getElementById('btnCloseJsonFloat');
   if (!card) return;
 
   isJsonFloating = false;
@@ -1674,15 +1699,22 @@ export function dockJsonPreview() {
   card.classList.remove('is-minimized');
   isJsonMinimized = false;
 
+  // Restore back into the sidebar right after placeholder
+  if (placeholder && placeholder.parentNode && card.parentNode === document.body) {
+    placeholder.parentNode.insertBefore(card, placeholder.nextSibling);
+  }
+
   card.style.left = '';
   card.style.top = '';
   card.style.right = '';
   card.style.bottom = '';
   card.style.width = '';
   card.style.height = '';
+  card.style.maxHeight = '';
 
   if (placeholder) placeholder.style.display = 'none';
   if (minBtn) minBtn.style.display = 'none';
+  if (closeBtn) closeBtn.style.display = 'none';
   if (floatBtnLabel) floatBtnLabel.textContent = 'Float';
 
   const minusIcon = document.getElementById('minimizeIconMinus');
@@ -1716,6 +1748,22 @@ export function toggleMinimizeJsonFloat() {
   }
 }
 
+export function resetJsonFloatingPosition() {
+  const card = document.getElementById('jsonFloatingCard');
+  if (!card || !isJsonFloating) return;
+  const safeTop = getFloatingHeaderSafeTop();
+  const maxAvailableHeight = Math.max(220, window.innerHeight - safeTop - 24);
+  card.style.right = '24px';
+  card.style.top = `${safeTop}px`;
+  card.style.left = 'auto';
+  card.style.bottom = 'auto';
+  card.style.width = '420px';
+  card.style.height = `${Math.min(420, maxAvailableHeight)}px`;
+  card.style.maxHeight = `${maxAvailableHeight}px`;
+  jsonFloatPos = null;
+  showToast('JSON preview window position reset to top right');
+}
+
 export function initJsonDrag() {
   if (dragInitialized) return;
   const header = document.getElementById('jsonPanelDragHandle');
@@ -1723,6 +1771,13 @@ export function initJsonDrag() {
   if (!header || !card) return;
 
   dragInitialized = true;
+
+  // Double-click header to reset to top-right safe position
+  header.addEventListener('dblclick', (e) => {
+    if (!isJsonFloating) return;
+    if (e.target.closest('button, select, a, input')) return;
+    resetJsonFloatingPosition();
+  });
 
   header.addEventListener('pointerdown', (e) => {
     if (!isJsonFloating) return;
@@ -1755,10 +1810,11 @@ export function initJsonDrag() {
     const newX = cardStartX + dx;
     const newY = cardStartY + dy;
 
+    const safeTop = getFloatingHeaderSafeTop();
     const minX = 8;
-    const minY = 8;
+    const minY = safeTop; // Crucial: Prevents card from sliding behind header or off-screen
     const maxX = Math.max(8, window.innerWidth - 80);
-    const maxY = Math.max(8, window.innerHeight - 40);
+    const maxY = Math.max(minY, window.innerHeight - 50);
 
     const clampedX = Math.min(Math.max(minX, newX), maxX);
     const clampedY = Math.min(Math.max(minY, newY), maxY);
@@ -1782,11 +1838,35 @@ export function initJsonDrag() {
   header.addEventListener('pointercancel', stopDrag);
 }
 
+// Ensure resize keeps floating JSON window completely visible and beneath header
+window.addEventListener('resize', () => {
+  if (!isJsonFloating) return;
+  const card = document.getElementById('jsonFloatingCard');
+  if (!card) return;
+  const safeTop = getFloatingHeaderSafeTop();
+  const maxAvailableHeight = Math.max(220, window.innerHeight - safeTop - 24);
+  card.style.maxHeight = `${maxAvailableHeight}px`;
+
+  const rect = card.getBoundingClientRect();
+  if (rect.top < safeTop) {
+    card.style.top = `${safeTop}px`;
+    if (jsonFloatPos) jsonFloatPos.y = safeTop;
+  }
+  if (rect.right > window.innerWidth - 8 && rect.left > 8) {
+    const newLeft = Math.max(8, window.innerWidth - rect.width - 24);
+    card.style.left = `${newLeft}px`;
+    card.style.right = 'auto';
+    if (jsonFloatPos) jsonFloatPos.x = newLeft;
+  }
+});
+
 window.floatJsonPreview = floatJsonPreview;
 window.dockJsonPreview = dockJsonPreview;
 window.toggleJsonFloat = toggleJsonFloat;
 window.toggleMinimizeJsonFloat = toggleMinimizeJsonFloat;
 window.initJsonDrag = initJsonDrag;
+window.resetJsonFloatingPosition = resetJsonFloatingPosition;
+window.getFloatingHeaderSafeTop = getFloatingHeaderSafeTop;
 
 /**
  * Prompts the user where to save the file using the native OS Save As dialog (File System Access API).

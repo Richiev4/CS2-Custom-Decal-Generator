@@ -834,9 +834,13 @@ export function setPreviewScaleMode(mode) {
   const container = document.getElementById('previewCanvasContainer');
   const btnFit = document.getElementById('btnScaleFit');
   const btnActual = document.getElementById('btnScaleActual');
+  const btnTabFit = document.getElementById('btnTabScaleFit');
+  const btnTabActual = document.getElementById('btnTabScaleActual');
 
   if (btnFit) btnFit.classList.toggle('active', mode === 'fit');
   if (btnActual) btnActual.classList.toggle('active', mode === 'actual');
+  if (btnTabFit) btnTabFit.classList.toggle('active', mode === 'fit');
+  if (btnTabActual) btnTabActual.classList.toggle('active', mode === 'actual');
 
   if (container) {
     if (mode === 'actual') {
@@ -921,10 +925,50 @@ export function initTabsScroll() {
   checkTabScrollButtons();
 }
 
+export function toggleFloatingViewportControls(forceVisible) {
+  const pill = document.getElementById('floatingViewportControls');
+  const toggleBtn = document.getElementById('btnToggleFloatingScale');
+  if (!pill) return;
+
+  const isCurrentlyHidden = pill.classList.contains('is-hidden') || pill.style.display === 'none';
+  const shouldShow = (typeof forceVisible === 'boolean') ? forceVisible : isCurrentlyHidden;
+
+  if (shouldShow) {
+    pill.classList.remove('is-hidden');
+    pill.style.display = 'flex';
+    try {
+      localStorage.setItem('cs2_floating_scale_bar_hidden', 'false');
+    } catch (_) {}
+    if (toggleBtn) {
+      toggleBtn.classList.add('active');
+      toggleBtn.setAttribute('title', 'Hide Floating Size & Zoom Bar');
+    }
+  } else {
+    pill.classList.add('is-hidden');
+    pill.style.display = 'none';
+    try {
+      localStorage.setItem('cs2_floating_scale_bar_hidden', 'true');
+    } catch (_) {}
+    if (toggleBtn) {
+      toggleBtn.classList.remove('active');
+      toggleBtn.setAttribute('title', 'Show Floating Size & Zoom Bar');
+    }
+  }
+}
+
 export function initDraggableFloatingControls() {
   const pill = document.getElementById('floatingViewportControls');
   const handle = document.getElementById('floatingDragHandle') || pill;
   if (!pill || !handle) return;
+
+  // Restore user visibility preference (defaults to hidden per user preference)
+  try {
+    const savedHidden = localStorage.getItem('cs2_floating_scale_bar_hidden');
+    const shouldHide = savedHidden === null ? true : (savedHidden === 'true');
+    toggleFloatingViewportControls(!shouldHide);
+  } catch (_) {
+    toggleFloatingViewportControls(false);
+  }
 
   const container = pill.closest('.preview-area') || pill.parentElement;
   if (!container) return;
@@ -1041,6 +1085,7 @@ if (typeof document !== 'undefined') {
 
 if (typeof window !== 'undefined') {
   window.setPreviewScaleMode = setPreviewScaleMode;
+  window.toggleFloatingViewportControls = toggleFloatingViewportControls;
   window.initTabsScroll = initTabsScroll;
   window.initDraggableFloatingControls = initDraggableFloatingControls;
   window.scrollTabsNav = scrollTabsNav;

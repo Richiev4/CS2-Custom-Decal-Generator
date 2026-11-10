@@ -57,15 +57,28 @@
       gap: 12px;
       flex-shrink: 0;
       position: relative;
-      z-index: 100100;
+      z-index: 500;
     }
 
-    #mainProjectMenuDropdown {
-      z-index: 100100 !important;
+    #mainProjectMenuDropdown,
+    .main-project-menu-dropdown {
+      z-index: 1000 !important;
       max-height: calc(100vh - 75px);
+      max-width: calc(100vw - 20px);
+      box-sizing: border-box;
       overflow-y: auto;
       scrollbar-width: thin;
       scrollbar-color: rgba(56, 189, 248, 0.4) transparent;
+      right: 0;
+    }
+
+    /* When header items wrap or on medium-to-narrow screens where toolbar is on the left */
+    @media (max-width: 1280px) {
+      #mainProjectMenuDropdown,
+      .main-project-menu-dropdown {
+        left: 0;
+        right: auto;
+      }
     }
 
     .brand-group {
@@ -324,7 +337,7 @@
     /* Project & Tools Menu Presets Grid & Tabs */
     .menu-preset-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 5px;
     }
 
@@ -812,6 +825,114 @@
       font-size: 11px;
       color: var(--text-dim);
       margin-top: 3px;
+    }
+
+    /* Source Image Input: Shortcut to Normal Map Area */
+    .source-normal-shortcut-bar {
+      margin-top: 10px;
+      padding: 9px 12px;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px dashed rgba(56, 189, 248, 0.35);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      transition: all 0.2s ease;
+    }
+
+    .source-normal-shortcut-bar:hover {
+      background: rgba(15, 23, 42, 0.9);
+      border-color: rgba(56, 189, 248, 0.6);
+    }
+
+    .source-normal-shortcut-info {
+      min-width: 0;
+      line-height: 1.25;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .source-normal-shortcut-title-row {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .source-normal-shortcut-title {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .source-normal-shortcut-sub {
+      font-size: 10.5px;
+      color: var(--text-muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .normal-filename-tag {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      color: var(--accent-cyan);
+      font-size: 10px;
+      background: rgba(0, 229, 255, 0.1);
+      padding: 1px 5px;
+      border-radius: 3px;
+      border: 1px solid rgba(0, 229, 255, 0.2);
+    }
+
+    .btn-goto-normal {
+      flex-shrink: 0;
+      padding: 6px 11px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent-cyan);
+      border-color: rgba(56, 189, 248, 0.45);
+      background: rgba(56, 189, 248, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-goto-normal:hover {
+      background: rgba(56, 189, 248, 0.2);
+      border-color: var(--primary);
+      color: #fff;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(56, 189, 248, 0.3);
+    }
+
+    .btn-goto-normal:active {
+      transform: translateY(0);
+    }
+
+    /* Target Section Spotlight Pulse */
+    @keyframes sectionTargetPulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.8);
+        border-color: #38bdf8;
+      }
+      50% {
+        box-shadow: 0 0 16px 3px rgba(56, 189, 248, 0.6);
+        border-color: #38bdf8;
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(56, 189, 248, 0);
+      }
+    }
+
+    .section-target-highlight {
+      animation: sectionTargetPulse 1.2s ease-in-out 2;
+      border-color: #38bdf8 !important;
     }
 
     /* Form controls */
@@ -1388,17 +1509,18 @@
     /* Floating State */
     .json-preview-card.is-floating {
       position: fixed !important;
-      z-index: 10050 !important;
-      width: 400px;
+      z-index: 9500 !important;
+      width: 420px;
       max-width: calc(100vw - 24px);
       min-width: 280px;
       min-height: 120px;
-      background: rgba(13, 20, 34, 0.96) !important;
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      border: 1px solid rgba(0, 168, 255, 0.5) !important;
+      max-height: calc(100vh - 70px);
+      background: rgba(13, 20, 34, 0.98) !important;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(0, 168, 255, 0.6) !important;
       border-radius: 8px !important;
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 20px rgba(0, 168, 255, 0.25) !important;
+      box-shadow: 0 18px 48px rgba(0, 0, 0, 0.75), 0 0 24px rgba(0, 168, 255, 0.3) !important;
       resize: both;
       overflow: hidden;
       display: flex;
@@ -1407,12 +1529,15 @@
     }
 
     .json-preview-card.is-floating .json-panel-header {
-      background: linear-gradient(90deg, rgba(0, 168, 255, 0.18) 0%, rgba(13, 20, 34, 0.4) 100%);
-      border-bottom: 1px solid rgba(0, 168, 255, 0.3);
-      padding: 8px 12px;
+      background: linear-gradient(90deg, rgba(0, 168, 255, 0.22) 0%, rgba(13, 20, 34, 0.85) 100%);
+      border-bottom: 1px solid rgba(0, 168, 255, 0.35);
+      padding: 9px 12px;
       margin-bottom: 0;
       cursor: grab;
       border-radius: 8px 8px 0 0;
+      flex-shrink: 0;
+      user-select: none;
+      touch-action: none;
     }
 
     .json-preview-card.is-floating .json-panel-header:active {
@@ -1429,12 +1554,13 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      min-height: 0;
     }
 
     .json-preview-card.is-floating .json-code {
       flex: 1;
       max-height: none;
-      min-height: 160px;
+      min-height: 140px;
       overflow-y: auto;
       margin-top: 4px;
     }
@@ -1445,6 +1571,10 @@
 
     .json-preview-card.is-floating .icon-dock {
       display: inline-block !important;
+    }
+
+    .json-preview-card.is-floating #jsonFloatingFooter {
+      display: flex !important;
     }
 
     /* Floating Minimized State */
@@ -1770,6 +1900,81 @@
       background: rgba(0, 168, 255, 0.22);
       color: var(--accent-cyan);
       box-shadow: 0 1px 5px rgba(0, 168, 255, 0.3);
+    }
+
+    .preview-scale-controls.floating-viewport-controls.is-hidden {
+      display: none !important;
+    }
+
+    .preview-scale-close-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      cursor: pointer;
+      padding: 0;
+      margin-left: 2px;
+      transition: all 0.15s ease;
+    }
+
+    .preview-scale-close-btn:hover {
+      background: rgba(239, 68, 68, 0.25);
+      color: #f87171;
+    }
+
+    /* Tabs Addon Controls (Inline zoom and floating bar toggle) */
+    .tabs-addon-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: auto;
+      padding-bottom: 5px;
+      flex-shrink: 0;
+      z-index: 6;
+    }
+
+    .preview-scale-inline-toggle {
+      display: flex;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      padding: 2px;
+      gap: 2px;
+    }
+
+    .tab-addon-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 4px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s ease;
+      line-height: 1.2;
+      user-select: none;
+    }
+
+    .tab-addon-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .tab-addon-btn.active {
+      background: rgba(0, 168, 255, 0.2);
+      color: var(--accent-cyan);
+      border-color: rgba(0, 168, 255, 0.35);
     }
 
     /* Preview Canvas Container */
@@ -3400,7 +3605,7 @@
       font-weight: 600;
       box-shadow: 0 4px 16px rgba(0, 168, 255, 0.4);
       display: none;
-      z-index: 9999;
+      z-index: 15000;
       animation: fadeIn 0.2s ease-out;
     }
 

@@ -593,6 +593,58 @@ export function toggleSection(sectionId) {
   } catch (e) {}
 }
 
+export function openAndScrollToSection(sectionId, targetChildId = null) {
+  const sec = document.getElementById(sectionId);
+  if (!sec) return;
+
+  // 1. Expand section if it is currently collapsed
+  if (sec.classList.contains('collapsed')) {
+    sec.classList.remove('collapsed');
+    const header = sec.querySelector('.collapsible-header');
+    if (header) {
+      header.setAttribute('aria-expanded', 'true');
+    }
+    try {
+      const s = JSON.parse(localStorage.getItem(SIDEBAR_SECTIONS_STORAGE_KEY) || '{}');
+      s[sectionId] = 'open';
+      localStorage.setItem(SIDEBAR_SECTIONS_STORAGE_KEY, JSON.stringify(s));
+    } catch (e) {}
+  }
+
+  // 2. Wait for layout reflow and smoothly scroll target into view
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      const target = targetChildId ? (document.getElementById(targetChildId) || sec) : sec;
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+      // 3. Highlight custom upload target box
+      if (targetChildId) {
+        const highlightEl = document.getElementById(targetChildId);
+        if (highlightEl) {
+          highlightEl.classList.remove('section-target-highlight');
+          void highlightEl.offsetWidth; // trigger reflow
+          highlightEl.classList.add('section-target-highlight');
+          setTimeout(() => {
+            highlightEl.classList.remove('section-target-highlight');
+          }, 2600);
+        }
+      }
+
+      // 4. Optionally focus the custom normal button
+      const customBtn = document.getElementById('btnInsertCustomNormal');
+      if (customBtn && typeof customBtn.focus === 'function') {
+        customBtn.focus({ preventScroll: true });
+      }
+    }, 45);
+  });
+}
+
+export function scrollToNormalMapArea() {
+  openAndScrollToSection('secToolsNormal', 'groupCustomNormalMap');
+  showToast('Opened Normal Map section');
+}
+
+
 export function expandAllSections() {
   document.querySelectorAll('.collapsible-section').forEach(sec => {
     sec.classList.remove('collapsed');
