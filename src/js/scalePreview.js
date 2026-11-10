@@ -1047,8 +1047,8 @@ function drawDecalOnScaleCanvas(ctx, screenX, screenY, w, h, metricW, metricH) {
   ctx.translate(screenX + w / 2, screenY + h / 2);
 
   // Determine source image and content bounds
-  const src = state.currentImage || (canvasBase && canvasBase.width > 0 ? canvasBase : null);
-  const isBaseCanvas = !state.currentImage && src === canvasBase;
+  const src = state.currentImage || null;
+  const isBaseCanvas = false;
   const srcBounds = src ? getImageContentBounds(src) : null;
 
   if (src && srcBounds && srcBounds.w > 0 && srcBounds.h > 0) {
@@ -1091,17 +1091,20 @@ function drawDecalOnScaleCanvas(ctx, screenX, screenY, w, h, metricW, metricH) {
     }
   } else {
     // Fallback if no texture loaded yet: clean styled placeholder
-    ctx.fillStyle = 'rgba(0, 168, 255, 0.25)';
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.65)';
     ctx.fillRect(-w / 2, -h / 2, w, h);
-    ctx.strokeStyle = '#00a8ff';
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
     ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 4]);
     ctx.strokeRect(-w / 2, -h / 2, w, h);
+    ctx.setLineDash([]);
 
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 12px Inter, sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 11px Inter, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(`${metricW.toFixed(1)}m × ${metricH.toFixed(1)}m`, 0, 0);
+    const modeLabel = state.appMode === 'surface' ? 'Surface' : (state.appMode === 'netlane' ? 'Net Lane' : 'Decal');
+    ctx.fillText(`${metricW.toFixed(1)}m × ${metricH.toFixed(1)}m (${modeLabel} Empty)`, 0, 0);
   }
 
   ctx.restore();

@@ -71,6 +71,15 @@ export function updateSingleView() {
   const { canvasBase, canvasNormal, canvasMask, canvasIcon, canvasSingle, ctxSingle } = getCanvases();
   if (!canvasSingle || !ctxSingle) return;
 
+  if (!state.currentImage) {
+    ctxSingle.clearRect(0, 0, canvasSingle.width, canvasSingle.height);
+    const aspectBar = document.getElementById('singleAspectOverlayBar');
+    if (aspectBar) aspectBar.style.display = 'none';
+    const iconBar = document.getElementById('iconOverlayToggleBar');
+    if (iconBar) iconBar.style.display = 'none';
+    return;
+  }
+
   ['base', 'normal', 'mask', 'icon'].forEach(m => {
     const btn = document.getElementById(`singleSelect_${m}`);
     if (btn) {
@@ -388,6 +397,16 @@ export function renderSimulation() {
   const { canvasBase, canvasNormal, canvasMask, canvasSim, ctxBase, ctxNormal, ctxMask, ctxSim } = getCanvases();
   if (!canvasSim || !ctxSim || !canvasBase || !canvasNormal || !canvasMask) return;
 
+  if (!state.currentImage) {
+    ctxSim.clearRect(0, 0, canvasSim.width, canvasSim.height);
+    const canvasSimGrid = document.getElementById('canvasSimGrid');
+    if (canvasSimGrid) {
+      const ctxGrid = canvasSimGrid.getContext('2d');
+      if (ctxGrid) ctxGrid.clearRect(0, 0, canvasSimGrid.width, canvasSimGrid.height);
+    }
+    return;
+  }
+
   const { width: decalW, height: decalH } = getDecalDimensions();
   const ratio = decalH > 0 ? (decalW / decalH) : 1.0;
   const isDecal = (state.appMode === 'decal');
@@ -700,6 +719,8 @@ export function renderTiledView() {
   canvasTiled.width = size;
   canvasTiled.height = size;
   ctxTiled.clearRect(0, 0, size, size);
+
+  if (!state.currentImage) return;
 
   const mapSource = document.getElementById('tiledMapSource') ? document.getElementById('tiledMapSource').value : 'base';
   let srcCanvas = canvasBase;

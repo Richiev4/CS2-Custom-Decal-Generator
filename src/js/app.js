@@ -208,6 +208,18 @@ import {
   downloadSingleMap,
   downloadAllMaps,
   exportZipPackage,
+  areAllSlotsEmpty,
+  isCurrentSlotEmpty,
+  openEmptySlotsModal,
+  closeEmptySlotsModal,
+  closeEmptySlotsModalOnBackdrop,
+  openPrepareExportModal,
+  closePrepareExportModal,
+  closePrepareExportModalOnBackdrop,
+  updatePrepareExportProgress,
+  triggerUploadFromEmptyModal,
+  loadSampleFromEmptyModal,
+  switchToSlotFromEmptyModal,
   serializeCurrentProject,
   deserializeAndLoadProject,
   saveProjectToFile,
@@ -487,6 +499,8 @@ export function saveCurrentSlotState(mode = state.appMode) {
       tctx.drawImage(canvasBase, 0, 0, 64, 64);
       slot.thumbnail = tc.toDataURL('image/png');
     } catch (_) {}
+  } else if (!state.currentImage) {
+    slot.thumbnail = '';
   }
 }
 
@@ -649,9 +663,9 @@ export function updateSetSlotsUI() {
   const count = getLoadedSlotsCount();
 
   // 1. Header Set Bundle Count Badge
-  const headerCountBadge = document.getElementById('setBundleCountBadge');
+  const headerCountBadge = document.getElementById('headerSetCountBadge') || document.getElementById('setBundleCountBadge');
   if (headerCountBadge) {
-    headerCountBadge.textContent = count === 3 ? 'Set: 3/3 Complete' : `Set: ${count}/3 Loaded`;
+    headerCountBadge.textContent = `${count}/3 Items`;
     headerCountBadge.className = count === 3 ? 'set-bundle-count complete' : (count > 0 ? 'set-bundle-count partial' : 'set-bundle-count empty');
   }
 
@@ -659,74 +673,80 @@ export function updateSetSlotsUI() {
   ['decal', 'surface', 'netlane'].forEach(mode => {
     const slot = state.setSlots[mode];
     const isLoaded = isSlotLoaded(mode);
+    const capMode = mode.charAt(0).toUpperCase() + mode.slice(1);
 
-    const thumbEl = document.getElementById(`headerThumb${mode.charAt(0).toUpperCase() + mode.slice(1)}`);
+    const thumbEl = document.getElementById(`headerThumb${capMode}`);
+    const iconEl = document.getElementById(`headerIcon${capMode}`);
     if (thumbEl) {
       if (slot && slot.thumbnail) {
-        thumbEl.style.backgroundImage = `url(${slot.thumbnail})`;
-        thumbEl.classList.add('has-thumb');
+        thumbEl.src = slot.thumbnail;
+        thumbEl.style.display = 'block';
+        if (iconEl) iconEl.style.display = 'none';
       } else {
-        thumbEl.style.backgroundImage = 'none';
-        thumbEl.classList.remove('has-thumb');
+        thumbEl.src = '';
+        thumbEl.style.display = 'none';
+        if (iconEl) iconEl.style.display = 'block';
       }
     }
 
-    const subEl = document.getElementById(`headerSub${mode.charAt(0).toUpperCase() + mode.slice(1)}`);
+    const subEl = document.getElementById(`headerSub${capMode}`);
     if (subEl) {
-      subEl.textContent = isLoaded ? (slot.assetName || 'Loaded') : '(Empty)';
+      subEl.textContent = isLoaded ? (slot.assetName || 'Loaded') : 'Empty slot';
     }
 
-    const badgeEl = document.getElementById(`headerBadge${mode.charAt(0).toUpperCase() + mode.slice(1)}`);
+    const badgeEl = document.getElementById(`headerBadge${capMode}`);
     if (badgeEl) {
-      badgeEl.textContent = isLoaded ? '✓' : '＋';
+      badgeEl.textContent = isLoaded ? '✓ Loaded' : 'Empty';
       badgeEl.className = isLoaded ? 'mode-slot-badge loaded' : 'mode-slot-badge empty';
     }
 
     // Section 2 Source Image Quick-Slot Pills
-    const qTab = document.getElementById(`quickSlot${mode.charAt(0).toUpperCase() + mode.slice(1)}`);
+    const qTab = document.getElementById(`quickSlot${capMode}`);
     if (qTab) {
       qTab.classList.toggle('active', state.appMode === mode);
       qTab.classList.toggle('is-loaded', isLoaded);
     }
 
-    const qCheck = document.getElementById(`quickCheck${mode.charAt(0).toUpperCase() + mode.slice(1)}`);
-    if (qCheck) {
-      qCheck.textContent = isLoaded ? '✓' : '＋';
-      qCheck.className = isLoaded ? 'quick-slot-check loaded' : 'quick-slot-check empty';
+    const qDot = document.getElementById(`quickDot${capMode}`);
+    if (qDot) {
+      qDot.className = isLoaded ? 'quick-slot-dot loaded' : 'quick-slot-dot';
     }
 
-    const qName = document.getElementById(`slotName${mode.charAt(0).toUpperCase() + mode.slice(1)}`);
+    const qName = document.getElementById(`slotName${capMode}`);
     if (qName) {
       qName.textContent = isLoaded ? (slot.assetName || 'Loaded') : 'Empty';
     }
 
     // Section 6 Export Card Items
-    const expRow = document.getElementById(`setItemRow${mode.charAt(0).toUpperCase() + mode.slice(1)}`);
+    const expRow = document.getElementById(`setItemRow${capMode}`);
     if (expRow) {
       expRow.classList.toggle('is-loaded', isLoaded);
       expRow.classList.toggle('is-active', state.appMode === mode);
     }
 
-    const expThumb = document.getElementById(`setExportThumb${mode.charAt(0).toUpperCase() + mode.slice(1)}`);
+    const expThumb = document.getElementById(`setExport${capMode}Thumb`);
+    const expIcon = document.getElementById(`setExport${capMode}Icon`);
     if (expThumb) {
       if (slot && slot.thumbnail) {
-        expThumb.style.backgroundImage = `url(${slot.thumbnail})`;
-        expThumb.classList.add('has-thumb');
+        expThumb.src = slot.thumbnail;
+        expThumb.style.display = 'block';
+        if (expIcon) expIcon.style.display = 'none';
       } else {
-        expThumb.style.backgroundImage = 'none';
-        expThumb.classList.remove('has-thumb');
+        expThumb.src = '';
+        expThumb.style.display = 'none';
+        if (expIcon) expIcon.style.display = 'block';
       }
     }
 
-    const expName = document.getElementById(`setExportName${mode.charAt(0).toUpperCase() + mode.slice(1)}`);
+    const expName = document.getElementById(`setExport${capMode}Name`);
     if (expName) {
-      expName.textContent = isLoaded ? slot.assetName : 'Not Loaded';
+      expName.textContent = isLoaded ? slot.assetName : '(Not Loaded)';
     }
 
-    const expStatus = document.getElementById(`setExportStatus${mode.charAt(0).toUpperCase() + mode.slice(1)}`);
+    const expStatus = document.getElementById(`setExport${capMode}Status`);
     if (expStatus) {
-      expStatus.textContent = isLoaded ? '✓ Ready' : 'Empty';
-      expStatus.className = isLoaded ? 'set-item-status ready' : 'set-item-status empty';
+      expStatus.textContent = isLoaded ? 'Ready' : 'Empty';
+      expStatus.className = isLoaded ? 'set-item-status-tag loaded' : 'set-item-status-tag empty';
     }
   });
 
@@ -742,11 +762,26 @@ export function updateSetSlotsUI() {
     srcSlotName.textContent = curSlot?.assetName || 'Unnamed';
   }
 
+  const dropZoneTargetSlotLabel = document.getElementById('dropZoneTargetSlotLabel');
+  if (dropZoneTargetSlotLabel) {
+    dropZoneTargetSlotLabel.textContent = state.appMode.toUpperCase();
+  }
+  const dropZoneTargetSlotSub = document.getElementById('dropZoneTargetSlotSub');
+  if (dropZoneTargetSlotSub) {
+    if (state.appMode === 'surface') {
+      dropZoneTargetSlotSub.textContent = 'Uploads will replace Surface texture only';
+    } else if (state.appMode === 'netlane') {
+      dropZoneTargetSlotSub.textContent = 'Uploads will replace Net Lane texture only';
+    } else {
+      dropZoneTargetSlotSub.textContent = 'Uploads will replace Decal graphic only';
+    }
+  }
+
   // Section 6 Export Count Badge & Subtext
-  const expCountBadge = document.getElementById('setExportCountBadge');
+  const expCountBadge = document.getElementById('setExportOverallCount') || document.getElementById('setExportCountBadge');
   if (expCountBadge) {
-    expCountBadge.textContent = count === 3 ? '3/3 Items Ready' : `${count}/3 Items Ready`;
-    expCountBadge.className = count === 3 ? 'set-bundle-count complete' : (count > 0 ? 'set-bundle-count partial' : 'set-bundle-count empty');
+    expCountBadge.textContent = `${count} / 3 Items Loaded`;
+    expCountBadge.className = count === 3 ? 'set-export-status complete' : (count > 0 ? 'set-export-status partial' : 'set-export-status empty');
   }
 
   const btnFullSet = document.getElementById('btnExportFullSet');
@@ -1060,7 +1095,7 @@ export function setMode(mode, force = false, silent = false) {
   if (!silent) {
     const slot = state.setSlots[mode];
     const loaded = isSlotLoaded(mode);
-    showToast(`Switched to ${mode.toUpperCase()} slot: ${loaded ? slot.assetName : 'Ready for graphic'}`);
+    showToast(`Switched to ${mode.toUpperCase()} slot: ${loaded ? slot.assetName : 'Empty (ready for graphic)'}`);
   }
 }
 
@@ -1138,11 +1173,90 @@ export function toggleEmptyOverlayMinimize(_forceRestore) {
 }
 
 // ==========================================
-// Primary Map Rendering Logic
+// Primary Map Rendering Logic & Canvas Clearing
 // ==========================================
+export function clearCanvases() {
+  const { canvasBase, ctxBase, canvasNormal, ctxNormal, canvasMask, ctxMask, canvasIcon, ctxIcon, canvasSingle, ctxSingle } = getCanvases();
+  const size = state.currentResolution || 1024;
+
+  if (canvasBase && ctxBase) {
+    canvasBase.width = size;
+    canvasBase.height = size;
+    ctxBase.clearRect(0, 0, size, size);
+  }
+  if (canvasNormal && ctxNormal) {
+    canvasNormal.width = size;
+    canvasNormal.height = size;
+    ctxNormal.clearRect(0, 0, size, size);
+  }
+  if (canvasMask && ctxMask) {
+    canvasMask.width = size;
+    canvasMask.height = size;
+    ctxMask.clearRect(0, 0, size, size);
+  }
+  if (canvasIcon && ctxIcon) {
+    canvasIcon.width = 256;
+    canvasIcon.height = 256;
+    ctxIcon.clearRect(0, 0, 256, 256);
+  }
+
+  const canvasSim = document.getElementById('canvasSim');
+  if (canvasSim) {
+    const ctxSim = canvasSim.getContext('2d');
+    if (ctxSim) ctxSim.clearRect(0, 0, canvasSim.width, canvasSim.height);
+  }
+
+  const canvasSimGrid = document.getElementById('canvasSimGrid');
+  if (canvasSimGrid) {
+    const ctxSimGrid = canvasSimGrid.getContext('2d');
+    if (ctxSimGrid) ctxSimGrid.clearRect(0, 0, canvasSimGrid.width, canvasSimGrid.height);
+  }
+
+  const canvasTiled = document.getElementById('canvasTiled');
+  if (canvasTiled) {
+    const ctxTiled = canvasTiled.getContext('2d');
+    if (ctxTiled) ctxTiled.clearRect(0, 0, canvasTiled.width, canvasTiled.height);
+  }
+
+  if (canvasSingle && ctxSingle) {
+    ctxSingle.clearRect(0, 0, canvasSingle.width, canvasSingle.height);
+  }
+}
+window.clearCanvases = clearCanvases;
+
 export function renderAllMaps() {
   updateEmptyPreviewIndicator();
-  if (!state.currentImage) return;
+  if (!state.currentImage) {
+    clearCanvases();
+
+    // Reset map card badges & footers to empty status
+    const cardNormalBadge = document.getElementById('cardNormalBadge');
+    if (cardNormalBadge) {
+      cardNormalBadge.textContent = 'None';
+      cardNormalBadge.style.background = 'rgba(148, 163, 184, 0.15)';
+      cardNormalBadge.style.color = 'var(--text-muted)';
+    }
+    const cardNormalFooter = document.getElementById('cardNormalFooter');
+    if (cardNormalFooter) cardNormalFooter.textContent = 'No normal map generated';
+
+    const cardIconBadge = document.getElementById('cardIconBadge');
+    if (cardIconBadge) {
+      cardIconBadge.textContent = 'None';
+      cardIconBadge.style.background = 'rgba(148, 163, 184, 0.15)';
+      cardIconBadge.style.color = 'var(--text-muted)';
+    }
+    const cardIconFooter = document.getElementById('cardIconFooter');
+    if (cardIconFooter) cardIconFooter.textContent = 'No icon generated';
+
+    if (['single', 'base', 'normal', 'mask', 'icon'].includes(state.activeTab)) {
+      updateSingleView();
+    } else if (state.activeTab === 'tiled') {
+      renderTiledView();
+    } else if (state.activeTab === 'scale') {
+      renderScaleView();
+    }
+    return;
+  }
 
   const { canvasBase, canvasNormal, canvasMask, ctxBase, ctxNormal, ctxMask } = getCanvases();
   if (!canvasBase || !ctxBase || !canvasNormal || !ctxNormal || !canvasMask || !ctxMask) return;
@@ -1452,51 +1566,7 @@ export function clearAllWorkspace(force = false) {
   const dimD = document.getElementById('dimDepth'); if (dimD) dimD.value = '0.5';
 
   // 8. Wipe every single canvas to a clean slate
-  const { canvasBase, ctxBase, canvasNormal, ctxNormal, canvasMask, ctxMask, canvasIcon, ctxIcon, canvasSingle, ctxSingle } = getCanvases();
-  const size = state.currentResolution || 1024;
-
-  if (canvasBase && ctxBase) {
-    canvasBase.width = size;
-    canvasBase.height = size;
-    ctxBase.clearRect(0, 0, size, size);
-  }
-  if (canvasNormal && ctxNormal) {
-    canvasNormal.width = size;
-    canvasNormal.height = size;
-    ctxNormal.clearRect(0, 0, size, size);
-  }
-  if (canvasMask && ctxMask) {
-    canvasMask.width = size;
-    canvasMask.height = size;
-    ctxMask.clearRect(0, 0, size, size);
-  }
-  if (canvasIcon && ctxIcon) {
-    canvasIcon.width = 512;
-    canvasIcon.height = 512;
-    ctxIcon.clearRect(0, 0, 512, 512);
-  }
-
-  const canvasSim = document.getElementById('canvasSim');
-  if (canvasSim) {
-    const ctxSim = canvasSim.getContext('2d');
-    if (ctxSim) ctxSim.clearRect(0, 0, canvasSim.width, canvasSim.height);
-  }
-
-  const canvasSimGrid = document.getElementById('canvasSimGrid');
-  if (canvasSimGrid) {
-    const ctxSimGrid = canvasSimGrid.getContext('2d');
-    if (ctxSimGrid) ctxSimGrid.clearRect(0, 0, canvasSimGrid.width, canvasSimGrid.height);
-  }
-
-  const canvasTiled = document.getElementById('canvasTiled');
-  if (canvasTiled) {
-    const ctxTiled = canvasTiled.getContext('2d');
-    if (ctxTiled) ctxTiled.clearRect(0, 0, canvasTiled.width, canvasTiled.height);
-  }
-
-  if (canvasSingle && ctxSingle) {
-    ctxSingle.clearRect(0, 0, canvasSingle.width, canvasSingle.height);
-  }
+  clearCanvases();
 
   // 9. Update Card Footer / Badges to reflect clean state
   const cardNormalBadge = document.getElementById('cardNormalBadge');
@@ -1564,6 +1634,18 @@ Object.assign(window, {
   openSaveModal,
   closeSaveModal,
   closeSaveModalOnBackdrop,
+  openEmptySlotsModal,
+  closeEmptySlotsModal,
+  closeEmptySlotsModalOnBackdrop,
+  openPrepareExportModal,
+  closePrepareExportModal,
+  closePrepareExportModalOnBackdrop,
+  updatePrepareExportProgress,
+  triggerUploadFromEmptyModal,
+  loadSampleFromEmptyModal,
+  switchToSlotFromEmptyModal,
+  areAllSlotsEmpty,
+  isCurrentSlotEmpty,
   saveProjectWithPrompt,
   exportZipWithPrompt,
   exportDirectToFolderWithPrompt,
@@ -2073,15 +2155,9 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   if (!hidePresets) {
     try {
-      // Bootstrap all 3 slots with high-quality themed starter items
+      // Bootstrap ONLY decal slot with starter item; Surface and Net Lane start completely blank/empty until loaded
       const decalSlotData = createSampleSlot('manhole');
       Object.assign(state.setSlots.decal, decalSlotData);
-
-      const surfaceSlotData = createSampleSlot('cobblestone');
-      Object.assign(state.setSlots.surface, surfaceSlotData);
-
-      const netlaneSlotData = createSampleSlot('centerline');
-      Object.assign(state.setSlots.netlane, netlaneSlotData);
     } catch (e) {
       console.warn('Could not populate initial sample slots:', e);
     }
@@ -2180,6 +2256,8 @@ window.addEventListener('DOMContentLoaded', async () => {
       hideFieldHelp(true);
       closeWelcomeSplash();
       closeHelpModal();
+      closeEmptySlotsModal();
+      closePrepareExportModal();
       closeSetRegistryModal();
       closeCreateSetAssetModal();
       closeCreateNewSetWizard();

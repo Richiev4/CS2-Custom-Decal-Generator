@@ -1989,8 +1989,171 @@ export function downloadAllMaps() {
   setTimeout(() => downloadConfigJson(), 1000);
 }
 
+// ==========================================
+// Empty Slots Detection & Nothing Loaded Modal
+// ==========================================
+
+export function areAllSlotsEmpty() {
+  if (typeof window.saveCurrentSlotState === 'function') {
+    try { window.saveCurrentSlotState(); } catch (_) {}
+  }
+
+  // If the active workspace currently has an image loaded
+  if (state.currentImage || state.isCustomImageLoaded) {
+    return false;
+  }
+
+  // Check the 3 set slots: decal, surface, netlane
+  if (state.setSlots) {
+    const modes = ['decal', 'surface', 'netlane'];
+    for (const mode of modes) {
+      const slot = state.setSlots[mode];
+      if (slot) {
+        if (slot.image || slot.isCustomImageLoaded) return false;
+        if (slot.imageSrc && typeof slot.imageSrc === 'string' && slot.imageSrc.length > 50) return false;
+        if (slot.thumbnail && typeof slot.thumbnail === 'string' && slot.thumbnail.length > 50) return false;
+      }
+    }
+  }
+
+  return true;
+}
+window.areAllSlotsEmpty = areAllSlotsEmpty;
+
+export function isCurrentSlotEmpty() {
+  if (typeof window.saveCurrentSlotState === 'function') {
+    try { window.saveCurrentSlotState(); } catch (_) {}
+  }
+
+  if (state.currentImage || state.isCustomImageLoaded) {
+    return false;
+  }
+
+  const slot = state.setSlots ? state.setSlots[state.appMode] : null;
+  if (!slot) return true;
+
+  if (slot.image || slot.isCustomImageLoaded) return false;
+  if (slot.imageSrc && typeof slot.imageSrc === 'string' && slot.imageSrc.length > 50) return false;
+  if (slot.thumbnail && typeof slot.thumbnail === 'string' && slot.thumbnail.length > 50) return false;
+
+  return true;
+}
+window.isCurrentSlotEmpty = isCurrentSlotEmpty;
+
+export function openEmptySlotsModal(customMsg = null) {
+  const modal = document.getElementById('emptySlotsModal');
+  if (!modal) return;
+
+  if (typeof window.saveCurrentSlotState === 'function') {
+    try { window.saveCurrentSlotState(); } catch (_) {}
+  }
+
+  const modes = [
+    { id: 'decal', name: 'Decal' },
+    { id: 'surface', name: 'Surface' },
+    { id: 'netlane', name: 'Net Lane' }
+  ];
+
+  let anyLoaded = false;
+  modes.forEach(({ id }) => {
+    const slot = state.setSlots ? state.setSlots[id] : null;
+    const isLoaded = Boolean(slot && (slot.image || slot.isCustomImageLoaded || (slot.thumbnail && slot.thumbnail.length > 50)));
+    if (isLoaded) anyLoaded = true;
+
+    const row = document.getElementById(`emptyModalSlotRow_${id}`);
+    const badge = document.getElementById(`emptyModalSlotBadge_${id}`);
+    const nameEl = document.getElementById(`emptyModalSlotName_${id}`);
+
+    if (badge) {
+      if (isLoaded) {
+        badge.textContent = '✓ Loaded';
+        badge.className = 'empty-modal-slot-badge loaded';
+      } else {
+        badge.textContent = 'Empty';
+        badge.className = 'empty-modal-slot-badge empty';
+      }
+    }
+    if (nameEl) {
+      nameEl.textContent = isLoaded ? (slot.assetName || 'Loaded Graphic') : '(No graphic loaded)';
+      nameEl.style.color = isLoaded ? '#38bdf8' : 'var(--text-dim)';
+    }
+    if (row) {
+      row.classList.toggle('is-loaded', isLoaded);
+      row.classList.toggle('is-empty', !isLoaded);
+    }
+  });
+
+  const bannerTitle = document.getElementById('emptyModalBannerTitle');
+  const bannerDesc = document.getElementById('emptyModalBannerDesc');
+
+  if (!anyLoaded) {
+    if (bannerTitle) bannerTitle.innerHTML = '<span>⚠️ Nothing is Loaded</span>';
+    if (bannerDesc) bannerDesc.textContent = 'Nothing is loaded in the workspace. All 3 asset slots (Decal, Surface, and Net Lane) are currently empty. You cannot save or export an empty package.';
+  } else {
+    if (bannerTitle) bannerTitle.innerHTML = '<span>⚠️ Active Slot is Empty</span>';
+    if (bannerDesc) bannerDesc.textContent = customMsg || `Nothing is loaded in the current ${state.appMode.toUpperCase()} slot. Please load a graphic into this slot or switch to one of your loaded slots.`;
+  }
+
+  modal.style.display = 'flex';
+  modal.classList.add('active');
+  showToast('Cannot export package: Nothing is loaded');
+}
+window.openEmptySlotsModal = openEmptySlotsModal;
+
+export function closeEmptySlotsModal() {
+  const modal = document.getElementById('emptySlotsModal');
+  if (modal) {
+    modal.style.display = 'none';
+    modal.classList.remove('active');
+  }
+}
+window.closeEmptySlotsModal = closeEmptySlotsModal;
+
+export function closeEmptySlotsModalOnBackdrop(e) {
+  if (e.target && e.target.id === 'emptySlotsModal') {
+    closeEmptySlotsModal();
+  }
+}
+window.closeEmptySlotsModalOnBackdrop = closeEmptySlotsModalOnBackdrop;
+
+export function triggerUploadFromEmptyModal(targetMode) {
+  closeEmptySlotsModal();
+  if (targetMode && typeof window.setMode === 'function') {
+    window.setMode(targetMode);
+  }
+  const fileInput = document.getElementById('fileInput');
+  if (fileInput) {
+    fileInput.click();
+  }
+}
+window.triggerUploadFromEmptyModal = triggerUploadFromEmptyModal;
+
+export function loadSampleFromEmptyModal() {
+  closeEmptySlotsModal();
+  if (typeof window.loadSample === 'function') {
+    window.loadSample('manhole');
+  }
+}
+window.loadSampleFromEmptyModal = loadSampleFromEmptyModal;
+
+export function switchToSlotFromEmptyModal(mode) {
+  closeEmptySlotsModal();
+  if (typeof window.setMode === 'function') {
+    window.setMode(mode);
+  }
+}
+window.switchToSlotFromEmptyModal = switchToSlotFromEmptyModal;
 
 export async function exportZipPackage() {
+  if (areAllSlotsEmpty()) {
+    openEmptySlotsModal();
+    return;
+  }
+  if (isCurrentSlotEmpty()) {
+    openEmptySlotsModal(`Nothing is loaded in the active ${state.appMode.toUpperCase()} slot. Please load a graphic into this slot or switch to one of your loaded slots.`);
+    return;
+  }
+
   const JSZipLib = (typeof window !== 'undefined' && window.JSZip) || JSZip;
   if (!JSZipLib) {
     showToast('JSZip library is still loading, please wait...');
@@ -2126,16 +2289,161 @@ INSTRUCTIONS:
   }
 }
 
+export function openPrepareExportModal(options = {}) {
+  const modal = document.getElementById('prepareExportModal');
+  if (!modal) return;
+
+  const heading = document.getElementById('prepareExportHeading');
+  if (heading) {
+    heading.textContent = 'Please wait while the files are prepared';
+  }
+
+  const subtext = document.getElementById('prepareExportSubtext');
+  if (subtext) {
+    const setName = options.setName || '3-in-1 Mod Set';
+    subtext.textContent = `Packaging "${setName}" into an organized Cities: Skylines 2 ExtraAssetsImporter archive...`;
+  }
+
+  const stepLabel = document.getElementById('prepareExportStepLabel');
+  if (stepLabel) {
+    stepLabel.textContent = 'Initializing PBR texture pipeline...';
+  }
+
+  const percentEl = document.getElementById('prepareExportPercent');
+  if (percentEl) {
+    percentEl.textContent = '5%';
+  }
+
+  const progressBar = document.getElementById('prepareExportProgressBar');
+  if (progressBar) {
+    progressBar.style.width = '5%';
+  }
+
+  const dot = document.querySelector('.prepare-pulse-dot');
+  if (dot) {
+    dot.style.background = '#38bdf8';
+    dot.style.animation = 'prepare-pulse 1.2s infinite ease-in-out';
+  }
+
+  // Populate slot rows
+  const modes = ['decal', 'surface', 'netlane'];
+  modes.forEach(mode => {
+    const slotEl = document.getElementById(`prepareSlot_${mode}`);
+    const nameEl = document.getElementById(`prepareSlotName_${mode}`);
+    const badgeEl = document.getElementById(`prepareSlotBadge_${mode}`);
+    const slotData = state.setSlots ? state.setSlots[mode] : null;
+    const isLoaded = Boolean(slotData && (slotData.image || slotData.isCustomImageLoaded || (slotData.thumbnail && slotData.thumbnail.length > 50)));
+
+    if (slotEl) {
+      slotEl.className = 'prepare-slot-item';
+    }
+
+    if (nameEl) {
+      if (isLoaded) {
+        nameEl.textContent = `• ${slotData.assetName || (mode === 'decal' ? 'Decal' : (mode === 'surface' ? 'Surface' : 'Net Lane'))}`;
+      } else {
+        nameEl.textContent = '(Not in set)';
+      }
+    }
+
+    if (badgeEl) {
+      if (isLoaded) {
+        badgeEl.textContent = 'Queued';
+        badgeEl.style.color = '#38bdf8';
+      } else {
+        badgeEl.textContent = 'Skipped';
+        badgeEl.style.color = '#64748b';
+      }
+    }
+  });
+
+  modal.style.display = 'flex';
+  modal.classList.add('active');
+}
+window.openPrepareExportModal = openPrepareExportModal;
+
+export function updatePrepareExportProgress(stepText, percent, activeMode = null, modeStatus = null, isFinished = false) {
+  const stepLabel = document.getElementById('prepareExportStepLabel');
+  if (stepLabel && stepText) {
+    stepLabel.textContent = stepText;
+  }
+
+  const percentEl = document.getElementById('prepareExportPercent');
+  if (percentEl && typeof percent === 'number') {
+    percentEl.textContent = `${Math.min(100, Math.max(0, Math.round(percent)))}%`;
+  }
+
+  const progressBar = document.getElementById('prepareExportProgressBar');
+  if (progressBar && typeof percent === 'number') {
+    progressBar.style.width = `${Math.min(100, Math.max(0, Math.round(percent)))}%`;
+  }
+
+  if (activeMode) {
+    const slotEl = document.getElementById(`prepareSlot_${activeMode}`);
+    const badgeEl = document.getElementById(`prepareSlotBadge_${activeMode}`);
+    if (slotEl) {
+      if (modeStatus === 'processing') {
+        slotEl.className = 'prepare-slot-item is-active';
+      } else if (modeStatus === 'done') {
+        slotEl.className = 'prepare-slot-item is-done';
+      }
+    }
+    if (badgeEl) {
+      if (modeStatus === 'processing') {
+        badgeEl.textContent = 'Rendering...';
+        badgeEl.style.color = '#38bdf8';
+      } else if (modeStatus === 'done') {
+        badgeEl.textContent = '✓ Ready';
+        badgeEl.style.color = '#10b981';
+      }
+    }
+  }
+
+  if (isFinished) {
+    const heading = document.getElementById('prepareExportHeading');
+    if (heading) {
+      heading.textContent = 'Files Prepared!';
+    }
+    const dot = document.querySelector('.prepare-pulse-dot');
+    if (dot) {
+      dot.style.background = '#10b981';
+      dot.style.animation = 'none';
+    }
+  }
+}
+window.updatePrepareExportProgress = updatePrepareExportProgress;
+
+export function closePrepareExportModal() {
+  const modal = document.getElementById('prepareExportModal');
+  if (modal) {
+    modal.style.display = 'none';
+    modal.classList.remove('active');
+  }
+}
+window.closePrepareExportModal = closePrepareExportModal;
+
+export function closePrepareExportModalOnBackdrop(e) {
+  if (e.target && e.target.id === 'prepareExportModal') {
+    closePrepareExportModal();
+  }
+}
+window.closePrepareExportModalOnBackdrop = closePrepareExportModalOnBackdrop;
+
 export async function exportCompleteSetZip() {
+  // 1. Save current active workspace state to its slot first
+  if (typeof window.saveCurrentSlotState === 'function') {
+    window.saveCurrentSlotState();
+  }
+
+  if (areAllSlotsEmpty()) {
+    openEmptySlotsModal();
+    return;
+  }
+
   const JSZipLib = (typeof window !== 'undefined' && window.JSZip) || JSZip;
   if (!JSZipLib) {
     showToast('JSZip library is still loading, please wait...');
     return;
-  }
-
-  // 1. Save current active workspace state to its slot first
-  if (typeof window.saveCurrentSlotState === 'function') {
-    window.saveCurrentSlotState();
   }
 
   const loadedSlots = [];
@@ -2146,7 +2454,7 @@ export async function exportCompleteSetZip() {
   });
 
   if (loadedSlots.length === 0) {
-    showToast('Please load at least one asset graphic into your set first');
+    openEmptySlotsModal();
     return;
   }
 
@@ -2159,6 +2467,12 @@ export async function exportCompleteSetZip() {
   const author = document.getElementById('metaAuthor')?.value?.trim() || 'CS2 Creator';
   const version = document.getElementById('metaVersion')?.value?.trim() || '1.0.0';
 
+  // Display the pop-up modal: "Please wait while the files are prepared"
+  openPrepareExportModal({ setName, loadedSlots });
+
+  // Yield control to browser so DOM paints before heavy canvas & zip work starts
+  await new Promise(resolve => setTimeout(resolve, 80));
+
   showToast(`Packaging complete set "${setName}" (${loadedSlots.length} item${loadedSlots.length > 1 ? 's' : ''})...`);
 
   const zip = new JSZipLib();
@@ -2166,7 +2480,16 @@ export async function exportCompleteSetZip() {
   const manifestAssets = [];
 
   try {
+    let itemIdx = 0;
+    const totalItems = loadedSlots.length;
+
     for (const { mode, slot } of loadedSlots) {
+      itemIdx++;
+      const modeName = mode === 'decal' ? 'Decal' : (mode === 'surface' ? 'Surface' : 'Net Lane');
+      const startPct = Math.round(10 + ((itemIdx - 1) / totalItems) * 60);
+      updatePrepareExportProgress(`Rendering ${modeName} PBR maps & configs...`, startPct, mode, 'processing');
+      await new Promise(r => setTimeout(r, 40));
+
       // Switch workspace to this mode temporarily to render exact PBR maps and configs
       if (typeof window.setMode === 'function') {
         window.setMode(mode, true, true);
@@ -2224,6 +2547,10 @@ export async function exportCompleteSetZip() {
         priority: slot.uiPriority || 50000,
         subfolder: `${folderName}/${assetName}`
       });
+
+      const donePct = Math.round(10 + (itemIdx / totalItems) * 60);
+      updatePrepareExportProgress(`✓ ${modeName} package generated`, donePct, mode, 'done');
+      await new Promise(r => setTimeout(r, 30));
     }
 
     // Restore user's previous active mode
@@ -2245,41 +2572,43 @@ export async function exportCompleteSetZip() {
     zip.file('set-manifest.json', JSON.stringify(manifest, null, 2));
 
     // Master Readme
-    let readmeText = `========================================================================
-Cities: Skylines 2 Custom Asset Set: ${setName}
-Unified Mod Package: ${manifestAssets.map(a => a.type.toUpperCase()).join(' + ')}
-Compatible with ExtraAssetsImporter & Native CS2 Asset Pipeline
-Author: ${author} • Version: ${version}
-========================================================================
-
-INCLUDED ASSET PACKAGES IN THIS SET:
-`;
+    let readmeText = `========================================================================\n` +
+      `Cities: Skylines 2 Custom Asset Set: ${setName}\n` +
+      `Unified Mod Package: ${manifestAssets.map(a => a.type.toUpperCase()).join(' + ')}\n` +
+      `Compatible with ExtraAssetsImporter & Native CS2 Asset Pipeline\n` +
+      `Author: ${author} • Version: ${version}\n` +
+      `========================================================================\n\n` +
+      `INCLUDED ASSET PACKAGES IN THIS SET:\n`;
     manifestAssets.forEach((a, i) => {
-      readmeText += `${i + 1}. [${a.type.toUpperCase()}] ${a.name}
-   - Category: ${a.category}
-   - In-Game Priority: ${a.priority.toLocaleString()}
-   - Package Directory: ${a.subfolder}/
-
-`;
+      readmeText += `${i + 1}. [${a.type.toUpperCase()}] ${a.name}\n` +
+        `   - Category: ${a.category}\n` +
+        `   - In-Game Priority: ${a.priority.toLocaleString()}\n` +
+        `   - Package Directory: ${a.subfolder}/\n\n`;
     });
 
-    readmeText += `
-HOW TO INSTALL IN CITIES: SKYLINES 2:
-1. Open your Cities: Skylines 2 ExtraAssetsImporter directory:
-   %AppData%\\..\\LocalLow\\Colossal Order\\Cities Skylines II\\ModsData\\ExtraAssetsImporter\\
-
-2. Copy each folder into its matching category:
-   - Copy any folders in "Decals/" into: ModsData\\ExtraAssetsImporter\\CustomDecals\\<Category>\\
-   - Copy any folders in "Surfaces/" into: ModsData\\ExtraAssetsImporter\\CustomSurfaces\\<Category>\\
-   - Copy any folders in "NetLanes/" into: ModsData\\ExtraAssetsImporter\\CustomNetlanes\\<Category>\\
-
-3. Launch Cities: Skylines 2.
-4. Your complete set will appear in-game with matching categories and sequential priority ordering!
-`;
+    readmeText += `\nHOW TO INSTALL IN CITIES: SKYLINES 2:\n` +
+      `1. Open your Cities: Skylines 2 ExtraAssetsImporter directory:\n` +
+      `   %AppData%\\..\\LocalLow\\Colossal Order\\Cities Skylines II\\ModsData\\ExtraAssetsImporter\\\n\n` +
+      `2. Copy each folder into its matching category:\n` +
+      `   - Copy any folders in "Decals/" into: ModsData\\ExtraAssetsImporter\\CustomDecals\\<Category>\\\n` +
+      `   - Copy any folders in "Surfaces/" into: ModsData\\ExtraAssetsImporter\\CustomSurfaces\\<Category>\\\n` +
+      `   - Copy any folders in "NetLanes/" into: ModsData\\ExtraAssetsImporter\\CustomNetlanes\\<Category>\\\n\n` +
+      `3. Launch Cities: Skylines 2.\n` +
+      `4. Your complete set will appear in-game with matching categories and sequential priority ordering!\n`;
     zip.file('SET-README.txt', readmeText);
 
+    updatePrepareExportProgress('Compressing 3-in-1 package (.zip)...', 75);
     showToast('Compressing full set package (.zip)...');
-    const content = await zip.generateAsync({ type: 'blob' });
+
+    const content = await zip.generateAsync({ type: 'blob' }, (metadata) => {
+      const compPct = 75 + Math.round((metadata.percent / 100) * 20);
+      updatePrepareExportProgress(`Compressing archive (${Math.round(metadata.percent)}%)...`, compPct);
+    });
+
+    updatePrepareExportProgress('Files prepared! Opening save dialog...', 100, null, null, true);
+    await new Promise(r => setTimeout(r, 350));
+    closePrepareExportModal();
+
     const defaultZipName = `${cleanSetName}_CompleteSet.zip`;
 
     const result = await saveFileWithPicker(content, defaultZipName, {
@@ -2302,10 +2631,14 @@ HOW TO INSTALL IN CITIES: SKYLINES 2:
     if (typeof window.setMode === 'function') {
       window.setMode(originalMode, true, true);
     }
+    closePrepareExportModal();
     showToast('Error exporting set package');
+  } finally {
+    closePrepareExportModal();
   }
 }
 window.exportCompleteSetZip = exportCompleteSetZip;
+
 
 // Project Serialization
 export function serializeCurrentProject() {
@@ -3081,13 +3414,22 @@ export async function saveProjectToFile() {
  * using the File System Access directory picker. No zip extraction needed!
  */
 export async function exportAssetDirectToFolder() {
+  if (areAllSlotsEmpty()) {
+    openEmptySlotsModal();
+    return;
+  }
+  if (isCurrentSlotEmpty()) {
+    openEmptySlotsModal(`Nothing is loaded in the active ${state.appMode.toUpperCase()} slot. Please load a graphic into this slot or switch to one of your loaded slots.`);
+    return;
+  }
+
   if (typeof window.showDirectoryPicker !== 'function') {
     showToast('Direct folder access is not supported by this browser. Use "Export Asset Package (.zip)" instead.');
     return;
   }
 
   try {
-    showToast('Select destination folder (e.g. your ExtraAssetsImporter directory)...');
+    showToast('Select destination folder (Only works with Windows - not fully tested)...');
     const rootHandle = await window.showDirectoryPicker({
       mode: 'readwrite',
       startIn: 'documents'
@@ -3232,11 +3574,31 @@ export function saveProjectWithPrompt() {
 }
 
 export function exportZipWithPrompt() {
+  if (areAllSlotsEmpty()) {
+    closeSaveModal();
+    openEmptySlotsModal();
+    return;
+  }
+  if (isCurrentSlotEmpty()) {
+    closeSaveModal();
+    openEmptySlotsModal(`Nothing is loaded in the active ${state.appMode.toUpperCase()} slot. Please load a graphic into this slot or switch to one of your loaded slots.`);
+    return;
+  }
   closeSaveModal();
   exportZipPackage();
 }
 
 export function exportDirectToFolderWithPrompt() {
+  if (areAllSlotsEmpty()) {
+    closeSaveModal();
+    openEmptySlotsModal();
+    return;
+  }
+  if (isCurrentSlotEmpty()) {
+    closeSaveModal();
+    openEmptySlotsModal(`Nothing is loaded in the active ${state.appMode.toUpperCase()} slot. Please load a graphic into this slot or switch to one of your loaded slots.`);
+    return;
+  }
   closeSaveModal();
   exportAssetDirectToFolder();
 }

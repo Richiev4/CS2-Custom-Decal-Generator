@@ -5,8 +5,8 @@
 export function createDefaultSlot(mode) {
   const defaultNames = {
     decal: 'CityUtility_Manhole_01',
-    surface: 'CustomSurface_Pavement_01',
-    netlane: 'CustomNetLane_DashedLine_01'
+    surface: 'CustomSurface_01',
+    netlane: 'CustomNetLane_01'
   };
   const defaultCategories = {
     decal: 'Utilities',

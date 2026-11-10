@@ -17,7 +17,7 @@
             <div class="set-export-header">
               <div class="set-export-badge-row">
                 <span class="set-export-pill">3-IN-1 MOD SET</span>
-                <span class="set-export-status" id="setExportOverallCount">3 / 3 Items Loaded</span>
+                <span class="set-export-status partial" id="setExportOverallCount">1 / 3 Items Loaded</span>
               </div>
               <div class="set-export-title">Export Complete Set (.zip)</div>
               <div class="set-export-desc">
@@ -28,14 +28,14 @@
             <!-- Set Items Summary Grid -->
             <div class="set-items-summary-list">
               <!-- Decal Row -->
-              <div class="set-item-row" id="setItemRowDecal" onclick="setMode('decal')">
+              <div class="set-item-row is-loaded is-active" id="setItemRowDecal" onclick="setMode('decal')">
                 <div class="set-item-thumb-box">
                   <img id="setExportDecalThumb" class="set-item-thumb" alt="Decal Thumbnail" style="display:none;" />
                   <span id="setExportDecalIcon" class="set-item-icon">🕳️</span>
                 </div>
                 <div class="set-item-meta">
                   <div class="set-item-name" id="setExportDecalName">Manhole Cover</div>
-                  <div class="set-item-type">Decal • 1.2 × 1.2 m</div>
+                  <div class="set-item-type">Decal • 1.8 × 1.8 m</div>
                 </div>
                 <div class="set-item-status-tag loaded" id="setExportDecalStatus">Ready</div>
               </div>
@@ -47,10 +47,10 @@
                   <span id="setExportSurfaceIcon" class="set-item-icon">🧱</span>
                 </div>
                 <div class="set-item-meta">
-                  <div class="set-item-name" id="setExportSurfaceName">Cobblestones</div>
+                  <div class="set-item-name" id="setExportSurfaceName">(Not Loaded)</div>
                   <div class="set-item-type">Surface • UV 2.0x</div>
                 </div>
-                <div class="set-item-status-tag loaded" id="setExportSurfaceStatus">Ready</div>
+                <div class="set-item-status-tag empty" id="setExportSurfaceStatus">Empty</div>
               </div>
 
               <!-- Net Lane Row -->
@@ -60,10 +60,10 @@
                   <span id="setExportNetlaneIcon" class="set-item-icon">🛣️</span>
                 </div>
                 <div class="set-item-meta">
-                  <div class="set-item-name" id="setExportNetlaneName">Dashed Road Line</div>
-                  <div class="set-item-type">Net Lane • 0.3 × 3.0 m</div>
+                  <div class="set-item-name" id="setExportNetlaneName">(Not Loaded)</div>
+                  <div class="set-item-type">Net Lane • 1.0 × 2.0 m</div>
                 </div>
-                <div class="set-item-status-tag loaded" id="setExportNetlaneStatus">Ready</div>
+                <div class="set-item-status-tag empty" id="setExportNetlaneStatus">Empty</div>
               </div>
             </div>
 
@@ -96,10 +96,13 @@
             </button>
 
             <!-- Direct Game Folder Export -->
-            <button class="btn-secondary" id="btnExportFolder" onclick="exportAssetDirectToFolder()" title="Select your Cities: Skylines 2 ExtraAssetsImporter directory to write files directly without zipping" style="display: flex; align-items: center; justify-content: center; gap: 7px; background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.4); color: #c084fc; font-weight: 600; padding: 9px 12px; border-radius: 6px; cursor: pointer;">
+            <button class="btn-secondary" id="btnExportFolder" onclick="exportAssetDirectToFolder()" title="Select your Cities: Skylines 2 ExtraAssetsImporter directory to write files directly without zipping (Only works with Windows - not fully tested)" style="display: flex; align-items: center; justify-content: center; gap: 7px; background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.4); color: #c084fc; font-weight: 600; padding: 9px 12px; border-radius: 6px; cursor: pointer;">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><polyline points="9 14 12 11 15 14"/></svg>
               <span>Export Directly to CS2 Folder...</span>
             </button>
+            <div style="font-size: 10.5px; color: #fbbf24; text-align: center; margin-top: -3px; margin-bottom: 2px; font-weight: 500;">
+              ⚠️ Only works with Windows - not fully tested
+            </div>
 
             <!-- Save Destination Options Modal Trigger -->
             <button class="btn-secondary" id="btnOpenSaveModalFromExport" onclick="openSaveModal()" title="Choose where you want to save your project, zip, or files" style="display: flex; align-items: center; justify-content: center; gap: 7px; background: rgba(0, 168, 255, 0.08); border: 1px solid rgba(0, 168, 255, 0.3); color: var(--primary); font-size: 11.5px; padding: 7px 10px; border-radius: 6px; cursor: pointer;">

@@ -297,15 +297,15 @@ export const FIELD_HELP = {
     badge: 'Packaging',
     badgeClass: 'pill-green',
     desc: 'Packages textures, metadata, and JSON configs into an ExtraAssetsImporter bundle.',
-    details: 'Generates a ready-to-extract ZIP folder containing:<br>• <code>_BaseColorMap.png</code> (RGBA albedo)<br>• <code>_NormalMap.png</code> (OpenGL tangent vectors)<br>• <code>_MaskMap.png</code> (R:Metal, A:Smooth)<br>• <code>icon.png</code> (256×256 UI thumbnail with watermarks)<br>• <code>decal.json</code> / <code>surface.json</code> / <code>netlane.json</code> &amp; official <code>settings.json</code>.<br><br>💡 <strong>Direct Folder Install:</strong> You can also choose <em>Export Directly to CS2 Folder</em> in the Save Destination dialog to write files straight into your game directory without unzipping!',
+    details: 'Generates a ready-to-extract ZIP folder containing:<br>• <code>_BaseColorMap.png</code> (RGBA albedo)<br>• <code>_NormalMap.png</code> (OpenGL tangent vectors)<br>• <code>_MaskMap.png</code> (R:Metal, A:Smooth)<br>• <code>icon.png</code> (256×256 UI thumbnail with watermarks)<br>• <code>decal.json</code> / <code>surface.json</code> / <code>netlane.json</code> &amp; official <code>settings.json</code>.<br><br>💡 <strong>Direct Folder Install:</strong> You can also choose <em>Export Directly to CS2 Folder</em> (⚠️ Only works with Windows - not fully tested) in the Save Destination dialog to write files straight into your game directory without unzipping!',
     wikiTopic: 'install'
   },
   directExport: {
     title: 'Export Directly to CS2 Folder',
     badge: 'Direct Install',
     badgeClass: 'pill-purple',
-    desc: 'Writes game-ready textures and JSON directly into your Cities: Skylines II mod folder.',
-    details: 'Uses the browser\'s secure native File System Access API to stream <code>_BaseColorMap.png</code>, <code>_NormalMap.png</code>, <code>_MaskMap.png</code>, <code>icon.png</code>, and configuration JSON directly into your <code>ModsData\\ExtraAssetsImporter</code> folder. Eliminates manual downloading and unzipping.',
+    desc: 'Writes game-ready textures and JSON directly into your Cities: Skylines II mod folder. (Only works with Windows - not fully tested)',
+    details: 'Uses the browser\'s secure native File System Access API to stream <code>_BaseColorMap.png</code>, <code>_NormalMap.png</code>, <code>_MaskMap.png</code>, <code>icon.png</code>, and configuration JSON directly into your <code>ModsData\\ExtraAssetsImporter</code> folder. Eliminates manual downloading and unzipping.<br><br>⚠️ <em>Only works with Windows - not fully tested</em>',
     wikiTopic: 'install'
   },
   scalePreview: {

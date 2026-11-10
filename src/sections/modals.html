@@ -49,11 +49,15 @@
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><polyline points="9 14 12 11 15 14"/></svg>
             </div>
             <div style="flex: 1; text-align: left;">
-              <div style="font-size: 13.5px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 6px;">
+              <div style="font-size: 13.5px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                 <span>Export Directly to CS2 Folder</span>
                 <span style="font-size: 9px; padding: 2px 6px; background: rgba(168, 85, 247, 0.25); color: #e9d5ff; border-radius: 4px; font-weight: 700; text-transform: uppercase;">Direct Install</span>
+                <span style="font-size: 9.5px; padding: 2px 6px; background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 4px; font-weight: 600;">⚠️ Windows Only</span>
               </div>
               <div style="font-size: 11px; color: var(--text-dim); margin-top: 2px;">Pick your ExtraAssetsImporter mod directory directly. Writes uncompressed game files straight into your game folder!</div>
+              <div style="font-size: 11px; color: #fbbf24; margin-top: 4px; display: flex; align-items: center; gap: 4px; font-weight: 500;">
+                <span>⚠️ Only works with Windows - not fully tested</span>
+              </div>
             </div>
             <span class="save-dest-arrow">➔</span>
           </button>
@@ -88,6 +92,197 @@
             <span>Always ask where to save (Native File Dialog)</span>
           </label>
           <button class="btn-secondary" style="font-size: 12px; padding: 6px 14px;" onclick="closeSaveModal()">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty Slots Alert Modal ("Nothing is Loaded") -->
+  <div class="modal-overlay" id="emptySlotsModal" onclick="closeEmptySlotsModalOnBackdrop(event)" style="display: none; z-index: 12500;">
+    <div class="modal-card" style="max-width: 500px; border-color: rgba(245, 158, 11, 0.45); box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9);">
+      <div class="modal-header" style="background: #141c28; border-bottom: 1px solid rgba(245, 158, 11, 0.25);">
+        <div class="modal-title" style="color: #f59e0b; display: flex; align-items: center; gap: 8px;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <span id="emptyModalTitle" style="font-size: 15px; font-weight: 700;">Nothing is Loaded</span>
+        </div>
+        <button type="button" class="preset-btn" style="padding: 4px 8px; font-size: 13px;" onclick="closeEmptySlotsModal()" aria-label="Close">✕</button>
+      </div>
+
+      <div class="modal-body" style="padding: 20px; gap: 14px;">
+        <!-- Banner notice -->
+        <div style="background: rgba(245, 158, 11, 0.1); border-left: 3px solid #f59e0b; padding: 12px 14px; border-radius: 0 6px 6px 0;">
+          <div id="emptyModalBannerTitle" style="font-size: 13.5px; font-weight: 700; color: #fef08a; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+            <span>⚠️ Nothing is Loaded</span>
+          </div>
+          <div id="emptyModalBannerDesc" style="font-size: 12px; line-height: 1.5; color: #fde68a;">
+            Nothing is loaded in the workspace. All 3 asset slots (Decal, Surface, and Net Lane) are currently empty. You cannot save or export an empty package.
+          </div>
+        </div>
+
+        <p style="font-size: 12.5px; line-height: 1.5; color: #cbd5e1; margin: 0;">
+          To export a Cities: Skylines 2 asset package (.zip) or direct game folder, please load an image graphic into at least one slot first.
+        </p>
+
+        <!-- Slot status overview -->
+        <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px;">Current Asset Slots Status</span>
+            <span style="font-size: 10px; color: var(--text-dim);">3-in-1 Mod Slots</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <!-- Decal Slot -->
+            <div class="empty-modal-slot-row" id="emptyModalSlotRow_decal" onclick="switchToSlotFromEmptyModal('decal')" style="cursor: pointer;" title="Click to switch to Decal slot">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 14px;">🕳️</span>
+                <div>
+                  <div style="font-weight: 600; color: #e2e8f0; font-size: 12px;">Decal Slot</div>
+                  <div id="emptyModalSlotName_decal" style="font-size: 11px; color: var(--text-dim);">(No graphic loaded)</div>
+                </div>
+              </div>
+              <span class="empty-modal-slot-badge empty" id="emptyModalSlotBadge_decal">Empty</span>
+            </div>
+
+            <!-- Surface Slot -->
+            <div class="empty-modal-slot-row" id="emptyModalSlotRow_surface" onclick="switchToSlotFromEmptyModal('surface')" style="cursor: pointer;" title="Click to switch to Surface slot">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 14px;">🧱</span>
+                <div>
+                  <div style="font-weight: 600; color: #e2e8f0; font-size: 12px;">Surface Slot</div>
+                  <div id="emptyModalSlotName_surface" style="font-size: 11px; color: var(--text-dim);">(No graphic loaded)</div>
+                </div>
+              </div>
+              <span class="empty-modal-slot-badge empty" id="emptyModalSlotBadge_surface">Empty</span>
+            </div>
+
+            <!-- Net Lane Slot -->
+            <div class="empty-modal-slot-row" id="emptyModalSlotRow_netlane" onclick="switchToSlotFromEmptyModal('netlane')" style="cursor: pointer;" title="Click to switch to Net Lane slot">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 14px;">🛣️</span>
+                <div>
+                  <div style="font-weight: 600; color: #e2e8f0; font-size: 12px;">Net Lane Slot</div>
+                  <div id="emptyModalSlotName_netlane" style="font-size: 11px; color: var(--text-dim);">(No graphic loaded)</div>
+                </div>
+              </div>
+              <span class="empty-modal-slot-badge empty" id="emptyModalSlotBadge_netlane">Empty</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick actions -->
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 4px;">
+          <!-- Action 1: Upload graphic -->
+          <button type="button" class="btn-primary" onclick="triggerUploadFromEmptyModal()" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 16px; font-size: 13px; font-weight: 700; background: linear-gradient(135deg, #0284c7 0%, #00a8ff 100%);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span>Upload Image Graphic to Slot...</span>
+          </button>
+
+          <!-- Action 2: Load starter preset -->
+          <button type="button" class="btn-secondary" onclick="loadSampleFromEmptyModal()" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 9px 14px; font-size: 12px; font-weight: 600; color: var(--accent-emerald); border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.1);">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+            <span>Load Sample Preset (Manhole Cover)</span>
+          </button>
+
+          <!-- Action 3: Close -->
+          <button type="button" class="btn-secondary" onclick="closeEmptySlotsModal()" style="padding: 8px 14px; font-size: 12px; color: var(--text-muted); display: flex; align-items: center; justify-content: center;">
+            Dismiss
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Preparing 3-in-1 Set Export Progress Modal ("Please wait while the files are prepared") -->
+  <div class="modal-overlay" id="prepareExportModal" onclick="closePrepareExportModalOnBackdrop(event)" style="display: none; z-index: 12600;">
+    <div class="modal-card" style="max-width: 490px; width: 95%; border-color: rgba(6, 182, 212, 0.45); box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95); background: #0d131f; border-radius: 12px; overflow: hidden;">
+      <div class="modal-header" style="background: #141c28; border-bottom: 1px solid rgba(6, 182, 212, 0.25); padding: 13px 18px; display: flex; align-items: center; justify-content: space-between;">
+        <div class="modal-title" style="color: #38bdf8; display: flex; align-items: center; gap: 9px; font-weight: 700; font-size: 14px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+            <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+            <line x1="12" y1="22.08" x2="12" y2="12"/>
+          </svg>
+          <span>Exporting 3-in-1 Mod Set</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 9.5px; padding: 2px 7px; border-radius: 4px; background: rgba(6, 182, 212, 0.15); color: #38bdf8; border: 1px solid rgba(6, 182, 212, 0.3); font-weight: 700; letter-spacing: 0.5px;">ZIP PACKAGE</span>
+          <button type="button" class="preset-btn" style="padding: 3px 8px; font-size: 12px;" onclick="closePrepareExportModal()" title="Dismiss" aria-label="Dismiss">✕</button>
+        </div>
+      </div>
+
+      <div class="modal-body" style="padding: 22px 20px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px;">
+        
+        <!-- Animated Circular Spinner with Glowing Core -->
+        <div style="position: relative; width: 68px; height: 68px; display: flex; align-items: center; justify-content: center; margin-top: 2px;">
+          <div class="prepare-spinner-ring" style="position: absolute; inset: 0; border: 3px solid rgba(6, 182, 212, 0.15); border-top-color: #06b6d4; border-right-color: #38bdf8; border-radius: 50%; animation: prepare-spin 1s linear infinite;"></div>
+          <div class="prepare-spinner-glow" style="position: absolute; inset: 6px; border: 2px dashed rgba(16, 185, 129, 0.4); border-radius: 50%; animation: prepare-spin-reverse 3s linear infinite;"></div>
+          <div style="font-size: 24px; z-index: 1;">📦</div>
+        </div>
+
+        <!-- Prominent text requested by user -->
+        <div>
+          <h3 id="prepareExportHeading" style="font-size: 16.5px; font-weight: 700; color: #f8fafc; margin: 0 0 6px 0; letter-spacing: -0.2px;">
+            Please wait while the files are prepared
+          </h3>
+          <p id="prepareExportSubtext" style="font-size: 12px; color: #94a3b8; margin: 0; line-height: 1.5;">
+            Rendering high-resolution PBR texture maps, encoding JSON configs, and packaging your Cities: Skylines 2 asset set...
+          </p>
+        </div>
+
+        <!-- Dynamic Live Progress Bar Card -->
+        <div style="width: 100%; background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px 14px; box-sizing: border-box;">
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; margin-bottom: 8px;">
+            <span id="prepareExportCurrentStep" style="font-weight: 600; color: #38bdf8; display: flex; align-items: center; gap: 6px; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+              <span class="prepare-pulse-dot" style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #38bdf8; animation: prepare-pulse 1.2s infinite ease-in-out; flex-shrink: 0;"></span>
+              <span id="prepareExportStepLabel">Initializing export...</span>
+            </span>
+            <span id="prepareExportPercent" style="font-family: monospace; font-weight: 700; color: #10b981; flex-shrink: 0; margin-left: 8px;">0%</span>
+          </div>
+
+          <div style="width: 100%; height: 7px; background: rgba(255, 255, 255, 0.08); border-radius: 999px; overflow: hidden; position: relative;">
+            <div id="prepareExportProgressBar" style="height: 100%; width: 5%; background: linear-gradient(90deg, #0284c7 0%, #06b6d4 50%, #10b981 100%); border-radius: 999px; transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px rgba(6, 182, 212, 0.5);"></div>
+          </div>
+        </div>
+
+        <!-- 3-in-1 Slot Progress Items List -->
+        <div id="prepareExportItemsList" style="width: 100%; display: flex; flex-direction: column; gap: 6px; text-align: left; box-sizing: border-box;">
+          <!-- Decal -->
+          <div class="prepare-slot-item" id="prepareSlot_decal" style="display: flex; align-items: center; justify-content: space-between; padding: 7px 10px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 6px; font-size: 11.5px;">
+            <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
+              <span style="font-size: 13px; flex-shrink: 0;">🕳️</span>
+              <span style="color: #e2e8f0; font-weight: 600; flex-shrink: 0;">Decal</span>
+              <span id="prepareSlotName_decal" style="color: #64748b; font-size: 10.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
+            </div>
+            <span id="prepareSlotBadge_decal" class="prepare-badge-status" style="font-size: 10px; color: #64748b; font-weight: 600; flex-shrink: 0; margin-left: 8px;">Waiting</span>
+          </div>
+
+          <!-- Surface -->
+          <div class="prepare-slot-item" id="prepareSlot_surface" style="display: flex; align-items: center; justify-content: space-between; padding: 7px 10px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 6px; font-size: 11.5px;">
+            <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
+              <span style="font-size: 13px; flex-shrink: 0;">🧱</span>
+              <span style="color: #e2e8f0; font-weight: 600; flex-shrink: 0;">Surface</span>
+              <span id="prepareSlotName_surface" style="color: #64748b; font-size: 10.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
+            </div>
+            <span id="prepareSlotBadge_surface" class="prepare-badge-status" style="font-size: 10px; color: #64748b; font-weight: 600; flex-shrink: 0; margin-left: 8px;">Waiting</span>
+          </div>
+
+          <!-- Net Lane -->
+          <div class="prepare-slot-item" id="prepareSlot_netlane" style="display: flex; align-items: center; justify-content: space-between; padding: 7px 10px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 6px; font-size: 11.5px;">
+            <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
+              <span style="font-size: 13px; flex-shrink: 0;">🛣️</span>
+              <span style="color: #e2e8f0; font-weight: 600; flex-shrink: 0;">Net Lane</span>
+              <span id="prepareSlotName_netlane" style="color: #64748b; font-size: 10.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
+            </div>
+            <span id="prepareSlotBadge_netlane" class="prepare-badge-status" style="font-size: 10px; color: #64748b; font-weight: 600; flex-shrink: 0; margin-left: 8px;">Waiting</span>
+          </div>
+        </div>
+
+        <!-- Note info -->
+        <div style="font-size: 11px; color: #64748b; line-height: 1.4;">
+          💡 When packaging finishes, your computer will prompt you to save the complete .zip mod package.
         </div>
       </div>
     </div>
@@ -454,7 +649,7 @@
 
               <p style="margin-top: 10px;"><strong>⚡ Pro Tip — Direct Folder Export:</strong></p>
               <p style="font-size: 12px; color: #94a3b8;">
-                Instead of extracting ZIP files manually, click <strong>Save / Export</strong> and choose <strong>"Export Directly to CS2 Folder"</strong>. Select your <code>ExtraAssetsImporter</code> folder once, and the app writes the textures and JSON configuration files straight to disk in seconds!
+                Instead of extracting ZIP files manually, click <strong>Save / Export</strong> and choose <strong>"Export Directly to CS2 Folder"</strong> <em>(⚠️ Only works with Windows - not fully tested)</em>. Select your <code>ExtraAssetsImporter</code> folder once, and the app writes the textures and JSON configuration files straight to disk in seconds!
               </p>
 
               <p style="margin-top: 10px;"><strong>In-Game Access:</strong></p>
@@ -498,7 +693,7 @@
               <ul>
                 <li><strong>1. Save Project File (.cs2asset):</strong> Prompts your computer's native file dialog to save your complete workspace project file (including full-resolution source image, normal/mask maps, custom logos, dimensions, and settings) for future reloading.</li>
                 <li><strong>2. Export Asset Package (.zip):</strong> Prompts where to save the ready-to-extract mod zip containing all uncompressed PBR textures and JSON files.</li>
-                <li><strong>3. Export Directly to CS2 Folder (Direct Install):</strong> Uses the browser's native File System Access API to write game-ready files straight into your <code>ModsData\ExtraAssetsImporter</code> folder on disk—no zips, downloads, or unzipping needed!</li>
+                <li><strong>3. Export Directly to CS2 Folder (Direct Install):</strong> Uses the browser's native File System Access API to write game-ready files straight into your <code>ModsData\ExtraAssetsImporter</code> folder on disk—no zips, downloads, or unzipping needed! <em>(⚠️ Only works with Windows - not fully tested)</em></li>
                 <li><strong>4. Save to Browser Library:</strong> Fast local save into IndexedDB storage for immediate switching between assets during the same work session.</li>
                 <li><strong>Always Ask Checkbox:</strong> Keep "Always ask where to save" enabled to prompt your operating system's native folder/file picker each time, or toggle off for fast one-click saving.</li>
               </ul>
