@@ -1,0 +1,1 @@
+A complete web-based texture packing and asset creation suite for Cities: Skylines II. Generate custom Decals, Surfaces, and Net Lanes with PBR channel packing (BaseColor, OpenGL Normal, Mask Map), 3D preview, and instant ExtraAssetsImporter export.
