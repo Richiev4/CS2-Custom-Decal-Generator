@@ -1399,9 +1399,20 @@ export function updateActiveDecalPackStatus() {
   const descEl = document.getElementById('activeDecalPackStatusDesc');
   const actionsEl = document.getElementById('activeDecalPackActions');
   const iconEl = document.getElementById('activeDecalPackStatusIcon');
-  if (!bar || !titleEl || !descEl || !actionsEl) return;
-
   const set = getCurrentActiveSet();
+  if (set && state.setSlots && state.setSlots[state.appMode]) {
+    const currentAssetName = (state.currentLoadedAssetName || document.getElementById('assetName')?.value?.trim() || '').trim();
+    const member = (set.assets || []).find(a => a.name.toLowerCase() === currentAssetName.toLowerCase());
+    if (member) {
+      state.setSlots[state.appMode].seriesName = set.setName;
+    }
+  }
+
+  if (typeof window.updateSetSlotsUI === 'function') {
+    window.updateSetSlotsUI();
+  }
+
+  if (!bar || !titleEl || !descEl || !actionsEl) return;
   if (!set) return;
 
   const currentAssetName = (state.currentLoadedAssetName || document.getElementById('assetName')?.value?.trim() || '').trim();

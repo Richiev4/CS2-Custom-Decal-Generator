@@ -4152,11 +4152,17 @@ export function onAssetSeriesInput() {
   const badge = document.getElementById('activeSeriesBadge');
   if (badge) badge.textContent = val;
   state.currentLoadedAssetSeries = val;
+  if (state.setSlots && state.setSlots[state.appMode]) {
+    state.setSlots[state.appMode].seriesName = val;
+  }
   state.hasUnsavedChanges = true;
   updateRibbonSeriesDropdown();
   renderSeriesChips();
   if (typeof window.renderSetThumbnailsStrip === 'function') {
     window.renderSetThumbnailsStrip();
+  }
+  if (typeof window.updateSetSlotsUI === 'function') {
+    window.updateSetSlotsUI();
   }
 }
 

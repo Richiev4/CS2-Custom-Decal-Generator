@@ -327,6 +327,7 @@ import {
   closeManageSetItemsModal,
   closeManageSetItemsModalOnBackdrop,
   renderManageSetItemsTable,
+  getSetsRegistry,
   openAddFromLibraryModal,
   closeAddFromLibraryModal,
   closeAddFromLibraryModalOnBackdrop,
@@ -719,6 +720,32 @@ export function updateSetSlotsUI() {
     if (badgeEl) {
       badgeEl.textContent = isLoaded ? '✓ Loaded' : 'Empty';
       badgeEl.className = isLoaded ? 'mode-slot-badge loaded' : 'mode-slot-badge empty';
+    }
+
+    const packBadgeEl = document.getElementById(`headerPackBadge${capMode}`);
+    if (packBadgeEl) {
+      if (isLoaded && slot) {
+        let packName = slot.seriesName ? String(slot.seriesName).trim() : '';
+        const registry = typeof getSetsRegistry === 'function' ? getSetsRegistry() : [];
+        if (slot.assetName) {
+          const matchedSet = registry.find(s =>
+            (s.assets || []).some(a => a.name.toLowerCase() === slot.assetName.toLowerCase()) ||
+            (s.setName && s.setName.toLowerCase() === packName.toLowerCase())
+          );
+          if (matchedSet) {
+            packName = matchedSet.setName;
+          }
+        }
+        if (packName) {
+          packBadgeEl.textContent = `📁 ${packName}`;
+          packBadgeEl.title = `In Pack / Series: ${packName}`;
+          packBadgeEl.style.display = 'inline-flex';
+        } else {
+          packBadgeEl.style.display = 'none';
+        }
+      } else {
+        packBadgeEl.style.display = 'none';
+      }
     }
 
     // Section 2 Source Image Quick-Slot Pills
