@@ -445,8 +445,9 @@
                 
                 <div class="google-font-input-box" id="creatorGoogleFontRow">
                   <div class="google-font-row">
-                    <input type="text" id="creatorGoogleFontInput" class="google-font-text-input" placeholder="Google Font name (e.g. Audiowide, Fredoka, Lobster)" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomGoogleFontFromInput('creator');}">
-                    <button type="button" class="google-font-load-btn" onclick="addCustomGoogleFontFromInput('creator')">Load Font</button>
+                    <input type="text" id="creatorGoogleFontInput" class="google-font-text-input" placeholder="Google Font name (e.g. Audiowide, Fredoka, Lobster)" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomGoogleFontFromInput('creator', false);}">
+                    <button type="button" class="google-font-load-btn" onclick="addCustomGoogleFontFromInput('creator', false)">Load Font</button>
+                    <button type="button" class="preset-btn" style="padding: 3px 8px; font-size: 11px;" onclick="toggleGoogleFontInput('creator')" title="Close Font Window" aria-label="Close">✕</button>
                   </div>
                   <div style="font-size: 10px; color: var(--text-dim); margin-top: 4px;">Type any font from Google Fonts (fonts.google.com) to load live.</div>
                 </div>
@@ -888,8 +889,9 @@
 
                 <div class="google-font-input-box" id="seriesGoogleFontRow">
                   <div class="google-font-row">
-                    <input type="text" id="seriesGoogleFontInput" class="google-font-text-input" placeholder="Google Font name (e.g. Audiowide, Fredoka, Lobster)" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomGoogleFontFromInput('series');}">
-                    <button type="button" class="google-font-load-btn" onclick="addCustomGoogleFontFromInput('series')">Load Font</button>
+                    <input type="text" id="seriesGoogleFontInput" class="google-font-text-input" placeholder="Google Font name (e.g. Audiowide, Fredoka, Lobster)" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomGoogleFontFromInput('series', false);}">
+                    <button type="button" class="google-font-load-btn" onclick="addCustomGoogleFontFromInput('series', false)">Load Font</button>
+                    <button type="button" class="preset-btn" style="padding: 3px 8px; font-size: 11px;" onclick="toggleGoogleFontInput('series')" title="Close Font Window" aria-label="Close">✕</button>
                   </div>
                   <div style="font-size: 10px; color: var(--text-dim); margin-top: 4px;">Type any font from Google Fonts (fonts.google.com) to load live.</div>
                 </div>
@@ -1303,8 +1305,9 @@
 
                 <div class="google-font-input-box" id="extra1GoogleFontRow">
                   <div class="google-font-row">
-                    <input type="text" id="extra1GoogleFontInput" class="google-font-text-input" placeholder="Google Font name" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomGoogleFontFromInput('extra1');}">
-                    <button type="button" class="google-font-load-btn" onclick="addCustomGoogleFontFromInput('extra1')">Load</button>
+                    <input type="text" id="extra1GoogleFontInput" class="google-font-text-input" placeholder="Google Font name" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomGoogleFontFromInput('extra1', false);}">
+                    <button type="button" class="google-font-load-btn" onclick="addCustomGoogleFontFromInput('extra1', false)">Load</button>
+                    <button type="button" class="preset-btn" style="padding: 3px 8px; font-size: 11px;" onclick="toggleGoogleFontInput('extra1')" title="Close Font Window" aria-label="Close">✕</button>
                   </div>
                 </div>
 
@@ -1712,8 +1715,9 @@
 
                 <div class="google-font-input-box" id="extra2GoogleFontRow">
                   <div class="google-font-row">
-                    <input type="text" id="extra2GoogleFontInput" class="google-font-text-input" placeholder="Google Font name" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomGoogleFontFromInput('extra2');}">
-                    <button type="button" class="google-font-load-btn" onclick="addCustomGoogleFontFromInput('extra2')">Load</button>
+                    <input type="text" id="extra2GoogleFontInput" class="google-font-text-input" placeholder="Google Font name" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomGoogleFontFromInput('extra2', false);}">
+                    <button type="button" class="google-font-load-btn" onclick="addCustomGoogleFontFromInput('extra2', false)">Load</button>
+                    <button type="button" class="preset-btn" style="padding: 3px 8px; font-size: 11px;" onclick="toggleGoogleFontInput('extra2')" title="Close Font Window" aria-label="Close">✕</button>
                   </div>
                 </div>
 

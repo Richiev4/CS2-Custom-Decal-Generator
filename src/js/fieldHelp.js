@@ -368,8 +368,8 @@ export const FIELD_HELP = {
     title: 'Workspace Toolbar & Shortcuts',
     badge: 'Quick Tools',
     badgeClass: 'pill-blue',
-    desc: 'Quick-access commands to manage workspace sections, presets, and data.',
-    details: '• <strong>▾ Expand / ▸ Collapse All:</strong> Quickly open or fold all tool accordions.<br>• <strong>⚡ Presets:</strong> Toggle sample starter presets on or off for a cleaner workspace.<br>• <strong>💾 Backup Data:</strong> Full snapshot export and restore of sets, library assets, and default badge designs.<br>• <strong>✕ Clear:</strong> Selective reset dialog.',
+    desc: 'Quick-access commands to manage workspace sections.',
+    details: '• <strong>▾ Expand / ▸ Collapse All:</strong> Quickly open or fold all tool accordions.<br>• <em>Note:</em> Presets toggle, Backup Data, and Clear Workspace options are located in the top <strong>Project &amp; Tools</strong> menu.',
     wikiTopic: 'shortcuts'
   },
   saveDestination: {

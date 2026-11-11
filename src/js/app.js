@@ -2840,6 +2840,30 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
+  // Prevent Enter / Return from unexpectedly submitting forms, triggering close buttons, or dismissing windows
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const target = e.target;
+      if (target && (target.tagName === 'INPUT' || (target.tagName === 'TEXTAREA' && !e.shiftKey))) {
+        // Special case: Google Font inputs load the font without closing the window/box
+        if (target.classList && target.classList.contains('google-font-text-input')) {
+          e.preventDefault();
+          if (target.id === 'creatorGoogleFontInput') addCustomGoogleFontFromInput('creator', false);
+          else if (target.id === 'seriesGoogleFontInput') addCustomGoogleFontFromInput('series', false);
+          else if (target.id === 'extra1GoogleFontInput') addCustomGoogleFontFromInput('extra1', false);
+          else if (target.id === 'extra2GoogleFontInput') addCustomGoogleFontFromInput('extra2', false);
+          return;
+        }
+
+        // Prevent Enter in text or number inputs from triggering modal close buttons or form submits
+        e.preventDefault();
+
+        // Trigger change event to ensure any live updates commit cleanly
+        target.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    }
+  });
+
   window.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
       e.preventDefault();
@@ -2859,6 +2883,11 @@ window.addEventListener('DOMContentLoaded', async () => {
       closeCreateSetAssetModal();
       closeCreateNewSetWizard();
       closeNewStandaloneAssetWizard();
+      if (typeof window.closePackPriorityModal === 'function') window.closePackPriorityModal();
+      if (typeof window.closeBackupAllDataModal === 'function') window.closeBackupAllDataModal();
+      if (typeof window.closeManageSetItemsModal === 'function') window.closeManageSetItemsModal();
+      if (typeof window.closeAddFromLibraryModal === 'function') window.closeAddFromLibraryModal();
+      if (typeof window.closeDonateModal === 'function') window.closeDonateModal();
       cancelGuardAction();
     }
   });

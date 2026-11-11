@@ -188,7 +188,7 @@ export function toggleGoogleFontInput(target) {
   }
 }
 
-export function addCustomGoogleFontFromInput(target) {
+export function addCustomGoogleFontFromInput(target, closeRow = false) {
   const inputId = (target === 'creator') ? 'creatorGoogleFontInput' : (target === 'series' ? 'seriesGoogleFontInput' : (target === 'extra1' ? 'extra1GoogleFontInput' : 'extra2GoogleFontInput'));
   const input = document.getElementById(inputId);
   if (!input) return;
@@ -225,10 +225,16 @@ export function addCustomGoogleFontFromInput(target) {
     showToast(`Loaded Google Font "${fontName}"!`);
   });
 
-  input.value = '';
-  const rowId = (target === 'creator') ? 'creatorGoogleFontRow' : (target === 'series' ? 'seriesGoogleFontRow' : (target === 'extra1' ? 'extra1GoogleFontRow' : 'extra2GoogleFontRow'));
-  const row = document.getElementById(rowId);
-  if (row) row.style.display = 'none';
+  // Do not close the window/row on Enter - keep open so user can keep testing or view status
+  if (closeRow) {
+    input.value = '';
+    const rowId = (target === 'creator') ? 'creatorGoogleFontRow' : (target === 'series' ? 'seriesGoogleFontRow' : (target === 'extra1' ? 'extra1GoogleFontRow' : 'extra2GoogleFontRow'));
+    const row = document.getElementById(rowId);
+    if (row) row.style.display = 'none';
+  } else {
+    // Keep focus and select text for effortless replacement if desired
+    input.select();
+  }
 }
 
 export function switchBadgeSubtab(tab) {

@@ -10,7 +10,7 @@
           </svg>
           <span>Save Asset: <span id="saveModalAssetName" style="color: #38bdf8;">CustomDecal</span></span>
         </div>
-        <button class="preset-btn" style="padding: 4px 8px;" onclick="closeSaveModal()">✕</button>
+        <button type="button" class="preset-btn" style="padding: 4px 8px;" onclick="closeSaveModal()">✕</button>
       </div>
 
       <div class="modal-body" style="padding: 20px; gap: 14px;">
@@ -20,7 +20,7 @@
 
         <div style="display: flex; flex-direction: column; gap: 10px;">
           <!-- Option 1: Save Project File (.cs2asset) -->
-          <button class="save-dest-card" onclick="saveProjectWithPrompt()">
+          <button type="button" class="save-dest-card" onclick="saveProjectWithPrompt()">
             <div class="save-dest-icon" style="background: rgba(56, 189, 248, 0.15); color: var(--primary);">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
             </div>
@@ -32,7 +32,7 @@
           </button>
 
           <!-- Option 2: Export In-Game Mod Package (.zip) -->
-          <button class="save-dest-card" onclick="exportZipWithPrompt()">
+          <button type="button" class="save-dest-card" onclick="exportZipWithPrompt()">
             <div class="save-dest-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-emerald);">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             </div>
@@ -44,7 +44,7 @@
           </button>
 
           <!-- Option 3: Export Directly to CS2 Game Folder -->
-          <button class="save-dest-card" onclick="exportDirectToFolderWithPrompt()">
+          <button type="button" class="save-dest-card" onclick="exportDirectToFolderWithPrompt()">
             <div class="save-dest-icon" style="background: rgba(168, 85, 247, 0.15); color: #c084fc;">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><polyline points="9 14 12 11 15 14"/></svg>
             </div>
@@ -63,7 +63,7 @@
           </button>
 
           <!-- Option 4: Save to Browser Library -->
-          <button class="save-dest-card" onclick="saveToLibraryWithNotice()">
+          <button type="button" class="save-dest-card" onclick="saveToLibraryWithNotice()">
             <div class="save-dest-icon" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24;">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
             </div>
@@ -91,7 +91,7 @@
             <input type="checkbox" id="chkAlwaysAskWhereToSave" checked onchange="toggleAlwaysAskWhereToSave(this.checked)">
             <span>Always ask where to save (Native File Dialog)</span>
           </label>
-          <button class="btn-secondary" style="font-size: 12px; padding: 6px 14px;" onclick="closeSaveModal()">Close</button>
+          <button type="button" class="btn-secondary" style="font-size: 12px; padding: 6px 14px;" onclick="closeSaveModal()">Close</button>
         </div>
       </div>
     </div>
@@ -457,7 +457,7 @@
           </svg>
           <span>Unsaved Custom Asset</span>
         </div>
-        <button class="preset-btn" style="padding: 4px 8px;" onclick="cancelGuardAction()">✕</button>
+        <button type="button" class="preset-btn" style="padding: 4px 8px;" onclick="cancelGuardAction()">✕</button>
       </div>
 
       <div class="modal-body" style="padding: 20px; gap: 14px;">
@@ -471,19 +471,19 @@
 
         <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px;">
           <!-- Option 1: Save & Continue -->
-          <button class="btn-primary" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35); font-size: 13px; padding: 10px 14px;" onclick="confirmGuardSaveAndContinue()">
+          <button type="button" class="btn-primary" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35); font-size: 13px; padding: 10px 14px;" onclick="confirmGuardSaveAndContinue()">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
             Save Project & Continue
           </button>
 
           <!-- Option 2: Continue Without Saving -->
-          <button class="btn-secondary" style="background: rgba(239, 68, 68, 0.12); border-color: rgba(239, 68, 68, 0.4); color: #f87171; font-weight: 700; font-size: 12px; padding: 9px 14px; display: flex; align-items: center; justify-content: center; gap: 6px;" onclick="confirmGuardContinueWithoutSaving()">
+          <button type="button" class="btn-secondary" style="background: rgba(239, 68, 68, 0.12); border-color: rgba(239, 68, 68, 0.4); color: #f87171; font-weight: 700; font-size: 12px; padding: 9px 14px; display: flex; align-items: center; justify-content: center; gap: 6px;" onclick="confirmGuardContinueWithoutSaving()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
             Continue Without Saving
           </button>
 
           <!-- Option 3: Cancel -->
-          <button class="btn-secondary" style="font-size: 12px; padding: 9px 14px; color: var(--text-muted); display: flex; align-items: center; justify-content: center;" onclick="cancelGuardAction()">
+          <button type="button" class="btn-secondary" style="font-size: 12px; padding: 9px 14px; color: var(--text-muted); display: flex; align-items: center; justify-content: center;" onclick="cancelGuardAction()">
             Cancel (Stay on Current Asset)
           </button>
         </div>
@@ -595,7 +595,7 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
           Cities: Skylines 2 Custom Asset Guide & FAQ
         </div>
-        <button class="preset-btn" style="padding: 4px 8px;" onclick="closeHelpModal()">✕</button>
+        <button type="button" class="preset-btn" style="padding: 4px 8px;" onclick="closeHelpModal()">✕</button>
       </div>
 
       <div class="modal-body" style="padding: 18px 20px;">
@@ -1167,7 +1167,7 @@
                 <li><strong>Click any <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; border-radius:50%; background:#0f1722; border:1px solid #27374d; color:#94a3b8; font-weight:bold; font-size:10px;">?</span> button:</strong> Pins the field help popover open. You can click <em>"Open in Guide &amp; FAQ ↗"</em> to jump straight to the relevant documentation card.</li>
                 <li><strong>Draggable Floating Scale Bar:</strong> Click and drag the grip dots handle to move the scale/zoom toolbar to any corner of your preview panel. Double-click the grip to reset position.</li>
                 <li><strong>Tool Sections Toolbar:</strong> Click <em>▾ Expand All</em> or <em>▸ Collapse All</em> in the sidebar to toggle all accordion sections at once.</li>
-                <li><strong>⚡ Presets Toggle:</strong> Click <em>⚡ Presets: On/Off</em> in the sidebar or header menu to hide sample templates for a clean working space.</li>
+                <li><strong>⚡ Presets Toggle:</strong> Toggle sample presets in the <em>Project &amp; Tools</em> menu to hide or show starter templates for a clean working space.</li>
               </ul>
             </div>
           </details>
@@ -1259,7 +1259,7 @@
             </div>
           </div>
         </div>
-        <button class="preset-btn" style="padding: 4px 8px; font-size: 14px;" onclick="closeWelcomeSplash()" title="Close Splash Screen">✕</button>
+        <button type="button" class="preset-btn" style="padding: 4px 8px; font-size: 14px;" onclick="closeWelcomeSplash()" title="Close Splash Screen">✕</button>
       </div>
 
       <div class="modal-body splash-modal-body">
@@ -1498,7 +1498,7 @@
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
           <span>Asset Sets &amp; Priority Sequence Registry</span>
         </div>
-        <button class="preset-btn" style="padding: 4px 8px;" onclick="closeSetRegistryModal()">✕</button>
+        <button type="button" class="preset-btn" style="padding: 4px 8px;" onclick="closeSetRegistryModal()">✕</button>
       </div>
 
       <div class="modal-body" style="padding: 16px 20px; gap: 14px;">
@@ -1585,7 +1585,7 @@
             <div style="font-size: 10.5px; color: #94a3b8; font-weight: normal;">Browser Storage Portability • IndexedDB Assets • Sets &amp; Priority Bands • Settings</div>
           </div>
         </div>
-        <button class="preset-btn" style="padding: 4px 8px;" onclick="closeBackupAllDataModal()">✕</button>
+        <button type="button" class="preset-btn" style="padding: 4px 8px;" onclick="closeBackupAllDataModal()">✕</button>
       </div>
 
       <div class="modal-body" style="padding: 16px 20px; gap: 14px;">
@@ -1758,7 +1758,7 @@
           </svg>
           <span id="createModalTitle">New Asset in Set: City Utilities</span>
         </div>
-        <button class="preset-btn" style="padding: 4px 8px;" onclick="closeCreateSetAssetModal()">✕</button>
+        <button type="button" class="preset-btn" style="padding: 4px 8px;" onclick="closeCreateSetAssetModal()">✕</button>
       </div>
 
       <div class="modal-body" style="padding: 18px 20px; gap: 14px;">
@@ -1855,7 +1855,7 @@
             <div style="font-size: 10.5px; color: var(--text-dim); font-weight: normal;">Configure a themed asset collection with isolated safe priority range</div>
           </div>
         </div>
-        <button class="preset-btn" style="padding: 4px 8px;" onclick="closeCreateNewSetWizard()">✕</button>
+        <button type="button" class="preset-btn" style="padding: 4px 8px;" onclick="closeCreateNewSetWizard()">✕</button>
       </div>
 
       <!-- Step Navigation Indicator -->
@@ -2335,7 +2335,7 @@
             <div style="font-size: 10.5px; color: var(--text-dim); font-weight: normal;">Configure any Decal, Surface, or NetLane asset with guided dimensions &amp; materials</div>
           </div>
         </div>
-        <button class="preset-btn" style="padding: 4px 8px;" onclick="closeNewStandaloneAssetWizard()">✕</button>
+        <button type="button" class="preset-btn" style="padding: 4px 8px;" onclick="closeNewStandaloneAssetWizard()">✕</button>
       </div>
 
       <!-- Step Navigation Indicator -->
@@ -2808,7 +2808,7 @@
             <span>UI Priority &amp; Menu Order</span>
           </button>
         </div>
-        <button class="preset-btn" style="padding: 4px 8px; font-size: 13px;" onclick="closePackPriorityModal()">✕</button>
+        <button type="button" class="preset-btn" style="padding: 4px 8px; font-size: 13px;" onclick="closePackPriorityModal()">✕</button>
       </div>
 
       <div class="modal-body" style="padding: 16px 20px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 14px;">
