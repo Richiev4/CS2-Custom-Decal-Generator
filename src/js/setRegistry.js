@@ -79,13 +79,13 @@ export function getSetsRegistry() {
     const raw = localStorage.getItem(SETS_REGISTRY_STORAGE_KEY);
     if (!raw) {
       localStorage.setItem(SETS_REGISTRY_STORAGE_KEY, JSON.stringify(DEFAULT_SETS));
-      return DEFAULT_SETS;
+      return JSON.parse(JSON.stringify(DEFAULT_SETS));
     }
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_SETS;
+    return Array.isArray(parsed) ? parsed : JSON.parse(JSON.stringify(DEFAULT_SETS));
   } catch (err) {
     console.warn('Error reading sets registry, using defaults:', err);
-    return DEFAULT_SETS;
+    return JSON.parse(JSON.stringify(DEFAULT_SETS));
   }
 }
 
@@ -459,25 +459,66 @@ window.checkLiveOverlapAndAlert = checkLiveOverlapAndAlert;
  * Update the set profile selector dropdown in Section 2
  */
 export function updateSetRegistryUI(selectedSetId) {
-  const selector = document.getElementById('setProfileSelector');
-  if (!selector) return;
-
   const registry = getSetsRegistry();
-  let html = `<option value="">-- Recall Saved Set Profile (${registry.length}) --</option>`;
+  const currentSet = getCurrentActiveSet();
+  const activeId = selectedSetId || (currentSet ? currentSet.id : (registry[0] ? registry[0].id : ''));
 
-  registry.forEach(set => {
-    const isSelected = selectedSetId && (set.id === selectedSetId || set.setName.toLowerCase() === selectedSetId.toLowerCase());
-    const assetCount = set.assets ? set.assets.length : (set.lastIndex || 0);
-    const rangeText = `${(set.rangeStart || set.basePriority).toLocaleString()} – ${(set.rangeEnd || (set.basePriority + 990)).toLocaleString()}`;
-    html += `<option value="${escapeHtml(set.id)}" ${isSelected ? 'selected' : ''}>
-      ${escapeHtml(set.setName)} (${rangeText} • Next: ${(set.nextPriority || (set.basePriority + 10)).toLocaleString()} • ${assetCount} items)
-    </option>`;
-  });
+  // 1. Update Primary Pack Active Selector in Section 3
+  const packSelector = document.getElementById('packActiveSelector');
+  if (packSelector) {
+    let packHtml = '';
+    registry.forEach(set => {
+      const isSelected = activeId && (set.id === activeId || set.setName.toLowerCase() === activeId.toLowerCase());
+      const assetCount = set.assets ? set.assets.length : (set.lastIndex || 0);
+      packHtml += `<option value="${escapeHtml(set.id)}" ${isSelected ? 'selected' : ''}>
+        📁 ${escapeHtml(set.setName)} (${assetCount} ${assetCount === 1 ? 'item' : 'items'})
+      </option>`;
+    });
+    packHtml += `<option value="__new__">＋ Create Brand New Pack...</option>`;
+    packSelector.innerHTML = packHtml;
+  }
 
-  selector.innerHTML = html;
+  // 2. Compatibility with legacy setProfileSelector
+  const selector = document.getElementById('setProfileSelector');
+  if (selector) {
+    let html = `<option value="">-- Recall Saved Set Profile (${registry.length}) --</option>`;
+    registry.forEach(set => {
+      const isSelected = activeId && (set.id === activeId || set.setName.toLowerCase() === activeId.toLowerCase());
+      const assetCount = set.assets ? set.assets.length : (set.lastIndex || 0);
+      const rangeText = `${(set.rangeStart || set.basePriority).toLocaleString()} – ${(set.rangeEnd || (set.basePriority + 990)).toLocaleString()}`;
+      html += `<option value="${escapeHtml(set.id)}" ${isSelected ? 'selected' : ''}>
+        ${escapeHtml(set.setName)} (${rangeText} • Next: ${(set.nextPriority || (set.basePriority + 10)).toLocaleString()} • ${assetCount} items)
+      </option>`;
+    });
+    selector.innerHTML = html;
+  }
+
+  // 3. Update count label and category tag
+  if (currentSet) {
+    const countBadge = document.getElementById('packManageCountLabel');
+    if (countBadge) countBadge.textContent = String(currentSet.assets ? currentSet.assets.length : 0);
+
+    const catTag = document.getElementById('packCategoryTag');
+    if (catTag) catTag.textContent = currentSet.category || 'RoadMarkings';
+  }
+
   checkLiveOverlapAndAlert();
+  updateActiveDecalPackStatus();
 }
 window.updateSetRegistryUI = updateSetRegistryUI;
+
+export function switchActivePackFromSelect(val) {
+  if (!val) return;
+  if (val === '__new__') {
+    if (typeof window.initiateCreateNewSetFlow === 'function') {
+      window.initiateCreateNewSetFlow();
+    }
+    return;
+  }
+  recallSetProfile(val);
+  updateActiveDecalPackStatus();
+}
+window.switchActivePackFromSelect = switchActivePackFromSelect;
 
 /**
  * Render the full sets overview table inside the Set Registry Modal
@@ -519,7 +560,9 @@ export function renderSetsTable() {
           +${set.stepInterval || 10}
         </td>
         <td style="padding: 8px 10px; text-align: center;">
-          <span class="channel-pill pill-blue" style="font-size: 9px; padding: 1px 6px;">${assetCount} assets</span>
+          <button type="button" class="channel-pill pill-blue" style="font-size: 9px; padding: 2px 7px; cursor: pointer; border: 1px solid rgba(56, 189, 248, 0.3); background: rgba(14, 165, 233, 0.15);" onclick="openManageSetItemsModal('${escapeHtml(set.id)}')" title="View/edit individual decals in this pack">
+            ${assetCount} ${assetCount === 1 ? 'decal' : 'decals'} ↗
+          </button>
         </td>
         <td style="padding: 8px 10px; font-family: monospace; font-weight: 700; color: var(--accent-emerald); text-align: right;">
           ${(set.nextPriority || (set.basePriority + (assetCount + 1) * (set.stepInterval || 10))).toLocaleString()}
@@ -532,8 +575,9 @@ export function renderSetsTable() {
         </td>
         <td style="padding: 8px 10px; text-align: right;">
           <div style="display: flex; gap: 4px; justify-content: flex-end;">
-            <button type="button" class="preset-btn" style="padding: 2px 7px; font-size: 10px; color: var(--primary);" onclick="recallSetProfile('${escapeHtml(set.id)}'); closeSetRegistryModal();">Recall</button>
-            <button type="button" class="preset-btn" style="padding: 2px 6px; font-size: 10px; color: #f87171;" onclick="deleteSetProfileFromUI('${escapeHtml(set.id)}')">✕</button>
+            <button type="button" class="preset-btn" style="padding: 2px 7px; font-size: 10px; color: var(--accent-cyan);" onclick="openManageSetItemsModal('${escapeHtml(set.id)}')" title="Manage decals list">📋 Items</button>
+            <button type="button" class="preset-btn" style="padding: 2px 7px; font-size: 10px; color: var(--primary);" onclick="recallSetProfile('${escapeHtml(set.id)}'); closeSetRegistryModal();" title="Set this pack active in workspace">Recall</button>
+            <button type="button" class="preset-btn" style="padding: 2px 6px; font-size: 10px; color: #f87171; border-color: rgba(239, 68, 68, 0.3);" onclick="deleteSetProfileFromUI('${escapeHtml(set.id)}')" title="Delete this pack profile completely">✕ Delete</button>
           </div>
         </td>
       </tr>
@@ -550,14 +594,36 @@ window.renderSetsTable = renderSetsTable;
 export function deleteSetProfileFromUI(setId) {
   const set = getSetProfile(setId);
   if (!set) return;
-  if (!confirm(`Delete set profile "${set.setName}" from registry?`)) return;
 
   let registry = getSetsRegistry();
   registry = registry.filter(s => s.id !== setId);
   saveSetsRegistry(registry);
-  updateSetRegistryUI('');
+
+  // If the deleted set was the one currently in workspace inputs:
+  const seriesInp = document.getElementById('assetSeries');
+  const metaInp = document.getElementById('metaSetName');
+  const currentSeries = (seriesInp?.value || metaInp?.value || '').trim().toLowerCase();
+  const wasActive = (set.id === setId || set.setName.toLowerCase() === currentSeries);
+
+  if (wasActive) {
+    const nextSet = registry[0] || null;
+    if (nextSet) {
+      if (seriesInp) seriesInp.value = nextSet.setName;
+      if (metaInp) metaInp.value = nextSet.setName;
+      recallSetProfile(nextSet.id);
+    } else {
+      if (seriesInp) seriesInp.value = '';
+      if (metaInp) metaInp.value = '';
+      updateSetRegistryUI('');
+    }
+  } else {
+    const active = getCurrentActiveSet();
+    updateSetRegistryUI(active ? active.id : '');
+  }
+
   renderSetsTable();
-  showToast(`Deleted set profile "${set.setName}"`);
+  renderSetThumbnailsStrip();
+  showToast(`Deleted pack profile "${set.setName}"`);
 }
 window.deleteSetProfileFromUI = deleteSetProfileFromUI;
 
@@ -614,49 +680,24 @@ export function getAssetThumbnailFallback(name = '', category = '') {
 window.getAssetThumbnailFallback = getAssetThumbnailFallback;
 
 /**
- * Get or automatically provision the active set profile for current series
+ * Get the active set profile for the current workspace series/set inputs or registry.
+ * PURE GETTER: Never writes to localStorage or mutates registry.
  */
 export function getCurrentActiveSet() {
   const currentSetName = document.getElementById('metaSetName')?.value?.trim() ||
                          document.getElementById('assetSeries')?.value?.trim() ||
-                         'City Utilities';
-  const category = document.getElementById('assetCategory')?.value?.trim() || 'Utilities';
+                         '';
   const registry = getSetsRegistry();
-  let set = registry.find(s => s.setName.toLowerCase() === currentSetName.toLowerCase());
+  if (!registry || registry.length === 0) return null;
 
+  let set = null;
+  if (currentSetName) {
+    set = registry.find(s => s.setName.toLowerCase() === currentSetName.toLowerCase() || s.id === currentSetName);
+  }
+
+  // Fallback to the first available set in registry
   if (!set) {
-    const slug = 'set_' + currentSetName.toLowerCase().replace(/[^a-z0-9]+/g, '_');
-    const basePriority = parseInt(document.getElementById('uiPriorityBase')?.value, 10) || 52000;
-    const stepInterval = parseInt(document.getElementById('uiPriorityStep')?.value, 10) || 10;
-    const currentAssetName = document.getElementById('assetName')?.value?.trim() || 'CityUtility_Manhole_01';
-    const currentPriority = parseInt(document.getElementById('uiPriorityInput')?.value, 10) || (basePriority + stepInterval);
-
-    set = {
-      id: slug,
-      setName: currentSetName,
-      category,
-      author: document.getElementById('metaAuthor')?.value?.trim() || 'CS2 Creator',
-      version: document.getElementById('metaVersion')?.value?.trim() || '1.0.0',
-      basePriority,
-      stepInterval,
-      rangeSpan: 1000,
-      rangeStart: basePriority,
-      rangeEnd: basePriority + 990,
-      lastIndex: 1,
-      nextPriority: currentPriority + stepInterval,
-      assets: [
-        {
-          name: currentAssetName,
-          priority: currentPriority,
-          index: 1,
-          date: Date.now(),
-          thumbnail: captureCurrentCanvasThumbnail() || getAssetThumbnailFallback(currentAssetName, category)
-        }
-      ],
-      notesTemplate: 'Part {index} of the {setName} set. UI priority increments by +{step}.'
-    };
-    registry.push(set);
-    saveSetsRegistry(registry);
+    set = registry[0] || null;
   }
   return set;
 }
@@ -704,7 +745,7 @@ export function renderSetThumbnailsStrip() {
           <img class="set-thumb-img" src="${thumbSrc}" alt="${escapeHtml(asset.name)}" onerror="this.src='${escapeHtml(getAssetThumbnailFallback(asset.name, set.category))}'">
           <span class="set-thumb-index-tag">#${indexNum}</span>
           ${isCurrentActive ? '<span class="set-thumb-active-tag">ACTIVE</span>' : ''}
-          <button type="button" class="set-thumb-del-btn" onclick="deleteAssetFromSet('${escapeHtml(set.id)}', '${escapeHtml(asset.name)}', event)" title="Remove from set">✕</button>
+          <button type="button" class="set-thumb-del-btn" onclick="deleteAssetFromSet('${escapeHtml(set.id)}', '${escapeHtml(asset.name)}', event)" title="Remove '${escapeHtml(asset.name)}' from pack">🗑️</button>
         </div>
         <div class="set-thumb-meta">
           <span class="set-thumb-name">${escapeHtml(asset.name)}</span>
@@ -718,11 +759,12 @@ export function renderSetThumbnailsStrip() {
   html += `
     <div class="set-thumb-card-add" onclick="openCreateSetAssetModal()" title="Create new asset in ${escapeHtml(set.setName)} with preserved settings">
       <span class="set-thumb-add-icon">＋</span>
-      <span class="set-thumb-add-label">New Asset<br>in Set</span>
+      <span class="set-thumb-add-label">New Asset<br>in Pack</span>
     </div>
   `;
 
   container.innerHTML = html;
+  updateActiveDecalPackStatus();
 }
 window.renderSetThumbnailsStrip = renderSetThumbnailsStrip;
 
@@ -1097,26 +1139,561 @@ export function loadAssetFromSet(setId, assetName) {
 }
 window.loadAssetFromSet = loadAssetFromSet;
 
+let lastRemovedAssetCache = null;
+
+/**
+ * Restore the last removed asset to its pack
+ */
+export function undoLastRemovedAsset() {
+  if (!lastRemovedAssetCache) {
+    showToast('Nothing to undo');
+    return;
+  }
+  const { setId, asset } = lastRemovedAssetCache;
+  const registry = getSetsRegistry();
+  const setIdx = registry.findIndex(s => s.id === setId || s.setName.toLowerCase() === setId.toLowerCase());
+  if (setIdx >= 0) {
+    registry[setIdx].assets = registry[setIdx].assets || [];
+    registry[setIdx].assets.push(asset);
+    // Sort by priority/index
+    registry[setIdx].assets.sort((a, b) => (a.priority || 0) - (b.priority || 0));
+    registry[setIdx].assets.forEach((a, i) => { a.index = i + 1; });
+    registry[setIdx].lastIndex = registry[setIdx].assets.length;
+    saveSetsRegistry(registry);
+    updateSetRegistryUI(registry[setIdx].id);
+    renderSetThumbnailsStrip();
+    renderSetsTable();
+    renderManageSetItemsTable();
+    updateActiveDecalPackStatus();
+    showToast(`Restored "${asset.name}" to pack "${registry[setIdx].setName}"`);
+  }
+  lastRemovedAssetCache = null;
+}
+window.undoLastRemovedAsset = undoLastRemovedAsset;
+
+/**
+ * Primary asset removal function with clean re-indexing and sequential priority re-alignment.
+ * Does not use native window.confirm so it runs instantly and never gets blocked in iframes.
+ */
+export function removeAssetFromSet(setId, assetName, askConfirm = false, resequence = true) {
+  const set = getSetProfile(setId) || getCurrentActiveSet();
+  if (!set) {
+    showToast('Pack not found');
+    return;
+  }
+
+  const registry = getSetsRegistry();
+  const setIdx = registry.findIndex(s => s.id === set.id || s.setName.toLowerCase() === set.setName.toLowerCase());
+  if (setIdx < 0) {
+    showToast(`Pack "${set.setName}" not found in registry`);
+    return;
+  }
+
+  const targetSet = registry[setIdx];
+  const prevCount = targetSet.assets ? targetSet.assets.length : 0;
+  const assetToRemove = (targetSet.assets || []).find(a => a.name.toLowerCase() === assetName.toLowerCase());
+
+  targetSet.assets = (targetSet.assets || []).filter(a => a.name.toLowerCase() !== assetName.toLowerCase());
+
+  if (targetSet.assets.length === prevCount) {
+    showToast(`Asset "${assetName}" not found in ${targetSet.setName}`);
+    return;
+  }
+
+  // Cache for instant undo
+  if (assetToRemove) {
+    lastRemovedAssetCache = { setId: targetSet.id, asset: assetToRemove };
+  }
+
+  const step = targetSet.stepInterval || 10;
+  targetSet.assets.forEach((item, idx) => {
+    item.index = idx + 1;
+    if (resequence) {
+      item.priority = targetSet.basePriority + (idx + 1) * step;
+    }
+  });
+
+  targetSet.lastIndex = targetSet.assets.length;
+  targetSet.nextPriority = targetSet.basePriority + (targetSet.assets.length + 1) * step;
+
+  saveSetsRegistry(registry);
+  updateSetRegistryUI(targetSet.id);
+  renderSetThumbnailsStrip();
+  updateActiveDecalPackStatus();
+  renderSetsTable();
+  renderManageSetItemsTable(currentManagingSetId || targetSet.id);
+  showToast(`Removed "${escapeHtml(assetName)}" from ${escapeHtml(targetSet.setName)} (${targetSet.assets.length} items left) <button type="button" onclick="undoLastRemovedAsset()" style="margin-left: 8px; background: rgba(255,255,255,0.22); border: 1px solid rgba(255,255,255,0.45); color: #fff; border-radius: 4px; padding: 2px 7px; font-size: 11px; cursor: pointer; font-weight: 700;">Undo ↺</button>`);
+}
+window.removeAssetFromSet = removeAssetFromSet;
+
+/**
+ * Remove an asset from a set (event wrapper for thumbnail button)
+ */
 export function deleteAssetFromSet(setId, assetName, event) {
   if (event) event.stopPropagation();
-  const set = getSetProfile(setId);
+  removeAssetFromSet(setId, assetName, false, true);
+}
+window.deleteAssetFromSet = deleteAssetFromSet;
+
+/**
+ * Direct one-click removal of the currently loaded canvas decal from the active pack
+ */
+export function removeCurrentDecalFromActiveSet() {
+  const currName = (state.currentLoadedAssetName || document.getElementById('assetName')?.value?.trim() || '').trim();
+  const set = getCurrentActiveSet();
+  if (!currName || !set) {
+    showToast('No active asset loaded to remove');
+    return;
+  }
+  removeAssetFromSet(set.id, currName, false, true);
+}
+window.removeCurrentDecalFromActiveSet = removeCurrentDecalFromActiveSet;
+
+/**
+ * One-click: add or update the current workspace decal into the active pack
+ */
+export function addCurrentWorkspaceToSet() {
+  const set = getCurrentActiveSet();
   if (!set) return;
 
-  if (!confirm(`Remove "${assetName}" from set "${set.setName}"?`)) return;
+  const currentAssetName = document.getElementById('assetName')?.value?.trim() || 'CustomDecal';
+  const category = document.getElementById('assetCategory')?.value?.trim() || set.category || 'RoadMarkings';
+
+  const count = set.assets ? set.assets.length : 0;
+  const existingIdx = set.assets ? set.assets.findIndex(a => a.name.toLowerCase() === currentAssetName.toLowerCase()) : -1;
+
+  let itemPriority;
+  let itemIndex;
+
+  if (existingIdx >= 0) {
+    itemPriority = set.assets[existingIdx].priority;
+    itemIndex = set.assets[existingIdx].index;
+  } else {
+    itemIndex = count + 1;
+    itemPriority = set.nextPriority || (set.basePriority + itemIndex * (set.stepInterval || 10));
+    const prioInput = document.getElementById('uiPriorityInput');
+    if (prioInput) prioInput.value = itemPriority;
+    const prioBadge = document.getElementById('uiPriorityVal');
+    if (prioBadge) prioBadge.textContent = itemPriority.toLocaleString();
+  }
+
+  const thumbData = captureCurrentCanvasThumbnail() || getAssetThumbnailFallback(currentAssetName, category);
+
+  set.assets = set.assets || [];
+  if (existingIdx >= 0) {
+    set.assets[existingIdx].priority = itemPriority;
+    set.assets[existingIdx].thumbnail = thumbData;
+    set.assets[existingIdx].date = Date.now();
+  } else {
+    set.assets.push({
+      name: currentAssetName,
+      priority: itemPriority,
+      index: itemIndex,
+      date: Date.now(),
+      thumbnail: thumbData
+    });
+  }
+
+  set.lastIndex = set.assets.length;
+  set.nextPriority = set.basePriority + (set.assets.length + 1) * (set.stepInterval || 10);
 
   const registry = getSetsRegistry();
   const setIdx = registry.findIndex(s => s.id === set.id || s.setName.toLowerCase() === set.setName.toLowerCase());
   if (setIdx >= 0) {
-    registry[setIdx].assets = (registry[setIdx].assets || []).filter(a => a.name.toLowerCase() !== assetName.toLowerCase());
-    registry[setIdx].lastIndex = registry[setIdx].assets.length;
-    saveSetsRegistry(registry);
-    updateSetRegistryUI(set.id);
-    renderSetThumbnailsStrip();
-    renderSetsTable();
-    showToast(`Removed "${assetName}" from ${set.setName}`);
+    registry[setIdx] = set;
+  } else {
+    registry.push(set);
+  }
+  saveSetsRegistry(registry);
+
+  // Cache in IndexedDB if serialize helper exists
+  if (typeof window.serializeCurrentProject === 'function' && typeof window.saveAssetToIndexedDB === 'function') {
+    try {
+      const proj = window.serializeCurrentProject();
+      window.saveAssetToIndexedDB(proj);
+    } catch (_) {}
+  }
+
+  updateSetRegistryUI(set.id);
+  renderSetThumbnailsStrip();
+  updateActiveDecalPackStatus();
+  showToast(existingIdx >= 0
+    ? `Updated "${currentAssetName}" in pack "${set.setName}"`
+    : `Added "${currentAssetName}" to pack "${set.setName}" (Priority: ${itemPriority.toLocaleString()} • Item #${itemIndex})`
+  );
+}
+window.addCurrentWorkspaceToSet = addCurrentWorkspaceToSet;
+
+/**
+ * Cleanly recalculates and auto-aligns all priorities in the active pack
+ */
+export function resequenceCurrentSetActiveSet() {
+  const set = getCurrentActiveSet();
+  if (!set || !set.assets || set.assets.length === 0) {
+    showToast('No decals in this pack to re-sequence');
+    return;
+  }
+
+  const registry = getSetsRegistry();
+  const setIdx = registry.findIndex(s => s.id === set.id || s.setName.toLowerCase() === set.setName.toLowerCase());
+  if (setIdx < 0) return;
+
+  const step = registry[setIdx].stepInterval || 10;
+  registry[setIdx].assets.forEach((item, idx) => {
+    item.index = idx + 1;
+    item.priority = registry[setIdx].basePriority + (idx + 1) * step;
+  });
+  registry[setIdx].lastIndex = registry[setIdx].assets.length;
+  registry[setIdx].nextPriority = registry[setIdx].basePriority + (registry[setIdx].assets.length + 1) * step;
+
+  saveSetsRegistry(registry);
+  updateSetRegistryUI(set.id);
+  renderSetThumbnailsStrip();
+  renderManageSetItemsTable();
+  updateActiveDecalPackStatus();
+  showToast(`Auto-aligned ${registry[setIdx].assets.length} decals with +${step} spacing (Next: ${registry[setIdx].nextPriority.toLocaleString()})`);
+}
+window.resequenceCurrentSetActiveSet = resequenceCurrentSetActiveSet;
+
+/**
+ * Reorder asset in sequence (up or down)
+ */
+export function moveSetAsset(setId, assetName, direction) {
+  const registry = getSetsRegistry();
+  const setIdx = registry.findIndex(s => s.id === setId || s.setName.toLowerCase() === setId.toLowerCase());
+  if (setIdx < 0) return;
+
+  const set = registry[setIdx];
+  const assets = set.assets || [];
+  const idx = assets.findIndex(a => a.name.toLowerCase() === assetName.toLowerCase());
+  if (idx < 0) return;
+
+  const targetIdx = idx + direction;
+  if (targetIdx < 0 || targetIdx >= assets.length) return;
+
+  const temp = assets[idx];
+  assets[idx] = assets[targetIdx];
+  assets[targetIdx] = temp;
+
+  const step = set.stepInterval || 10;
+  assets.forEach((item, i) => {
+    item.index = i + 1;
+    item.priority = set.basePriority + (i + 1) * step;
+  });
+  set.nextPriority = set.basePriority + (assets.length + 1) * step;
+
+  saveSetsRegistry(registry);
+  updateSetRegistryUI(set.id);
+  renderSetThumbnailsStrip();
+  renderManageSetItemsTable();
+  updateActiveDecalPackStatus();
+}
+window.moveSetAsset = moveSetAsset;
+
+/**
+ * Update the dynamic Active Decal status bar in Section 3
+ */
+export function updateActiveDecalPackStatus() {
+  const bar = document.getElementById('activeDecalPackBar');
+  const titleEl = document.getElementById('activeDecalCurrentName');
+  const descEl = document.getElementById('activeDecalPackStatusDesc');
+  const actionsEl = document.getElementById('activeDecalPackActions');
+  const iconEl = document.getElementById('activeDecalPackStatusIcon');
+  if (!bar || !titleEl || !descEl || !actionsEl) return;
+
+  const set = getCurrentActiveSet();
+  if (!set) return;
+
+  const currentAssetName = (state.currentLoadedAssetName || document.getElementById('assetName')?.value?.trim() || '').trim();
+  titleEl.textContent = currentAssetName || 'Untitled Decal';
+
+  const member = (set.assets || []).find(a => a.name.toLowerCase() === currentAssetName.toLowerCase());
+
+  if (member) {
+    bar.className = 'active-decal-pack-bar in-pack';
+    if (iconEl) iconEl.textContent = '✓';
+    descEl.innerHTML = `<strong>Item #${member.index || 1}</strong> in pack "${escapeHtml(set.setName)}" • In-Game Priority: <strong>${member.priority.toLocaleString()}</strong>`;
+    actionsEl.innerHTML = `
+      <button type="button" class="btn-secondary" style="font-size: 10px; padding: 3px 8px;" onclick="addCurrentWorkspaceToSet()" title="Update canvas changes for this decal">
+        💾 Update in Pack
+      </button>
+      <button type="button" class="btn-remove-set-asset" onclick="removeCurrentDecalFromActiveSet()" title="Remove this decal from the active pack">
+        🗑️ Remove from Pack
+      </button>
+    `;
+  } else {
+    bar.className = 'active-decal-pack-bar not-in-pack';
+    if (iconEl) iconEl.textContent = '📌';
+    const nextPrio = set.nextPriority || (set.basePriority + ((set.assets?.length || 0) + 1) * (set.stepInterval || 10));
+    descEl.innerHTML = `This decal is <em>not yet in "${escapeHtml(set.setName)}"</em> (Next Priority: <strong>${nextPrio.toLocaleString()}</strong>)`;
+    actionsEl.innerHTML = `
+      <button type="button" class="btn-primary" style="font-size: 10.5px; padding: 4px 10px; font-weight: 700; background: linear-gradient(135deg, #0284c7 0%, #06b6d4 100%);" onclick="addCurrentWorkspaceToSet()" title="Add this decal into ${escapeHtml(set.setName)}">
+        ＋ Add Current Decal to Pack
+      </button>
+    `;
   }
 }
-window.deleteAssetFromSet = deleteAssetFromSet;
+window.updateActiveDecalPackStatus = updateActiveDecalPackStatus;
+
+// ==========================================
+// Manage Pack Items Modal Logic
+// ==========================================
+
+let currentManagingSetId = null;
+
+export function openManageSetItemsModal(setId) {
+  const modal = document.getElementById('manageSetItemsModal');
+  if (modal) {
+    currentManagingSetId = setId || null;
+    modal.style.display = 'flex';
+    renderManageSetItemsTable(currentManagingSetId);
+  }
+}
+window.openManageSetItemsModal = openManageSetItemsModal;
+
+export function closeManageSetItemsModal() {
+  const modal = document.getElementById('manageSetItemsModal');
+  if (modal) modal.style.display = 'none';
+  currentManagingSetId = null;
+}
+window.closeManageSetItemsModal = closeManageSetItemsModal;
+
+export function closeManageSetItemsModalOnBackdrop(e) {
+  if (e.target && e.target.id === 'manageSetItemsModal') {
+    closeManageSetItemsModal();
+  }
+}
+window.closeManageSetItemsModalOnBackdrop = closeManageSetItemsModalOnBackdrop;
+
+export function renderManageSetItemsTable(targetSetId) {
+  const tbody = document.getElementById('manageSetItemsTableBody');
+  if (!tbody) return;
+
+  const idToUse = targetSetId || currentManagingSetId;
+  const registry = getSetsRegistry();
+  let set = null;
+  if (idToUse) {
+    set = registry.find(s => s.id === idToUse || s.setName.toLowerCase() === String(idToUse).toLowerCase());
+  }
+  if (!set) {
+    set = getCurrentActiveSet();
+  }
+  if (!set) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-dim); padding: 30px;">No pack selected.</td></tr>`;
+    return;
+  }
+
+  const titleEl = document.getElementById('manageModalPackTitle');
+  if (titleEl) titleEl.textContent = set.setName;
+
+  const countBadge = document.getElementById('manageModalItemsCountBadge');
+  const count = set.assets ? set.assets.length : 0;
+  if (countBadge) countBadge.textContent = `${count} ${count === 1 ? 'item' : 'items'}`;
+
+  const rangeFootnote = document.getElementById('manageModalRangeFootnote');
+  if (rangeFootnote) {
+    const start = set.rangeStart !== undefined ? set.rangeStart : set.basePriority;
+    const end = set.rangeEnd !== undefined ? set.rangeEnd : (start + 990);
+    rangeFootnote.textContent = `Band: ${start.toLocaleString()} – ${end.toLocaleString()} • Step: +${set.stepInterval || 10} • In-game order determined by Priority`;
+  }
+
+  const assets = set.assets || [];
+  if (assets.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-dim); padding: 30px;">No decals in this pack yet. Click "+ New Decal" or "Add from Library" above!</td></tr>`;
+    return;
+  }
+
+  const currentActiveName = (state.currentLoadedAssetName || document.getElementById('assetName')?.value?.trim() || '').toLowerCase();
+
+  let html = '';
+  assets.forEach((asset, idx) => {
+    const isCurrent = asset.name.toLowerCase() === currentActiveName;
+    const thumbSrc = asset.thumbnail || getAssetThumbnailFallback(asset.name, set.category);
+    const isFirst = idx === 0;
+    const isLast = idx === assets.length - 1;
+
+    html += `
+      <tr class="${isCurrent ? 'current-active-row' : ''}">
+        <td style="text-align: center; font-family: monospace; font-weight: 700; color: var(--text-dim);">
+          #${asset.index || (idx + 1)}
+        </td>
+        <td style="text-align: center;">
+          <div style="width: 38px; height: 38px; border-radius: 4px; overflow: hidden; background: #090e16; border: 1px solid rgba(255,255,255,0.1); display: inline-block;">
+            <img src="${thumbSrc}" alt="${escapeHtml(asset.name)}" style="width: 100%; height: 100%; object-fit: contain;">
+          </div>
+        </td>
+        <td>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <strong style="color: ${isCurrent ? 'var(--accent-cyan)' : '#f1f5f9'}; font-size: 12px;">${escapeHtml(asset.name)}</strong>
+            ${isCurrent ? '<span class="channel-pill pill-cyan" style="font-size: 8px; padding: 1px 4px;">ACTIVE</span>' : ''}
+          </div>
+          <div style="font-size: 10px; color: var(--text-dim);">
+            Added ${new Date(asset.date || Date.now()).toLocaleDateString()}
+          </div>
+        </td>
+        <td style="text-align: right; font-family: monospace; font-weight: 700; color: var(--accent-emerald);">
+          ${asset.priority.toLocaleString()}
+        </td>
+        <td style="text-align: center;">
+          <div style="display: inline-flex; gap: 2px;">
+            <button type="button" class="preset-btn" style="padding: 2px 6px; font-size: 10px;" onclick="moveSetAsset('${escapeHtml(set.id)}', '${escapeHtml(asset.name)}', -1)" ${isFirst ? 'disabled style="opacity: 0.3;"' : ''} title="Move up in sequence">▲</button>
+            <button type="button" class="preset-btn" style="padding: 2px 6px; font-size: 10px;" onclick="moveSetAsset('${escapeHtml(set.id)}', '${escapeHtml(asset.name)}', 1)" ${isLast ? 'disabled style="opacity: 0.3;"' : ''} title="Move down in sequence">▼</button>
+          </div>
+        </td>
+        <td style="text-align: right;">
+          <div style="display: inline-flex; gap: 6px; align-items: center;">
+            <button type="button" class="preset-btn" style="padding: 3px 8px; font-size: 10.5px; color: var(--primary);" onclick="loadAssetFromSet('${escapeHtml(set.id)}', '${escapeHtml(asset.name)}'); closeManageSetItemsModal();">Load</button>
+            <button type="button" class="btn-remove-set-asset" onclick="removeAssetFromSet('${escapeHtml(set.id)}', '${escapeHtml(asset.name)}', false, true)" title="Remove this decal from the pack">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              <span>Remove</span>
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+  });
+
+  tbody.innerHTML = html;
+}
+window.renderManageSetItemsTable = renderManageSetItemsTable;
+
+// ==========================================
+// Add from Library Modal Logic
+// ==========================================
+
+let librarySelectedAssets = new Set();
+
+export function openAddFromLibraryModal() {
+  const modal = document.getElementById('addFromLibraryToSetModal');
+  if (!modal) return;
+
+  const set = (currentManagingSetId ? getSetProfile(currentManagingSetId) : null) || getCurrentActiveSet();
+  const titleEl = document.getElementById('addLibraryModalPackName');
+  if (titleEl) titleEl.textContent = set ? set.setName : 'Pack';
+
+  librarySelectedAssets = new Set();
+  renderAddFromLibraryList();
+  modal.style.display = 'flex';
+}
+window.openAddFromLibraryModal = openAddFromLibraryModal;
+
+export function closeAddFromLibraryModal() {
+  const modal = document.getElementById('addFromLibraryToSetModal');
+  if (modal) modal.style.display = 'none';
+  librarySelectedAssets = new Set();
+}
+window.closeAddFromLibraryModal = closeAddFromLibraryModal;
+
+export function closeAddFromLibraryModalOnBackdrop(e) {
+  if (e.target && e.target.id === 'addFromLibraryToSetModal') {
+    closeAddFromLibraryModal();
+  }
+}
+window.closeAddFromLibraryModalOnBackdrop = closeAddFromLibraryModalOnBackdrop;
+
+export function renderAddFromLibraryList() {
+  const grid = document.getElementById('addLibraryPickGrid');
+  if (!grid) return;
+
+  const set = (currentManagingSetId ? getSetProfile(currentManagingSetId) : null) || getCurrentActiveSet();
+  const existingNames = new Set((set?.assets || []).map(a => a.name.toLowerCase()));
+
+  const library = typeof window.getSavedLibraryFromMemory === 'function' ? window.getSavedLibraryFromMemory() : [];
+  if (library.length === 0) {
+    grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: var(--text-dim); padding: 30px;">No saved decals found in browser library. Create and save decals first!</div>`;
+    return;
+  }
+
+  let html = '';
+  library.forEach(item => {
+    const isAlreadyInSet = existingNames.has(item.assetName.toLowerCase());
+    const isSelected = librarySelectedAssets.has(item.assetName);
+    const thumb = item.baseImageData || getAssetThumbnailFallback(item.assetName, item.assetCategory);
+
+    html += `
+      <div class="library-pick-card ${isSelected ? 'selected' : ''} ${isAlreadyInSet ? 'already-in-set' : ''}" onclick="${isAlreadyInSet ? '' : `toggleLibraryPickSelection('${escapeHtml(item.assetName)}')`}" title="${escapeHtml(item.assetName)} ${isAlreadyInSet ? '(Already in this pack)' : ''}">
+        <div style="width: 100%; height: 60px; border-radius: 4px; overflow: hidden; background: #090e16; display: flex; align-items: center; justify-content: center; position: relative;">
+          <img src="${thumb}" alt="${escapeHtml(item.assetName)}" style="width: 100%; height: 100%; object-fit: contain;">
+          ${isAlreadyInSet ? '<span style="position: absolute; font-size: 8px; font-weight: 700; background: rgba(0,0,0,0.8); color: #94a3b8; padding: 2px 4px; border-radius: 3px;">IN PACK</span>' : ''}
+          ${isSelected ? '<span style="position: absolute; top: 2px; right: 2px; font-size: 10px; background: var(--accent-emerald); color: #000; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800;">✓</span>' : ''}
+        </div>
+        <div style="font-size: 10.5px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+          ${escapeHtml(item.assetName)}
+        </div>
+        <div style="font-size: 9px; color: var(--text-dim);">
+          ${escapeHtml(item.assetCategory || 'Decals')}
+        </div>
+      </div>
+    `;
+  });
+
+  grid.innerHTML = html;
+
+  const countBadge = document.getElementById('addLibrarySelectionCountBadge');
+  if (countBadge) countBadge.textContent = `${librarySelectedAssets.size} selected`;
+
+  const btnConfirm = document.getElementById('btnConfirmAddFromLibrary');
+  if (btnConfirm) btnConfirm.disabled = librarySelectedAssets.size === 0;
+}
+window.renderAddFromLibraryList = renderAddFromLibraryList;
+
+export function toggleLibraryPickSelection(assetName) {
+  if (librarySelectedAssets.has(assetName)) {
+    librarySelectedAssets.delete(assetName);
+  } else {
+    librarySelectedAssets.add(assetName);
+  }
+  renderAddFromLibraryList();
+}
+window.toggleLibraryPickSelection = toggleLibraryPickSelection;
+
+export function confirmAddFromLibraryToSet() {
+  if (librarySelectedAssets.size === 0) return;
+
+  const set = (currentManagingSetId ? getSetProfile(currentManagingSetId) : null) || getCurrentActiveSet();
+  if (!set) return;
+
+  const library = typeof window.getSavedLibraryFromMemory === 'function' ? window.getSavedLibraryFromMemory() : [];
+  const selectedItems = library.filter(it => librarySelectedAssets.has(it.assetName));
+
+  const registry = getSetsRegistry();
+  const setIdx = registry.findIndex(s => s.id === set.id || s.setName.toLowerCase() === set.setName.toLowerCase());
+  const activeSet = setIdx >= 0 ? registry[setIdx] : set;
+
+  activeSet.assets = activeSet.assets || [];
+  const step = activeSet.stepInterval || 10;
+
+  selectedItems.forEach(item => {
+    const existing = activeSet.assets.find(a => a.name.toLowerCase() === item.assetName.toLowerCase());
+    if (!existing) {
+      const nextIdx = activeSet.assets.length + 1;
+      const nextPrio = activeSet.basePriority + nextIdx * step;
+      activeSet.assets.push({
+        name: item.assetName,
+        priority: nextPrio,
+        index: nextIdx,
+        date: Date.now(),
+        thumbnail: item.baseImageData || getAssetThumbnailFallback(item.assetName, activeSet.category)
+      });
+    }
+  });
+
+  activeSet.lastIndex = activeSet.assets.length;
+  activeSet.nextPriority = activeSet.basePriority + (activeSet.assets.length + 1) * step;
+
+  if (setIdx >= 0) registry[setIdx] = activeSet;
+  else registry.push(activeSet);
+
+  saveSetsRegistry(registry);
+  updateSetRegistryUI(activeSet.id);
+  renderSetThumbnailsStrip();
+  renderManageSetItemsTable(activeSet.id);
+  renderSetsTable();
+  updateActiveDecalPackStatus();
+  closeAddFromLibraryModal();
+  showToast(`Added ${selectedItems.length} decals to ${activeSet.setName}`);
+}
+window.confirmAddFromLibraryToSet = confirmAddFromLibraryToSet;
 
 // ==========================================
 // Create New Set Wizard Flow & State

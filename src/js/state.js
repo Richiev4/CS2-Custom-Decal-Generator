@@ -322,14 +322,17 @@ export function getCanvases() {
   };
 }
 
+let toastTimeout = null;
 export function showToast(msg) {
   const toast = document.getElementById('toast');
   if (!toast) return;
-  toast.textContent = msg;
+  if (toastTimeout) clearTimeout(toastTimeout);
+  toast.innerHTML = msg;
   toast.style.display = 'block';
-  setTimeout(() => {
+  toastTimeout = setTimeout(() => {
     toast.style.display = 'none';
-  }, 2500);
+    toastTimeout = null;
+  }, 3200);
 }
 
 export function escapeHtml(str) {

@@ -61,6 +61,7 @@
       <div class="set-bundle-bar" id="headerSetBundleBar" title="Combined 3-in-1 Set (Decal + Surface + Net Lane). Each mode retains its own independent graphic and settings.">
         <div class="set-bundle-info">
           <span class="set-bundle-label">SET</span>
+          <button type="button" class="help-q-btn" onclick="event.stopPropagation(); toggleFieldHelp(this, 'set3in1', event)" onmouseenter="showFieldHelp(this, 'set3in1', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for 3-in-1 Mod Sets" title="Help for 3-in-1 Mod Sets" style="width: 15px; height: 15px; font-size: 10px; margin-left: 2px;">?</button>
           <span class="set-bundle-count partial" id="headerSetCountBadge">1/3 Items</span>
         </div>
         <button type="button" class="set-bundle-export-btn" id="btnHeaderExportSet" onclick="exportCompleteSetZip()" title="Export complete 3-in-1 Set containing Decal, Surface, and Net Lane into a single organized ZIP package">
@@ -77,14 +78,25 @@
       <input type="file" id="communityFolderInput" webkitdirectory directory multiple style="display:none;" onchange="handleCommunityFolderImport(event)">
       <input type="file" id="communityFilesInput" multiple accept=".png,.jpg,.jpeg,.json,.txt" style="display:none;" onchange="handleCommunityFilesImport(event)">
 
-      <!-- Backup & Restore Quick Header Button -->
-      <button class="project-btn" id="btnHeaderBackup" onclick="openBackupAllDataModal()" title="Backup &amp; Restore All Local Data (Sets, IndexedDB assets, preferences)" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); color: #34d399; font-weight: 700; padding: 6px 11px; font-size: 12px; gap: 6px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-          <polyline points="17 21 17 13 7 13 7 21"/>
-          <polyline points="7 3 7 8 15 8"/>
+      <!-- GitHub Repository Link -->
+      <a href="https://github.com/Richiev4/CS2-Custom-Decal-Generator" target="_blank" rel="noopener noreferrer" class="project-btn header-github-btn" title="View Source &amp; Project on GitHub (Richiev4/CS2-Custom-Decal-Generator)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
         </svg>
-        <span>Backup Data</span>
+        <span>GitHub</span>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.65; margin-left: -2px;">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+          <polyline points="15 3 21 3 21 9"></polyline>
+          <line x1="10" y1="14" x2="21" y2="3"></line>
+        </svg>
+      </a>
+
+      <!-- Donate / Support Button -->
+      <button type="button" class="project-btn header-donate-btn" id="btnHeaderDonate" onclick="openDonateModal()" title="Support the Creator / Donate">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+        </svg>
+        <span>Donate</span>
       </button>
 
       <!-- Unified Project & Tools Menu Dropdown -->
@@ -98,9 +110,9 @@
           <span>Project &amp; Tools ▾</span>
         </button>
 
-        <div id="mainProjectMenuDropdown" class="main-project-menu-dropdown" style="display: none; position: absolute; top: calc(100% + 8px); background: #0c131f; border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 8px; box-shadow: 0 16px 36px rgba(0,0,0,0.85); z-index: 100100; min-width: 320px; max-width: calc(100vw - 20px); padding: 6px; backdrop-filter: blur(8px); box-sizing: border-box;">
+        <div id="mainProjectMenuDropdown" class="main-project-menu-dropdown" style="display: none; position: absolute; top: calc(100% + 8px); background: #0c131f; border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 8px; box-shadow: 0 16px 36px rgba(0,0,0,0.85); z-index: 100100; min-width: 320px; max-width: calc(100vw - 20px); padding: 6px 6px 14px 6px; backdrop-filter: blur(8px); box-sizing: border-box; overscroll-behavior: contain;">
           <!-- Section 1: File & Workspace -->
-          <div style="padding: 4px 8px 3px; font-size: 10px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px;">Workspace</div>
+          <div style="padding: 4px 8px 3px; font-size: 10px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px;">Workspace &amp; Storage</div>
           
           <button type="button" class="project-btn" style="width: 100%; justify-content: flex-start; padding: 7px 10px; border-radius: 5px; margin-bottom: 2px;" onclick="openSaveModal(); toggleMainProjectMenu(false);" title="Save project or export asset (Ctrl+S)">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="color: var(--primary);"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
@@ -113,10 +125,10 @@
             <span style="font-weight: 600;">Load Saved Project (.cs2asset)</span>
           </button>
 
-          <button type="button" class="project-btn" style="width: 100%; justify-content: flex-start; padding: 7px 10px; border-radius: 5px; margin-bottom: 2px; color: #34d399;" onclick="openBackupAllDataModal(); toggleMainProjectMenu(false);" title="Backup &amp; Restore All Local Data (Sets, IndexedDB textures, and settings)">
+          <button type="button" class="project-btn" id="btnMenuBackupData" style="width: 100%; justify-content: flex-start; padding: 7.5px 10px; border-radius: 5px; margin-bottom: 2px; color: #34d399; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25);" onclick="openBackupAllDataModal(); toggleMainProjectMenu(false);" title="Backup &amp; Restore All Local Data (Sets, IndexedDB textures, and settings)">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="color: #34d399;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-            <span style="font-weight: 600;">Backup / Restore All Data...</span>
-            <span style="margin-left: auto; font-size: 9.5px; color: var(--accent-emerald); font-weight: bold; background: rgba(16, 185, 129, 0.15); padding: 1px 5px; border-radius: 3px;">Full Storage</span>
+            <span style="font-weight: 700;">Backup Data...</span>
+            <span style="margin-left: auto; font-size: 9.5px; color: #34d399; font-weight: bold; background: rgba(16, 185, 129, 0.2); padding: 1.5px 6px; border-radius: 4px; border: 1px solid rgba(16, 185, 129, 0.35);">Export / Restore</span>
           </button>
 
           <button type="button" class="project-btn" style="width: 100%; justify-content: flex-start; padding: 7px 10px; border-radius: 5px; color: #f87171;" onclick="openClearModal(); toggleMainProjectMenu(false);" title="Choose what to clear from the workspace">
@@ -257,6 +269,18 @@
           <button type="button" class="project-btn" style="width: 100%; justify-content: flex-start; padding: 7px 10px; border-radius: 5px; color: var(--primary);" onclick="openHelpModal(); toggleMainProjectMenu(false);">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
             <span style="font-weight: 600;">Help, Modding Wiki &amp; FAQ</span>
+          </button>
+
+          <a href="https://github.com/Richiev4/CS2-Custom-Decal-Generator" target="_blank" rel="noopener noreferrer" class="project-btn" style="width: 100%; justify-content: flex-start; padding: 7px 10px; border-radius: 5px; color: #f1f5f9; text-decoration: none;" onclick="toggleMainProjectMenu(false);" title="Open source code repository on GitHub (Richiev4/CS2-Custom-Decal-Generator)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+            <span style="font-weight: 600;">GitHub Repository</span>
+            <span style="margin-left: auto; font-size: 9.5px; color: var(--accent-cyan); font-family: monospace;">Richiev4 ↗</span>
+          </a>
+
+          <button type="button" class="project-btn" style="width: 100%; justify-content: flex-start; padding: 7px 10px; border-radius: 5px; color: #fda4af;" onclick="openDonateModal(); toggleMainProjectMenu(false);" title="Support the project creator / Donate">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+            <span style="font-weight: 600;">Donate / Support Creator</span>
+            <span style="margin-left: auto; font-size: 9.5px; color: #fb7185; background: rgba(251, 113, 133, 0.15); padding: 1.5px 6px; border-radius: 4px; font-weight: bold;">❤️ Support</span>
           </button>
 
           <!-- Divider -->

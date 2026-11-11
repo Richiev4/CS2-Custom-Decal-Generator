@@ -75,6 +75,7 @@
         <button type="button" class="preview-scale-btn active" id="btnToggleAspectBadge" onclick="toggleGlobalAspectOverlay()" title="Click to toggle in-game 3D decal size & aspect ratio overlay across previews">
           <span id="floatingAspectBadgeText" style="color: var(--accent-cyan);">📐 2.0×2.0m (1:1)</span>
         </button>
+        <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'viewportControls', event)" onmouseenter="showFieldHelp(this, 'viewportControls', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Viewport Controls" title="Help for Viewport Controls" style="width: 15px; height: 15px; font-size: 9.5px; margin: 0 2px;">?</button>
         <button type="button" class="preview-scale-close-btn" id="btnCloseFloatingScale" onclick="toggleFloatingViewportControls(false)" title="Hide size/zoom bar" aria-label="Hide floating size/zoom bar">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
@@ -268,7 +269,10 @@
           <!-- Top Controls Bar: Presets, Map Dropdown & Seams Toggle -->
           <div class="tiled-top-bar">
             <div class="tiled-presets-group">
-              <span class="tiled-control-label">Presets:</span>
+              <div style="display: flex; align-items: center; gap: 5px;">
+                <span class="tiled-control-label">Presets:</span>
+                <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'tiledPattern', event)" onmouseenter="showFieldHelp(this, 'tiledPattern', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Tiled Pattern" title="Help for Tiled Pattern" style="width: 14px; height: 14px; font-size: 9.5px;">?</button>
+              </div>
               <div class="tiling-btn-group" id="tiledGroup">
                 <button type="button" class="tiling-pill" data-tile="1" onclick="setSurfaceTiling(1)">1×</button>
                 <button type="button" class="tiling-pill" data-tile="2" onclick="setSurfaceTiling(2)">2×</button>
@@ -333,7 +337,10 @@
           <div class="scale-top-bar">
             <!-- Scene Switcher -->
             <div class="scale-scenes-group">
-              <span class="scale-control-label">Scene:</span>
+              <div style="display: flex; align-items: center; gap: 5px;">
+                <span class="scale-control-label">Scene:</span>
+                <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'inGameScale', event)" onmouseenter="showFieldHelp(this, 'inGameScale', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for In-Game Scale Simulation" title="Help for In-Game Scale Simulation" style="width: 14px; height: 14px; font-size: 9.5px;">?</button>
+              </div>
               <div class="scale-btn-group" id="scaleScenesGroup">
                 <button type="button" class="scale-scene-btn active" data-scene="road" onclick="setScaleScene('road')" title="Simulate decal on asphalt road lane with car, lane markings & pedestrian">
                   <span>🛣️ Road &amp; Lane</span>

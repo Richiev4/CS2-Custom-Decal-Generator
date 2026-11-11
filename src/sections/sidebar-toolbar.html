@@ -5,7 +5,10 @@
 
       <!-- Sections Quick Expand/Collapse Toolbar -->
       <div class="sidebar-section-toolbar">
-        <span class="sidebar-toolbar-title">Tool Sections</span>
+        <div style="display: flex; align-items: center; gap: 5px;">
+          <span class="sidebar-toolbar-title">Tool Sections</span>
+          <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'sidebarTools', event)" onmouseenter="showFieldHelp(this, 'sidebarTools', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Tool Sections &amp; Shortcuts" title="Help for Tool Sections &amp; Shortcuts" style="width: 14px; height: 14px; font-size: 9.5px;">?</button>
+        </div>
         <div class="sidebar-toolbar-actions">
           <button type="button" class="sidebar-tool-btn" onclick="expandAllSections()" title="Expand all sections">
             <span>▾ Expand All</span>

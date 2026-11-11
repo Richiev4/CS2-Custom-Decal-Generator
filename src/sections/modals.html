@@ -491,6 +491,102 @@
     </div>
   </div>
 
+  <!-- Support & Donation Modal -->
+  <div class="modal-overlay" id="donateModal" onclick="closeDonateModalOnBackdrop(event)" style="display: none; z-index: 12800;">
+    <div class="modal-card" style="max-width: 530px; width: 95%; border-color: rgba(244, 63, 94, 0.45); box-shadow: 0 25px 65px rgba(0, 0, 0, 0.95); background: #0c131f; border-radius: 12px; overflow: hidden;">
+      <div class="modal-header" style="background: linear-gradient(135deg, #1b131e 0%, #131a27 100%); border-bottom: 1px solid rgba(244, 63, 94, 0.3); padding: 14px 18px; display: flex; align-items: center; justify-content: space-between;">
+        <div class="modal-title" style="color: #fb7185; display: flex; align-items: center; gap: 9px; font-weight: 700; font-size: 14.5px;">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+          <span>Support the Creator</span>
+        </div>
+        <button type="button" class="preset-btn" style="padding: 3px 8px; font-size: 13px;" onclick="closeDonateModal()" title="Close dialog" aria-label="Close">✕</button>
+      </div>
+
+      <div class="modal-body" style="padding: 20px; gap: 14px; text-align: left;">
+        <!-- Banner notice -->
+        <div style="background: linear-gradient(135deg, rgba(244, 63, 94, 0.12) 0%, rgba(251, 146, 60, 0.12) 100%); border: 1px solid rgba(244, 63, 94, 0.3); border-radius: 8px; padding: 12px 14px; display: flex; align-items: flex-start; gap: 12px;">
+          <span style="font-size: 22px; flex-shrink: 0; line-height: 1;">☕</span>
+          <div>
+            <div style="font-size: 13.5px; font-weight: 700; color: #fff; margin-bottom: 3px;">
+              Thank you for considering supporting!
+            </div>
+            <div style="font-size: 12px; line-height: 1.5; color: #cbd5e1;">
+              Your support helps maintain this custom asset suite, keep PBR pipelines updated for Cities: Skylines II updates, and build new modding features.
+            </div>
+          </div>
+        </div>
+
+        <!-- Coming soon placeholder notice -->
+        <div style="background: rgba(15, 23, 42, 0.7); border: 1px dashed rgba(251, 146, 60, 0.5); border-radius: 8px; padding: 14px 16px; text-align: center;">
+          <div style="display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 9999px; background: rgba(251, 146, 60, 0.18); border: 1px solid rgba(251, 146, 60, 0.4); color: #fbbf24; font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">
+            <span>⏳ Donation Details Coming Soon</span>
+          </div>
+          <p style="font-size: 12.5px; color: #94a3b8; margin: 0 0 8px 0; line-height: 1.5;">
+            Direct donation channels (such as Ko-fi, Buy Me a Coffee, PayPal, or GitHub Sponsors) are being set up and will be linked here once ready.
+          </p>
+          <div style="font-size: 11px; color: #64748b; line-height: 1.4;">
+            <em>(When you have your donation URL, tell me or edit this dialog to link it directly!)</em>
+          </div>
+        </div>
+
+        <!-- Configurable Donation Channels (Prepared for when user adds links) -->
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div style="font-size: 10.5px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px;">Planned Support Channels</div>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <!-- Channel 1: Ko-fi / Buy Me a Coffee -->
+            <!-- TO CONFIGURE: replace the button or add href="https://ko-fi.com/YOUR_NAME" -->
+            <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 6px; padding: 11px; display: flex; align-items: center; gap: 9px;">
+              <span style="font-size: 20px;">☕</span>
+              <div>
+                <div style="font-size: 12px; font-weight: 700; color: #f1f5f9;">Ko-fi / Coffee</div>
+                <div style="font-size: 10px; color: #94a3b8;">Link coming soon</div>
+              </div>
+            </div>
+
+            <!-- Channel 2: GitHub Sponsors -->
+            <!-- TO CONFIGURE: replace the button or add href="https://github.com/sponsors/YOUR_NAME" -->
+            <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 6px; padding: 11px; display: flex; align-items: center; gap: 9px;">
+              <span style="font-size: 20px;">💖</span>
+              <div>
+                <div style="font-size: 12px; font-weight: 700; color: #f1f5f9;">GitHub Sponsors</div>
+                <div style="font-size: 10px; color: #94a3b8;">Link coming soon</div>
+              </div>
+            </div>
+
+            <!-- Channel 3: PayPal -->
+            <!-- TO CONFIGURE: replace the button or add href="https://paypal.me/YOUR_NAME" -->
+            <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 6px; padding: 11px; display: flex; align-items: center; gap: 9px;">
+              <span style="font-size: 20px;">💳</span>
+              <div>
+                <div style="font-size: 12px; font-weight: 700; color: #f1f5f9;">PayPal</div>
+                <div style="font-size: 10px; color: #94a3b8;">Link coming soon</div>
+              </div>
+            </div>
+
+            <!-- Channel 4: Community / Star -->
+            <a href="https://github.com/Richiev4/CS2-Custom-Decal-Generator" target="_blank" rel="noopener noreferrer" style="background: rgba(0, 168, 255, 0.08); border: 1px solid rgba(0, 168, 255, 0.25); border-radius: 6px; padding: 11px; display: flex; align-items: center; gap: 9px; text-decoration: none; transition: all 0.2s ease;">
+              <span style="font-size: 20px;">⭐</span>
+              <div>
+                <div style="font-size: 12px; font-weight: 700; color: #38bdf8;">Star on GitHub</div>
+                <div style="font-size: 10px; color: #93c5fd;">Free way to support ↗</div>
+              </div>
+            </a>
+          </div>
+        </div>
+
+        <!-- Footer Actions -->
+        <div style="display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-top: 4px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+          <button type="button" class="btn-secondary" style="font-size: 12px; padding: 7px 18px;" onclick="closeDonateModal()">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Help & Knowledge Base Modal -->
   <div class="modal-overlay" id="helpModal" onclick="closeHelpModalOnBackdrop(event)">
     <div class="modal-card help-modal-card">
@@ -512,13 +608,23 @@
         <!-- Category Filters -->
         <div class="help-filter-pills" id="helpFilterPills">
           <button type="button" class="help-filter-btn" style="background: rgba(56, 189, 248, 0.15); border-color: rgba(56, 189, 248, 0.4); color: var(--accent-cyan); font-weight: 700;" onclick="closeHelpModal(); openWelcomeSplash();">⭐ Quick Start Guide</button>
+          <a href="https://github.com/Richiev4/CS2-Custom-Decal-Generator" target="_blank" rel="noopener noreferrer" class="help-filter-btn" style="text-decoration: none; display: inline-flex; align-items: center; gap: 5px; background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.2); color: #f1f5f9;" title="View project on GitHub">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+            <span>GitHub Repo ↗</span>
+          </a>
+          <button type="button" class="help-filter-btn" style="background: rgba(244, 63, 94, 0.12); border-color: rgba(244, 63, 94, 0.35); color: #fda4af; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;" onclick="closeHelpModal(); openDonateModal();" title="Support the creator">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+            <span>Donate ❤️</span>
+          </button>
           <button type="button" class="help-filter-btn active" onclick="setHelpCategory('all')">All Questions</button>
           <button type="button" class="help-filter-btn" onclick="setHelpCategory('wiki')">Paradox Wiki Reference</button>
-          <button type="button" class="help-filter-btn" onclick="setHelpCategory('resolution')">Resolution & Export</button>
-          <button type="button" class="help-filter-btn" onclick="setHelpCategory('normal-mask')">Normal & Mask Maps</button>
-          <button type="button" class="help-filter-btn" onclick="setHelpCategory('tiling-lit')">Tiling & 3D Simulation</button>
+          <button type="button" class="help-filter-btn" onclick="setHelpCategory('set-3in1')">3-in-1 Sets &amp; Packs</button>
+          <button type="button" class="help-filter-btn" onclick="setHelpCategory('resolution')">Resolution &amp; Export</button>
+          <button type="button" class="help-filter-btn" onclick="setHelpCategory('normal-mask')">Normal &amp; Mask Maps</button>
+          <button type="button" class="help-filter-btn" onclick="setHelpCategory('tiling-lit')">Tiling &amp; 3D Simulation</button>
           <button type="button" class="help-filter-btn" onclick="setHelpCategory('modes')">Decal vs Surface vs NetLane</button>
-          <button type="button" class="help-filter-btn" onclick="setHelpCategory('install')">Installation & Modding</button>
+          <button type="button" class="help-filter-btn" onclick="setHelpCategory('install')">Installation &amp; Modding</button>
+          <button type="button" class="help-filter-btn" onclick="setHelpCategory('shortcuts')">Shortcuts &amp; Tools</button>
         </div>
 
         <!-- Search empty message -->
@@ -528,6 +634,38 @@
 
         <!-- Knowledge Base Cards List -->
         <div class="help-items-list" id="helpItemsList">
+
+          <!-- GITHUB: Source Code & Official Repo -->
+          <details class="help-card" data-category="all wiki" open style="border-color: rgba(56, 189, 248, 0.4); background: rgba(14, 23, 38, 0.85);">
+            <summary class="help-summary">
+              <span style="display: flex; align-items: center; gap: 7px; color: #f1f5f9; font-weight: 700;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+                Where can I find the GitHub repository and source code?
+              </span>
+              <span class="help-badge help-badge-green">GitHub Project</span>
+            </summary>
+            <div class="help-content">
+              <p>The complete open source repository for this Cities: Skylines 2 Custom Asset Generator is available on GitHub:</p>
+              <div style="margin: 10px 0; background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 6px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 9px;">
+                  <span style="font-size: 18px;">⭐</span>
+                  <div>
+                    <div style="font-weight: 700; color: #fff; font-size: 13px;">Richiev4 / CS2-Custom-Decal-Generator</div>
+                    <div style="font-size: 11px; color: var(--text-dim);">Source code, documentation, and issues tracker</div>
+                  </div>
+                </div>
+                <a href="https://github.com/Richiev4/CS2-Custom-Decal-Generator" target="_blank" rel="noopener noreferrer" class="btn-primary" style="text-decoration: none; font-size: 12px; font-weight: 700; padding: 6px 14px; display: inline-flex; align-items: center; gap: 6px;">
+                  <span>Open GitHub Repo</span>
+                  <span>↗</span>
+                </a>
+              </div>
+              <ul>
+                <li><strong>Repository:</strong> <a href="https://github.com/Richiev4/CS2-Custom-Decal-Generator" target="_blank" rel="noopener noreferrer" style="color: var(--accent-cyan); word-break: break-all;">https://github.com/Richiev4/CS2-Custom-Decal-Generator</a></li>
+                <li><strong>Author:</strong> Richiev4</li>
+                <li><strong>Feedback &amp; Issues:</strong> Report issues, suggest features, or star the project on GitHub.</li>
+              </ul>
+            </div>
+          </details>
 
           <!-- WIKI 1: Paradox Wiki Findings & Official Pipeline -->
           <details class="help-card" data-category="wiki" open>
@@ -925,6 +1063,159 @@
             </div>
           </details>
 
+          <!-- Q17: 3-in-1 Mod Sets System -->
+          <details class="help-card" data-category="set-3in1 packs modes">
+            <summary class="help-summary">
+              <span>How does the 3-in-1 Mod Set system (Decal + Surface + Net Lane) work?</span>
+              <span class="help-badge help-badge-cyan">3-in-1 Mod Sets</span>
+            </summary>
+            <div class="help-content">
+              <p><strong class="help-highlight">The 3-in-1 Mod Set architecture allows you to create and bundle three related assets in a single workspace session:</strong></p>
+              <ul>
+                <li><strong>Three Independent Slots:</strong> The top header displays <strong>Decal</strong>, <strong>Surface</strong>, and <strong>Net Lane</strong>. Each slot maintains its own independent source graphic, real-world meter dimensions, procedural or custom normal map, metallic/smoothness mask, and configuration JSON.</li>
+                <li><strong>Seamless Slot Switching:</strong> Click any slot in the header bar or in Section 1 (Source Image Input) to toggle between them. Switching slots preserves your work in memory without overwriting other slots.</li>
+                <li><strong>Unified Export:</strong> Clicking <strong>"Export Complete Set (.zip)"</strong> (in the header or Section 6) automatically renders high-resolution PBR textures for all loaded slots and packages them into clean subdirectories (<code>/Decals/&lt;AssetName&gt;/</code>, <code>/Surfaces/&lt;AssetName&gt;/</code>, <code>/NetLanes/&lt;AssetName&gt;/</code>) ready to drop into ExtraAssetsImporter!</li>
+                <li><strong>Flexible Workflow:</strong> You do not need to fill all 3 slots. If you only have a Decal, you can export just that decal, or load a matching ground surface and road line whenever you're ready.</li>
+              </ul>
+            </div>
+          </details>
+
+          <!-- Q18: Community Mod & File Import -->
+          <details class="help-card" data-category="install shortcuts">
+            <summary class="help-summary">
+              <span>How do I import existing CS2 mods (.zip, unpacked folder, or loose textures)?</span>
+              <span class="help-badge help-badge-green">Smart Import</span>
+            </summary>
+            <div class="help-content">
+              <p><strong class="help-highlight">You can easily load and edit existing Cities: Skylines II mods created by yourself or the community:</strong></p>
+              <ul>
+                <li><strong>Import .ZIP Archive:</strong> Open <em>Project &amp; Tools ▾</em> in the top header and select <strong>"Import .ZIP Archive"</strong>. Select any downloaded ExtraAssetsImporter mod ZIP. The app automatically uncompresses and assigns textures into the correct slot.</li>
+                <li><strong>Import Extracted Folder:</strong> Choose <strong>"Import Extracted Folder"</strong> to select an already-unpacked mod directory directly from your computer or <code>ModsData</code> folder.</li>
+                <li><strong>Import Loose Texture Files:</strong> Drag or browse loose files together (e.g. <code>_BaseColorMap.png</code>, <code>_NormalMap.png</code>, <code>_MaskMap.png</code>, <code>icon.png</code>, <code>settings.json</code>).</li>
+                <li><strong>Intelligent Auto-Detection:</strong> The importer parses filenames, identifies tangent normal maps, metallic/smoothness masks, in-game thumbnails, and extracts physical dimensions from <code>decal.json</code> or <code>settings.json</code>.</li>
+              </ul>
+            </div>
+          </details>
+
+          <!-- Q19: Selective Workspace Clear & Reset -->
+          <details class="help-card" data-category="shortcuts">
+            <summary class="help-summary">
+              <span>How does the 'Selective Workspace Clear' dialog work?</span>
+              <span class="help-badge help-badge-orange">Workspace Reset</span>
+            </summary>
+            <div class="help-content">
+              <p><strong class="help-highlight">The Clear modal gives you granular control over what gets wiped:</strong></p>
+              <ul>
+                <li><strong>Active Slot Graphic only:</strong> Removes the image from the currently selected slot without affecting the other two slots in your 3-in-1 set.</li>
+                <li><strong>All 3-in-1 Slot Graphics:</strong> Clears graphics across Decal, Surface, and Net Lane at once.</li>
+                <li><strong>Normal Map &amp; Bump Settings:</strong> Reverts custom uploaded normal maps and resets bump depth and smoothing blur to defaults.</li>
+                <li><strong>Mask Map &amp; PBR Values:</strong> Resets custom mask map uploads and metallic / smoothness sliders to 0.</li>
+                <li><strong>Badges, Logos &amp; Overlays:</strong> Clears custom creator monograms, series text, extra badges, and custom icon backdrops without touching your source graphic.</li>
+                <li><strong>Metadata &amp; Dimensions:</strong> Resets asset name, dimensions, and UI priority to default starter values.</li>
+                <li><strong>💥 Wipe Everything:</strong> Total clean slate that resets all slots, settings, and badges at once.</li>
+              </ul>
+            </div>
+          </details>
+
+          <!-- Q20: In-Game Icon Backgrounds & Typography -->
+          <details class="help-card" data-category="install shortcuts">
+            <summary class="help-summary">
+              <span>How do I customize the in-game icon backdrop, Google Fonts, and watermark badges?</span>
+              <span class="help-badge help-badge-purple">Icon &amp; Branding</span>
+            </summary>
+            <div class="help-content">
+              <p><strong class="help-highlight">Section 5 provides a professional graphic studio for generating your 256×256 toolbar icon (<code>icon.png</code>):</strong></p>
+              <ul>
+                <li><strong>Background Styles:</strong> Choose from <strong>CS2 Slate Vignette</strong> (official in-game UI tile), <strong>3D Hex Pedestal</strong> (isometric showroom stand), <strong>Dark City Asphalt</strong>, <strong>Cyan Blueprint Grid</strong>, or <strong>Custom Background</strong>.</li>
+                <li><strong>Custom Backdrops:</strong> Upload your own PNG/JPG/SVG backdrop image, apply procedural textures (wet asphalt, concrete, carbon weave), or craft bespoke dual-color linear/radial gradients.</li>
+                <li><strong>Real-Time Google Fonts:</strong> Custom text tags dynamically load popular Google Fonts (Roboto, Montserrat, Bebas Neue, Oswald, Poppins, Inter, Permanent Marker, JetBrains Mono) with live rendering.</li>
+                <li><strong>Dual-Stop &amp; Text Gradients:</strong> Apply gradient fills to badge shapes or gradient text across letterforms.</li>
+                <li><strong>Style Sync Across Layers:</strong> In the <em>Quick Style Sync Action</em> dropdown, copy your typography, colors, and gradients from one overlay across all other active badge layers with 1 click!</li>
+                <li><strong>Save as Default:</strong> In the <em>Saved Defaults</em> layer view, click <em>"Save Current Badges as Default"</em> so your creator monogram and styling load automatically in every session.</li>
+              </ul>
+            </div>
+          </details>
+
+          <!-- Q21: In-Game Scale Environments -->
+          <details class="help-card" data-category="tiling-lit modes">
+            <summary class="help-summary">
+              <span>How do I verify decal proportions using the In-Game Scale 3D preview?</span>
+              <span class="help-badge help-badge-cyan">Scale Simulation</span>
+            </summary>
+            <div class="help-content">
+              <p><strong class="help-highlight">The In-Game Scale tab projects your decals alongside real-world reference objects before launching the game:</strong></p>
+              <ul>
+                <li><strong>Asphalt Road Environment:</strong> Visualizes your decal centered on an asphalt road lane next to a <strong>4.5m passenger sedan</strong> and a <strong>1.8m citizen pedestrian</strong>. Ensures road markings, manholes, and crosswalks are sized accurately.</li>
+                <li><strong>Building Wall Environment:</strong> Visualizes vertical wall posters, corporate signage, and storefront advertisements next to a standard <strong>2.1m exterior doorway</strong> and realistic brick wall texture.</li>
+                <li><strong>CS2 Zoning Grid (8m × 8m):</strong> Displays the official <strong>8m × 8m zoning cell</strong> used by the Cities: Skylines II simulation engine to test boundary coverage and ground lot proportions.</li>
+                <li><strong>One-Click Standard Dimensions:</strong> In Section 2, use preset buttons to snap to standard sizes: 2:3 Movie Kiosk (1.2m × 1.8m), 3:4 Wall Poster (1.2m × 1.6m), DIN A-Series (1.0m × 1.41m), 16:9 Billboard (4.0m × 2.25m), or Manhole Cover (1.8m × 1.8m).</li>
+              </ul>
+            </div>
+          </details>
+
+          <!-- Q22: Keyboard Shortcuts & Power-User Controls -->
+          <details class="help-card" data-category="shortcuts">
+            <summary class="help-summary">
+              <span>What keyboard shortcuts and quick navigation commands are supported?</span>
+              <span class="help-badge help-badge-blue">Shortcuts</span>
+            </summary>
+            <div class="help-content">
+              <p><strong class="help-highlight">Accelerate your workflow with built-in shortcuts and quick controls:</strong></p>
+              <ul>
+                <li><kbd style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 4px; font-family: monospace;">Ctrl+S</kbd> / <kbd style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 4px; font-family: monospace;">Cmd+S</kbd>: Opens the <strong>Save Asset Destination</strong> dialog to export packages, save project files, or write to disk.</li>
+                <li><kbd style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 4px; font-family: monospace;">Escape</kbd>: Closes any active modal dialog or unpins the interactive field help popover.</li>
+                <li><strong>Click any <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; border-radius:50%; background:#0f1722; border:1px solid #27374d; color:#94a3b8; font-weight:bold; font-size:10px;">?</span> button:</strong> Pins the field help popover open. You can click <em>"Open in Guide &amp; FAQ ↗"</em> to jump straight to the relevant documentation card.</li>
+                <li><strong>Draggable Floating Scale Bar:</strong> Click and drag the grip dots handle to move the scale/zoom toolbar to any corner of your preview panel. Double-click the grip to reset position.</li>
+                <li><strong>Tool Sections Toolbar:</strong> Click <em>▾ Expand All</em> or <em>▸ Collapse All</em> in the sidebar to toggle all accordion sections at once.</li>
+                <li><strong>⚡ Presets Toggle:</strong> Click <em>⚡ Presets: On/Off</em> in the sidebar or header menu to hide sample templates for a clean working space.</li>
+              </ul>
+            </div>
+          </details>
+
+          <!-- Q23: File Formats Explained (.cs2asset vs .zip vs .json) -->
+          <details class="help-card" data-category="resolution shortcuts">
+            <summary class="help-summary">
+              <span>What is the difference between .cs2asset, .zip, and .json files?</span>
+              <span class="help-badge help-badge-blue">File Formats</span>
+            </summary>
+            <div class="help-content">
+              <p><strong class="help-highlight">Each export file serves a specific purpose in your modding workflow:</strong></p>
+              <ul>
+                <li><strong>Project File (<code>.cs2asset</code>):</strong> Your master editable workspace file. Contains the full-resolution uncompressed source graphic, baked custom normal maps, designer watermark logos, physical meter dimensions, and all slider values. Save this to your computer so you can reload and re-edit the asset later without losing quality!</li>
+                <li><strong>In-Game Mod Package (<code>.zip</code>):</strong> The ready-to-use bundle for Cities: Skylines II. Contains power-of-two PNG textures (<code>_BaseColorMap.png</code>, <code>_NormalMap.png</code>, <code>_MaskMap.png</code>, <code>icon.png</code>), <code>decal.json</code> / <code>surface.json</code> / <code>netlane.json</code> for ExtraAssetsImporter, and official <code>settings.json</code> for the game engine.</li>
+                <li><strong>Workspace Backup (<code>.json</code>):</strong> A complete snapshot of your browser's local registry. Contains all registered asset sets, reserved priority spans, default watermark styles, and local draft history. Use this to transfer your workspace between browsers or PCs.</li>
+              </ul>
+            </div>
+          </details>
+
+          <!-- Q24: Troubleshooting Checklist -->
+          <details class="help-card" data-category="install wiki">
+            <summary class="help-summary">
+              <span>Why isn't my decal or surface showing up in Cities: Skylines 2? (Troubleshooting Checklist)</span>
+              <span class="help-badge help-badge-red">Troubleshooting</span>
+            </summary>
+            <div class="help-content">
+              <p><strong class="help-highlight">If your custom asset does not appear in the in-game ExtraAssetsImporter menu, verify this checklist:</strong></p>
+              <ol style="margin-left: 18px; margin-bottom: 8px;">
+                <li><strong>Is ExtraAssetsImporter installed and enabled?</strong> Ensure the <em>ExtraAssetsImporter</em> mod is installed from Paradox Mods and active in your active Playset.</li>
+                <li><strong>Check folder path:</strong> Files must be located in:<br>
+                  <code style="font-size: 10.5px; background: rgba(0,0,0,0.4); padding: 2px 6px; border-radius: 4px; display: inline-block; margin: 3px 0;">%LocalAppData%\..\LocalLow\Colossal Order\Cities Skylines II\ModsData\ExtraAssetsImporter\CustomDecals\&lt;Asset_Name&gt;\</code><br>
+                  <em>Note: Make sure the subfolder name matches your Asset Name exactly.</em>
+                </li>
+                <li><strong>Check texture file names:</strong> ExtraAssetsImporter requires exact names:<br>
+                  • <code>_BaseColorMap.png</code><br>
+                  • <code>_NormalMap.png</code><br>
+                  • <code>_MaskMap.png</code><br>
+                  • <code>icon.png</code><br>
+                  <em>Do NOT prefix texture filenames with your asset name inside the folder!</em>
+                </li>
+                <li><strong>Check texture resolution:</strong> Textures must be square power-of-two dimensions (512×512, 1024×1024, 2048×2048, or 4096×4096). The generator guarantees this automatically.</li>
+                <li><strong>Check Render Target Layers:</strong> Ensure the decal layer mask includes <strong>Terrain (1)</strong>, <strong>Roads (2)</strong>, and <strong>Buildings (4)</strong> (default sum = 7). If all are unchecked, the decal will not project onto anything!</li>
+                <li><strong>Check UI Priority number:</strong> If your priority number is very high (e.g. 50,000+), scroll through the ExtraAssetsImporter tool menu; custom assets appear grouped further down the toolbar list.</li>
+              </ol>
+            </div>
+          </details>
+
         </div>
       </div>
     </div>
@@ -1089,12 +1380,13 @@
           <div class="splash-step-card">
             <div class="splash-step-header">
               <span class="splash-step-num">1</span>
-              <span class="splash-step-title">Prepare Your Images</span>
+              <span class="splash-step-title">Prepare Artwork &amp; Pick Slot</span>
             </div>
             <div class="splash-step-desc">
-              • <strong>Decals:</strong> Use <strong>PNG files with transparent backgrounds</strong> (e.g. road arrows, manholes, stains, graffiti, logos).<br>
-              • <strong>Surfaces &amp; Net Lanes:</strong> Use <strong>seamless tileable images</strong> (cobblestone, grass, asphalt, lines) without transparent borders.<br>
-              • <strong>Resolution:</strong> Power-of-two square formats (<strong>1024×1024</strong> or <strong>2048×2048</strong> recommended) for optimal GPU mipmapping.
+              • <strong>3-in-1 Mod Slots:</strong> Select <strong>Decal</strong> (standalone box), <strong>Surface</strong> (tiling ground), or <strong>Net Lane</strong> (spline ribbon) in the top header.<br>
+              • <strong>Decals:</strong> PNG graphics with transparent alpha backgrounds (arrows, manholes, stains, posters).<br>
+              • <strong>Surfaces &amp; Net Lanes:</strong> Seamless tileable textures without transparent borders.<br>
+              • <strong>Resolution:</strong> Square power-of-two (1024×1024 or 2048×2048 recommended) for GPU mipmapping.
             </div>
           </div>
 
@@ -1102,12 +1394,12 @@
           <div class="splash-step-card highlight-step">
             <div class="splash-step-header">
               <span class="splash-step-num">2</span>
-              <span class="splash-step-title">Load into 'Source Image Input'</span>
+              <span class="splash-step-title">Load into '1. Source Image Input'</span>
             </div>
             <div class="splash-step-desc">
-              • In the left sidebar, navigate to <strong>Section 1: Source Image Input</strong>.<br>
-              • Drag &amp; drop your image directly onto the drop zone, or click <em>"Browse File"</em>.<br>
-              • <em>Quick Test:</em> You can also click the quick presets (<span class="splash-inline-pill" onclick="loadSample('manhole'); closeWelcomeSplash();">Manhole</span>, <span class="splash-inline-pill" onclick="loadSample('arrow'); closeWelcomeSplash();">Turn Arrow</span>, <span class="splash-inline-pill" onclick="loadSample('crack'); closeWelcomeSplash();">Crack</span>) in the Project &amp; Tools menu.
+              • In the left sidebar, expand <strong>1. Source Image Input</strong>.<br>
+              • Drag &amp; drop your graphic directly onto the drop zone or browse files.<br>
+              • <em>Quick Templates:</em> Test right away with 1-click starter presets (<span class="splash-inline-pill" onclick="loadSample('manhole'); closeWelcomeSplash();">Manhole</span>, <span class="splash-inline-pill" onclick="loadSample('arrow'); closeWelcomeSplash();">Turn Arrow</span>, <span class="splash-inline-pill" onclick="loadSample('poster'); closeWelcomeSplash();">Poster (2:3)</span>, <span class="splash-inline-pill" onclick="loadSample('crack'); closeWelcomeSplash();">Crack</span>).
             </div>
           </div>
 
@@ -1115,11 +1407,12 @@
           <div class="splash-step-card">
             <div class="splash-step-header">
               <span class="splash-step-num">3</span>
-              <span class="splash-step-title">Tune Normal Map (3D Relief Bump)</span>
+              <span class="splash-step-title">Set Dimensions &amp; Geometry</span>
             </div>
             <div class="splash-step-desc">
-              • Tangent-space <strong>OpenGL (+X, +Y)</strong> normal maps are automatically generated from your image height gradients.<br>
-              • Adjust the <strong>Bump Height</strong> and <strong>Smoothing Blur</strong> sliders to achieve the desired physical depth, or import your own baked <code>_NormalMap.png</code>.
+              • In <strong>2. Decal Settings &amp; Geometry</strong>, set real-world physical Width, Height, and Depth in meters.<br>
+              • Choose <strong>Aspect Ratio Strategy</strong> (Contain with transparent borders vs Fill UV Full Stretch for posters).<br>
+              • Select <strong>Render Target Layers</strong> (Terrain, Roads, Buildings) and set menu <strong>UiPriority</strong>.
             </div>
           </div>
 
@@ -1127,11 +1420,11 @@
           <div class="splash-step-card">
             <div class="splash-step-header">
               <span class="splash-step-num">4</span>
-              <span class="splash-step-title">Configure Mask Map (PBR Physical Materials)</span>
+              <span class="splash-step-title">Tune Normal Map (3D Relief Bump)</span>
             </div>
             <div class="splash-step-desc">
-              • CS2 channel packing: <strong>Red = Metallic</strong> (iron rims, steel), <strong>Alpha = Smoothness</strong> (wet glossy pavement vs matte concrete).<br>
-              • Keep <strong>"Modulate Mask with Decal Alpha"</strong> checked to eliminate shiny square border halos on the road!
+              • In <strong>3. Normal Map</strong>, OpenGL (+X, +Y) tangent vectors are procedurally generated from color luminance gradients.<br>
+              • Adjust <strong>Bump Height</strong> and <strong>Edge Smoothing Blur</strong>, or upload your own sculpted <code>_NormalMap.png</code>.
             </div>
           </div>
 
@@ -1139,11 +1432,11 @@
           <div class="splash-step-card">
             <div class="splash-step-header">
               <span class="splash-step-num">5</span>
-              <span class="splash-step-title">Brand In-Game Icon Badges (Optional)</span>
+              <span class="splash-step-title">Configure Mask Map (PBR Physical Materials)</span>
             </div>
             <div class="splash-step-desc">
-              • Customize your <code>icon.png</code> thumbnail using <strong>Section 5: Icon Badges &amp; Creator Watermark</strong>.<br>
-              • Add creator seals, collection/series badges, and resolution tags (HQ, 4K) so your asset is easily recognizable in the in-game catalog.
+              • In <strong>4. Mask Map</strong>, tune CS2 PBR channels: <strong>Red = Metallic</strong> (iron grates, chrome), <strong>Alpha = Smoothness</strong> (wet asphalt vs matte stone).<br>
+              • Keep <strong>"Modulate Alpha"</strong> enabled to eliminate shiny square halos outside decal borders!
             </div>
           </div>
 
@@ -1151,12 +1444,11 @@
           <div class="splash-step-card highlight-export">
             <div class="splash-step-header">
               <span class="splash-step-num">6</span>
-              <span class="splash-step-title">Export Package &amp; Install in CS2</span>
+              <span class="splash-step-title">Brand In-Game Icon &amp; Export</span>
             </div>
             <div class="splash-step-desc">
-              • Set your real-world dimensions (meters) in <strong>Section 2</strong>.<br>
-              • Head to <strong>Section 6: Export Package</strong> and click <strong>"Export Asset Package (.zip)"</strong>.<br>
-              • Extract the zip into your ExtraAssetsImporter mod directory: <code>%AppData%\..\LocalLow\Colossal Order\Cities Skylines II\Mods\ExtraAssetsImporter\CustomDecals\&lt;Asset_Name&gt;\</code>.
+              • In <strong>5. In-Game Icon</strong>, customize your 256×256 thumbnail with backdrops (Slate, Hex Pedestal, Asphalt) and up to 4 watermark overlays with live Google Fonts.<br>
+              • In <strong>6. Export Package</strong>, click <strong>"Export Asset Package (.zip)"</strong> or <strong>"Export Directly to CS2 Folder"</strong> into <code>ModsData\ExtraAssetsImporter\CustomDecals\&lt;Asset_Name&gt;\</code>.
             </div>
           </div>
         </div>
@@ -1165,7 +1457,7 @@
         <div class="splash-tip-bar">
           <span style="font-size: 16px;">💡</span>
           <div>
-            <strong>Interactive Preview Tip:</strong> Use the right-hand preview panel tabs (<em>Composite Decal</em>, <em>3D Lit Surface</em>, <em>Tiled Pattern</em>, <em>Map Channels</em>) to inspect sun angles and seamless tiling before exporting!
+            <strong>Interactive Preview Modes:</strong> Use the right-hand preview panel tabs (<strong>All Maps</strong>, <strong>3D Lit Surface</strong>, <strong>In-Game Scale</strong> with car/pedestrian/doorway references, and <strong>Tiled Pattern</strong> with seam guidelines) to verify lighting and scale before launching CS2!
           </div>
         </div>
       </div>
@@ -1176,6 +1468,14 @@
           <span>Don't show this splash automatically on launch</span>
         </label>
         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+          <a href="https://github.com/Richiev4/CS2-Custom-Decal-Generator" target="_blank" rel="noopener noreferrer" class="btn-secondary" style="width: auto; padding: 7px 12px; font-size: 12px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; color: #f1f5f9;" title="View source code on GitHub (Richiev4/CS2-Custom-Decal-Generator)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+            <span>GitHub Repo ↗</span>
+          </a>
+          <button type="button" class="btn-secondary" style="width: auto; padding: 7px 12px; font-size: 12px; color: #fda4af; border-color: rgba(244, 63, 94, 0.4); display: inline-flex; align-items: center; gap: 5px;" onclick="openDonateModal()" title="Support the creator / Donate">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+            <span>Donate</span>
+          </button>
           <button type="button" class="btn-secondary" style="width: auto; padding: 7px 12px; font-size: 12px;" onclick="startBlankFromSplash()" title="Start with an empty workspace and no loaded image">
             Start Blank
           </button>
@@ -1896,6 +2196,132 @@
     </div>
   </div>
 
+  <!-- Manage Pack Items Modal (Viewing, Reordering, and Removing Assets from Set) -->
+  <div class="modal-overlay" id="manageSetItemsModal" onclick="closeManageSetItemsModalOnBackdrop(event)" style="display: none; z-index: 12400;">
+    <div class="modal-card manage-set-items-modal-card">
+      <div class="modal-header" style="background: linear-gradient(135deg, #101c2c 0%, #172a40 100%); border-bottom: 1px solid rgba(0, 168, 255, 0.35);">
+        <div class="modal-title" style="display: flex; align-items: center; gap: 9px; color: #ffffff;">
+          <div style="width: 28px; height: 28px; border-radius: 6px; background: rgba(0, 168, 255, 0.2); border: 1px solid rgba(0, 168, 255, 0.4); display: flex; align-items: center; justify-content: center; color: var(--accent-cyan); font-size: 15px;">
+            📁
+          </div>
+          <div>
+            <div style="font-size: 14px; font-weight: 700; color: #fff;">
+              Manage Pack: <span id="manageModalPackTitle" style="color: var(--accent-cyan);">Road Markings</span>
+            </div>
+            <div id="manageModalPackSubtitle" style="font-size: 10.5px; color: var(--text-dim); font-weight: normal;">
+              In-Game Sequence &amp; Member Decals
+            </div>
+          </div>
+        </div>
+        <button type="button" class="preset-btn" style="padding: 4px 8px; font-size: 13px;" onclick="closeManageSetItemsModal()" aria-label="Close">✕</button>
+      </div>
+
+      <div class="modal-body" style="padding: 18px 20px; gap: 14px;">
+        <!-- Top Info Strip -->
+        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.7); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px 14px; flex-wrap: wrap; gap: 8px;">
+          <div>
+            <div style="font-size: 12px; font-weight: 700; color: #f1f5f9; display: flex; align-items: center; gap: 6px;">
+              <span>Decals in this Pack:</span>
+              <span class="channel-pill pill-cyan" id="manageModalItemsCountBadge">2 items</span>
+            </div>
+            <div id="manageModalRangeFootnote" style="font-size: 11px; color: var(--text-dim); margin-top: 2px;">
+              Band: 50,000 – 50,990 • Step: +10 • In-game order determined by Priority
+            </div>
+          </div>
+          <div style="display: flex; gap: 6px;">
+            <button type="button" class="btn-secondary" style="font-size: 11px; padding: 4px 10px; color: var(--accent-cyan);" onclick="openAddFromLibraryModal()" title="Add existing decals from your library to this pack">
+              📥 Add from Library
+            </button>
+            <button type="button" class="btn-primary" style="font-size: 11px; padding: 4px 12px; font-weight: 700; background: linear-gradient(135deg, #0284c7 0%, #06b6d4 100%);" onclick="closeManageSetItemsModal(); openCreateSetAssetModal();" title="Create a new decal variant for this pack">
+              ＋ New Decal
+            </button>
+          </div>
+        </div>
+
+        <!-- Items Table -->
+        <div style="overflow-x: auto; max-height: 360px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-card);">
+          <table class="manage-set-items-table">
+            <thead>
+              <tr>
+                <th style="width: 44px; text-align: center;">Order</th>
+                <th style="width: 54px; text-align: center;">Preview</th>
+                <th>Asset Name</th>
+                <th style="width: 105px; text-align: right;">In-Game Priority</th>
+                <th style="width: 80px; text-align: center;">Reorder</th>
+                <th style="width: 130px; text-align: right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="manageSetItemsTableBody">
+              <!-- Dynamically populated rows with Remove buttons -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Footer Action Toolbar -->
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 10px; margin-top: 2px; flex-wrap: wrap; gap: 8px;">
+          <button type="button" class="btn-secondary" style="font-size: 11px; padding: 4px 10px; color: var(--accent-emerald);" onclick="resequenceCurrentSetActiveSet()" title="Cleanly recalculate and eliminate gaps in priorities (+10)">
+            ⚡ Auto-Align Priorities (+10)
+          </button>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" class="btn-secondary" style="font-size: 11px; padding: 4px 10px; color: var(--accent-purple);" onclick="closeManageSetItemsModal(); openSetRegistryModal();">
+              📊 All Packs Table
+            </button>
+            <button type="button" class="btn-primary" style="font-size: 11.5px; padding: 6px 16px; font-weight: 700;" onclick="closeManageSetItemsModal()">
+              Done
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add from Library to Set Modal -->
+  <div class="modal-overlay" id="addFromLibraryToSetModal" onclick="closeAddFromLibraryModalOnBackdrop(event)" style="display: none; z-index: 12500;">
+    <div class="modal-card add-from-library-modal-card">
+      <div class="modal-header" style="background: linear-gradient(135deg, #0e201b 0%, #143028 100%); border-bottom: 1px solid rgba(16, 185, 129, 0.35);">
+        <div class="modal-title" style="display: flex; align-items: center; gap: 9px; color: #ffffff;">
+          <div style="width: 28px; height: 28px; border-radius: 6px; background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); display: flex; align-items: center; justify-content: center; color: var(--accent-emerald); font-size: 14px;">
+            📥
+          </div>
+          <div>
+            <div style="font-size: 14px; font-weight: 700; color: #fff;">
+              Add Saved Decals to <span id="addLibraryModalPackName" style="color: var(--accent-emerald);">Road Markings</span>
+            </div>
+            <div style="font-size: 10.5px; color: var(--text-dim); font-weight: normal;">
+              Select existing assets from your browser library to bundle into this pack
+            </div>
+          </div>
+        </div>
+        <button type="button" class="preset-btn" style="padding: 4px 8px; font-size: 13px;" onclick="closeAddFromLibraryModal()" aria-label="Close">✕</button>
+      </div>
+
+      <div class="modal-body" style="padding: 18px 20px; gap: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+          <span style="font-size: 12px; font-weight: 600; color: #e2e8f0;">
+            Select decals to include:
+          </span>
+          <span id="addLibrarySelectionCountBadge" class="channel-pill pill-emerald" style="font-size: 10px;">
+            0 selected
+          </span>
+        </div>
+
+        <!-- Library Items Grid -->
+        <div class="library-pick-grid" id="addLibraryPickGrid">
+          <!-- Dynamically populated with asset cards -->
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 10px; margin-top: 4px;">
+          <button type="button" class="btn-secondary" style="font-size: 11px; padding: 5px 12px;" onclick="closeAddFromLibraryModal()">
+            Cancel
+          </button>
+          <button type="button" id="btnConfirmAddFromLibrary" class="btn-primary" style="font-size: 12px; font-weight: 700; padding: 6px 18px; background: linear-gradient(135deg, #059669 0%, #10b981 100%);" onclick="confirmAddFromLibraryToSet()" disabled>
+            Add Selected to Pack
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Standalone New Asset Setup Wizard Modal -->
   <div class="modal-overlay" id="newAssetWizardModal" onclick="closeNewStandaloneAssetWizardOnBackdrop(event)">
     <div class="modal-card create-standalone-asset-wizard-card">
@@ -2414,9 +2840,11 @@
       if (menu.style.display === 'none') return;
 
       const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+      const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
       const padding = 10;
+      const bottomSafetyPadding = 16; // Minimum clearance from bottom of screen
 
-      // Reset positioning styles first to accurately calculate dimensions
+      // Reset horizontal positioning styles first to accurately calculate dimensions
       menu.style.left = '0px';
       menu.style.right = 'auto';
 
@@ -2455,7 +2883,7 @@
         }
       }
 
-      // Final safety clamp: Ensure menu rect never bleeds outside viewport
+      // Horizontal safety clamp: Ensure menu rect never bleeds outside viewport
       const finalRect = menu.getBoundingClientRect();
       if (finalRect.left < padding) {
         const delta = padding - finalRect.left;
@@ -2472,6 +2900,34 @@
           menu.style.right = `${curRight + delta}px`;
         }
       }
+
+      // Vertical positioning & dynamic max-height to guarantee bottom is ALWAYS visible
+      const spaceBelow = viewportHeight - btnRect.bottom - 8 - bottomSafetyPadding;
+      const spaceAbove = btnRect.top - 8 - bottomSafetyPadding;
+
+      // If opening downwards has very little space (< 220px) and there is significantly more room above, flip upward
+      if (spaceBelow < 220 && spaceAbove > spaceBelow) {
+        menu.style.top = 'auto';
+        menu.style.bottom = 'calc(100% + 8px)';
+        const safeMaxHeight = Math.max(160, Math.floor(spaceAbove));
+        menu.style.maxHeight = `${safeMaxHeight}px`;
+      } else {
+        menu.style.top = 'calc(100% + 8px)';
+        menu.style.bottom = 'auto';
+        const safeMaxHeight = Math.max(160, Math.floor(spaceBelow));
+        menu.style.maxHeight = `${safeMaxHeight}px`;
+      }
+
+      // Final vertical safety check: if bottom edge still bleeds past viewport bottom, clamp immediately
+      const postRect = menu.getBoundingClientRect();
+      if (postRect.bottom > viewportHeight - bottomSafetyPadding) {
+        const overflow = postRect.bottom - (viewportHeight - bottomSafetyPadding);
+        const currentMax = parseFloat(menu.style.maxHeight) || postRect.height;
+        menu.style.maxHeight = `${Math.max(140, Math.floor(currentMax - overflow))}px`;
+      }
+
+      menu.style.overflowY = 'auto';
+      menu.style.overflowX = 'hidden';
     };
 
     window.toggleMainProjectMenu = function(event) {

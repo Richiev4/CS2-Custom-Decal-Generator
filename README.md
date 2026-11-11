@@ -1,8 +1,10 @@
-A complete vibe codded web-based texture packing and asset creation suite for Cities: Skylines II. Generate custom Decals, Surfaces, and Net Lanes with PBR channel packing (BaseColor, OpenGL Normal, Mask Map), 3D preview, and instant ExtraAssetsImporter export.
-
 # Cities: Skylines II Custom Asset Generator
 
-A browser-based modding suite and PBR texture-packing pipeline designed specifically for **Cities: Skylines II** and the **ExtraAssetsImporter** framework. 
+[![GitHub Repository](https://img.shields.io/badge/GitHub-Richiev4%2FCS2--Custom--Decal--Generator-181717?style=flat&logo=github)](https://github.com/Richiev4/CS2-Custom-Decal-Generator)
+
+A browser-based modding suite and PBR texture-packing pipeline designed specifically for **Cities: Skylines II** and the **ExtraAssetsImporter** framework.
+
+**Official Repository:** [https://github.com/Richiev4/CS2-Custom-Decal-Generator](https://github.com/Richiev4/CS2-Custom-Decal-Generator)
 
 Create, configure, and package custom **Decals**, **Surfaces**, and **Net Lanes** with real-time 3D PBR preview, automated normal and mask map generation, in-game icon styling, and one-click export into ready-to-load game packages.
 
@@ -58,3 +60,8 @@ Created with Google AI Studio
 ## 🛠️ Mod Compatibility
 * Built for use with **Cities: Skylines II** and the **ExtraAssetsImporter** mod by *Algernon / Treeputer*.
 * Follows the official Unity PBR texture conventions and CS2 decal geometry specifications.
+
+---
+
+## 💖 Support & Contributions
+If you find this suite helpful for your Cities: Skylines II creations, consider starring the [GitHub repository](https://github.com/Richiev4/CS2-Custom-Decal-Generator). Direct donation links will be available soon!

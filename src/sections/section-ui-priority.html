@@ -58,7 +58,10 @@
           <!-- Asset Sequence / Series Calculator Card -->
           <div style="margin-top: 10px; padding: 8px 10px; background: rgba(0, 168, 255, 0.05); border: 1px dashed rgba(0, 168, 255, 0.25); border-radius: 6px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-              <span style="font-size: 10px; font-weight: 700; color: var(--accent-cyan); text-transform: uppercase; letter-spacing: 0.3px;">Pack Sequence Helper</span>
+              <div style="display: flex; align-items: center; gap: 5px;">
+                <span style="font-size: 10px; font-weight: 700; color: var(--accent-cyan); text-transform: uppercase; letter-spacing: 0.3px;">Pack Sequence Helper</span>
+                <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'sequenceCalculator', event)" onmouseenter="showFieldHelp(this, 'sequenceCalculator', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Auto-Sequence" title="Help for Auto-Sequence" style="width: 14px; height: 14px; font-size: 9.5px;">?</button>
+              </div>
               <span id="uiSeqDetectedBadge" style="font-size: 9px; font-family: monospace; color: var(--accent-emerald); background: rgba(16, 185, 129, 0.12); padding: 1px 5px; border-radius: 3px;">Auto-Detect Ready</span>
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">

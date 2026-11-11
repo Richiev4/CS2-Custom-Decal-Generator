@@ -4211,7 +4211,7 @@ export function renderSeriesChips() {
   const cur = getAssetSeriesName();
   container.innerHTML = seriesList.map(s => {
     const isActive = s.toLowerCase() === cur.toLowerCase();
-    return `<button type="button" class="series-chip ${isActive ? 'active' : ''}" onclick="setAssetSeriesName('${escapeHtml(s)}'); state.activeRibbonSeries='${escapeHtml(s)}'; updateRibbonSeriesDropdown(); renderSeriesRibbon();">${escapeHtml(s)}</button>`;
+    return `<button type="button" class="series-chip ${isActive ? 'active' : ''}" onclick="setAssetSeriesName('${escapeHtml(s)}')">${escapeHtml(s)}</button>`;
   }).join('');
 }
 
@@ -4293,4 +4293,12 @@ export function openRibbonFromLibrary() {}
 export function loadFromBrowser() {}
 export function deleteFromBrowser() {}
 export function renderSavedAssetsList() {}
+
+if (typeof window !== 'undefined') {
+  window.updateRibbonSeriesDropdown = updateRibbonSeriesDropdown;
+  window.renderSeriesChips = renderSeriesChips;
+  window.getAllLibrarySeries = getAllLibrarySeries;
+  window.setAssetSeriesName = setAssetSeriesName;
+  window.getAssetSeriesName = getAssetSeriesName;
+}
 
