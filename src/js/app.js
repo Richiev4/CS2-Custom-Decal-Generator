@@ -40,6 +40,7 @@ import {
   getLoadedSlotsCount,
   getLoadedSlots
 } from './state.js';
+import { createModalController, bindDragAndDropZone } from './domUtils.js';
 
 import {
   FIELD_HELP,
@@ -84,6 +85,11 @@ import {
   toggleGoogleFontInput,
   addCustomGoogleFontFromInput,
   switchBadgeTab,
+  switchBadgeSubtab,
+  syncAllBadgeCheckboxes,
+  copyBadgeStyle,
+  runBadgeStyleCopyAction,
+  toggleBadge1Enable,
   setCreatorBadgeMode,
   onBadge1TextChange,
   clearCreatorText,
@@ -93,6 +99,10 @@ import {
   toggleBadge1Italic,
   toggleBadge1LetterSpacing,
   onBadge1PtSizeChange,
+  toggleBadge1TextGrad,
+  onBadge1TextGradInput,
+  setBadge1TextGradDir,
+  applyBadge1TextGradPresetByName,
   updateCreatorGradPreview,
   setCreatorColorMode,
   setCreatorColorTheme,
@@ -100,15 +110,25 @@ import {
   onCreatorCustomColorInput,
   onCreatorSolidColorInput,
   applyCreatorGradPreset,
+  applyCreatorGradPresetByName,
   handleDesignerLogoSelect,
   clearDesignerLogo,
   applyPresetLogo,
+  onCreatorPositionChange,
+  onCreatorCoordChange,
+  snapCreatorCoord,
   onBadge1PaddingChange,
   onBadge1InnerPaddingChange,
+  toggleBadge2Enable,
   onSeriesFontChange,
   toggleSeriesBold,
   toggleSeriesItalic,
+  toggleSeriesLetterSpacing,
   onSeriesPtSizeChange,
+  toggleBadge2TextGrad,
+  onBadge2TextGradInput,
+  setBadge2TextGradDir,
+  applyBadge2TextGradPresetByName,
   setSeriesBadgeMode,
   applySeriesPreset,
   setSeriesTextPreset,
@@ -121,8 +141,12 @@ import {
   onSeriesCustomColorInput,
   onSeriesSolidColorInput,
   applySeriesGradPreset,
+  applySeriesGradPresetByName,
   handleSeriesLogoSelect,
   clearSeriesLogo,
+  onSeriesPositionChange,
+  onSeriesCoordChange,
+  snapSeriesCoord,
   clearExtra1Logo,
   clearExtra2Logo,
   onBadge2PaddingChange,
@@ -132,8 +156,11 @@ import {
   saveIconBadgeDefaults,
   loadIconBadgeDefaults,
   resetIconBadgeDefaults,
+  clearIconBadgeDefaults,
+  toggleAutoApplyDefaults,
   updateBadgeDefaultsUI,
   initBadgeDefaults,
+  initBadgeCanvasInteractions,
   renderIconMap,
   onIconBgStyleChange,
   setCustomIconBgType,
@@ -210,7 +237,9 @@ import {
   downloadConfigJson,
   downloadSingleMap,
   downloadAllMaps,
+  buildExportReadmeText,
   exportZipPackage,
+  exportCompleteSetZip,
   areAllSlotsEmpty,
   isCurrentSlotEmpty,
   openEmptySlotsModal,
@@ -437,14 +466,16 @@ export function saveCurrentSlotState(mode = state.appMode) {
   }
 
   const catEl = document.getElementById('assetCategory');
-  if (catEl && catEl.value.trim()) {
-    slot.category = catEl.value.trim();
+  if (catEl) {
+    slot.category = catEl.value.trim() || 'None';
   }
 
   const seriesEl = document.getElementById('assetSeries') || document.getElementById('metaSetName');
-  if (seriesEl && seriesEl.value.trim()) {
-    slot.seriesName = seriesEl.value.trim();
-    state.setName = seriesEl.value.trim();
+  if (seriesEl) {
+    const val = seriesEl.value.trim();
+    slot.seriesName = val;
+    slot.assetSeries = val;
+    state.setName = val;
   }
 
   const fitEl = document.getElementById('fitStrategy');
@@ -545,8 +576,20 @@ export function restoreSlotState(mode) {
   if (assetNameEl) assetNameEl.value = slot.assetName || '';
   state.currentLoadedAssetName = slot.assetName || '';
 
-  if (slot.category && typeof setAssetCategory === 'function') {
+  if (slot.category !== undefined && typeof setAssetCategory === 'function') {
     setAssetCategory(slot.category);
+  }
+
+  // Sync pack/series name from actual pack membership for the restored slot
+  const registry = typeof getSetsRegistry === 'function' ? getSetsRegistry() : [];
+  const memberSet = slot.assetName
+    ? registry.find(s => (s.assets || []).some(a => a.name.toLowerCase() === slot.assetName.toLowerCase()))
+    : null;
+  const effectiveSeries = memberSet ? memberSet.setName : '';
+  slot.seriesName = effectiveSeries;
+  slot.assetSeries = effectiveSeries;
+  if (typeof setAssetSeriesName === 'function') {
+    setAssetSeriesName(effectiveSeries);
   }
 
   const fitEl = document.getElementById('fitStrategy');
@@ -711,9 +754,14 @@ export function updateSetSlotsUI() {
       }
     }
 
+    const hasCustomName = Boolean(slot && slot.hasCustomName && slot.assetName);
     const subEl = document.getElementById(`headerSub${capMode}`);
     if (subEl) {
-      subEl.textContent = isLoaded ? (slot.assetName || 'Loaded') : 'Empty slot';
+      if (isLoaded || hasCustomName) {
+        subEl.textContent = slot.assetName || 'Unnamed';
+      } else {
+        subEl.textContent = 'Empty slot';
+      }
     }
 
     const badgeEl = document.getElementById(`headerBadge${capMode}`);
@@ -724,26 +772,30 @@ export function updateSetSlotsUI() {
 
     const packBadgeEl = document.getElementById(`headerPackBadge${capMode}`);
     if (packBadgeEl) {
-      if (isLoaded && slot) {
-        let packName = slot.seriesName ? String(slot.seriesName).trim() : '';
+      if ((isLoaded || hasCustomName) && slot && slot.assetName) {
         const registry = typeof getSetsRegistry === 'function' ? getSetsRegistry() : [];
-        if (slot.assetName) {
-          const matchedSet = registry.find(s =>
-            (s.assets || []).some(a => a.name.toLowerCase() === slot.assetName.toLowerCase()) ||
-            (s.setName && s.setName.toLowerCase() === packName.toLowerCase())
-          );
-          if (matchedSet) {
-            packName = matchedSet.setName;
-          }
-        }
-        if (packName) {
-          packBadgeEl.textContent = `📁 ${packName}`;
-          packBadgeEl.title = `In Pack / Series: ${packName}`;
+        // An asset is only part of a pack if it is explicitly listed in that pack's assets array
+        const matchedSet = registry.find(s =>
+          (s.assets || []).some(a => a.name.toLowerCase() === slot.assetName.toLowerCase())
+        );
+        if (matchedSet && matchedSet.setName) {
+          slot.seriesName = matchedSet.setName;
+          slot.assetSeries = matchedSet.setName;
+          packBadgeEl.textContent = `📁 ${matchedSet.setName}`;
+          packBadgeEl.title = `In Pack / Series: ${matchedSet.setName}`;
           packBadgeEl.style.display = 'inline-flex';
         } else {
+          slot.seriesName = '';
+          slot.assetSeries = '';
+          packBadgeEl.textContent = '';
           packBadgeEl.style.display = 'none';
         }
       } else {
+        if (slot) {
+          slot.seriesName = '';
+          slot.assetSeries = '';
+        }
+        packBadgeEl.textContent = '';
         packBadgeEl.style.display = 'none';
       }
     }
@@ -762,7 +814,7 @@ export function updateSetSlotsUI() {
 
     const qName = document.getElementById(`slotName${capMode}`);
     if (qName) {
-      qName.textContent = isLoaded ? (slot.assetName || 'Loaded') : 'Empty';
+      qName.textContent = (isLoaded || hasCustomName) ? (slot.assetName || 'Unnamed') : 'Empty';
     }
 
     // Section 6 Export Card Items
@@ -868,6 +920,7 @@ export function clearCurrentSlot() {
   const nameInput = document.getElementById('assetName');
   if (nameInput) nameInput.value = defaultNames[mode] || 'CustomAsset_01';
   slot.assetName = defaultNames[mode] || 'CustomAsset_01';
+  slot.hasCustomName = false;
 
   updateEmptyPreviewIndicator();
   updateConfigJson();
@@ -1443,7 +1496,15 @@ export function processUploadedFile(file, force = false) {
         slot.fileName = file.name;
         slot.isCustomImageLoaded = true;
         slot.hasUnsavedChanges = true;
-        if (cleanName) slot.assetName = cleanName;
+        slot.seriesName = '';
+        slot.assetSeries = '';
+        if (cleanName) {
+          slot.assetName = cleanName;
+          state.currentLoadedAssetName = cleanName;
+        }
+        if (typeof setAssetSeriesName === 'function') {
+          setAssetSeriesName('');
+        }
 
         try {
           const tc = document.createElement('canvas');
@@ -1494,10 +1555,23 @@ export function onResolutionChange() {
 }
 
 export function onAssetNameInput() {
+  const newName = (document.getElementById('assetName')?.value || '').trim();
+  state.currentLoadedAssetName = newName;
+
+  // Keep active mode slot name in sync so the top bar updates immediately
+  const mode = state.appMode || 'decal';
+  if (state.setSlots && state.setSlots[mode]) {
+    state.setSlots[mode].assetName = newName;
+    state.setSlots[mode].hasCustomName = Boolean(newName);
+  }
+
   updateConfigJson();
   checkRotationNameReminder();
-  state.currentLoadedAssetName = document.getElementById('assetName').value.trim();
   updateUiPrioritySequenceUI();
+  updateSetSlotsUI();
+  if (typeof updateActiveDecalPackStatus === 'function') {
+    updateActiveDecalPackStatus();
+  }
   if (typeof renderSetThumbnailsStrip === 'function') {
     renderSetThumbnailsStrip();
   }
@@ -1645,19 +1719,15 @@ export function clearAllWorkspace(force = false) {
 // Selective Clear Workspace Modal Controllers
 // ==========================================
 
-export function openClearModal() {
-  const modal = document.getElementById('clearWorkspaceModal');
-  if (!modal) return;
+const clearWorkspaceModalCtrl = createModalController('clearWorkspaceModal');
 
-  // Make sure current changes are captured in slot
+export function openClearModal() {
   if (typeof saveCurrentSlotState === 'function') {
     try { saveCurrentSlotState(); } catch (_) {}
   }
 
-  // Update labels and active status badges
   updateClearModalStatus();
 
-  // Reset checkboxes to default
   const defaultChecked = ['chkClearSourceGraphic', 'chkClearNormalMap', 'chkClearMaskMap', 'chkClearBadges', 'chkClearMetadata', 'chkClearTransforms'];
   defaultChecked.forEach(id => {
     const el = document.getElementById(id);
@@ -1667,23 +1737,15 @@ export function openClearModal() {
   if (chkAllSlots) chkAllSlots.checked = false;
 
   onClearOptionChange();
-
-  modal.style.display = 'flex';
-  modal.classList.add('active');
+  clearWorkspaceModalCtrl.open();
 }
 
 export function closeClearModal() {
-  const modal = document.getElementById('clearWorkspaceModal');
-  if (modal) {
-    modal.style.display = 'none';
-    modal.classList.remove('active');
-  }
+  clearWorkspaceModalCtrl.close();
 }
 
 export function closeClearModalOnBackdrop(e) {
-  if (e.target && e.target.id === 'clearWorkspaceModal') {
-    closeClearModal();
-  }
+  clearWorkspaceModalCtrl.closeOnBackdrop(e);
 }
 
 export function updateClearModalStatus() {
@@ -2197,7 +2259,9 @@ Object.assign(window, {
   downloadConfigJson,
   downloadSingleMap,
   downloadAllMaps,
+  buildExportReadmeText,
   exportZipPackage,
+  exportCompleteSetZip,
   serializeCurrentProject,
   deserializeAndLoadProject,
   saveProjectToFile,
@@ -2251,6 +2315,11 @@ Object.assign(window, {
   onMetalChange,
   onSmoothChange,
   switchBadgeTab,
+  switchBadgeSubtab,
+  syncAllBadgeCheckboxes,
+  copyBadgeStyle,
+  runBadgeStyleCopyAction,
+  toggleBadge1Enable,
   setCreatorBadgeMode,
   onBadge1TextChange,
   clearCreatorText,
@@ -2260,21 +2329,35 @@ Object.assign(window, {
   toggleBadge1Italic,
   toggleBadge1LetterSpacing,
   onBadge1PtSizeChange,
+  toggleBadge1TextGrad,
+  onBadge1TextGradInput,
+  setBadge1TextGradDir,
+  applyBadge1TextGradPresetByName,
   setCreatorColorMode,
   setCreatorColorTheme,
   setCreatorGradDirection,
   onCreatorCustomColorInput,
   onCreatorSolidColorInput,
   applyCreatorGradPreset,
+  applyCreatorGradPresetByName,
   handleDesignerLogoSelect,
   clearDesignerLogo,
   applyPresetLogo,
+  onCreatorPositionChange,
+  onCreatorCoordChange,
+  snapCreatorCoord,
   onBadge1PaddingChange,
   onBadge1InnerPaddingChange,
+  toggleBadge2Enable,
   onSeriesFontChange,
   toggleSeriesBold,
   toggleSeriesItalic,
+  toggleSeriesLetterSpacing,
   onSeriesPtSizeChange,
+  toggleBadge2TextGrad,
+  onBadge2TextGradInput,
+  setBadge2TextGradDir,
+  applyBadge2TextGradPresetByName,
   setSeriesBadgeMode,
   applySeriesPreset,
   setSeriesTextPreset,
@@ -2286,8 +2369,12 @@ Object.assign(window, {
   onSeriesCustomColorInput,
   onSeriesSolidColorInput,
   applySeriesGradPreset,
+  applySeriesGradPresetByName,
   handleSeriesLogoSelect,
   clearSeriesLogo,
+  onSeriesPositionChange,
+  onSeriesCoordChange,
+  snapSeriesCoord,
   onBadge2PaddingChange,
   onBadge2InnerPaddingChange,
   onIconBadgeScaleChange,
@@ -2295,6 +2382,9 @@ Object.assign(window, {
   saveIconBadgeDefaults,
   loadIconBadgeDefaults,
   resetIconBadgeDefaults,
+  clearIconBadgeDefaults,
+  toggleAutoApplyDefaults,
+  initBadgeCanvasInteractions,
   renderIconMap,
   onIconBgStyleChange,
   setCustomIconBgType,
@@ -2709,29 +2799,23 @@ export function startBlankFromSplash() {
 // ==========================================
 // Quick Guide Splash Screen Logic
 // ==========================================
+const welcomeSplashModalCtrl = createModalController('welcomeSplashModal');
+
 export function openWelcomeSplash() {
-  const modal = document.getElementById('welcomeSplashModal');
-  if (modal) {
-    updateSplashScreenSessionInfo();
-    modal.style.display = 'flex';
-    const chk = document.getElementById('splashNeverShowCheckbox');
-    if (chk) {
-      chk.checked = localStorage.getItem('cs2_hide_welcome_splash') === 'true';
-    }
+  updateSplashScreenSessionInfo();
+  welcomeSplashModalCtrl.open();
+  const chk = document.getElementById('splashNeverShowCheckbox');
+  if (chk) {
+    chk.checked = localStorage.getItem('cs2_hide_welcome_splash') === 'true';
   }
 }
 
 export function closeWelcomeSplash() {
-  const modal = document.getElementById('welcomeSplashModal');
-  if (modal) {
-    modal.style.display = 'none';
-  }
+  welcomeSplashModalCtrl.close();
 }
 
 export function closeWelcomeSplashOnBackdrop(e) {
-  if (e.target && e.target.id === 'welcomeSplashModal') {
-    closeWelcomeSplash();
-  }
+  welcomeSplashModalCtrl.closeOnBackdrop(e);
 }
 
 export function toggleNeverShowSplashAgain(checked) {
@@ -2775,6 +2859,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   updateDecalAspectUI();
   updateUiPrioritySequenceUI();
   initBadgeDefaults();
+  initBadgeCanvasInteractions();
   restoreSidebarSectionsState();
   updateRibbonSeriesDropdown();
   renderSeriesChips();
@@ -2791,65 +2876,19 @@ window.addEventListener('DOMContentLoaded', async () => {
     openWelcomeSplash();
   }
 
-  const dropZone = document.getElementById('dropZone');
-  if (dropZone) {
-    ['dragenter', 'dragover'].forEach(eventName => {
-      dropZone.addEventListener(eventName, (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        dropZone.classList.add('dragover');
-      }, false);
-    });
+  const handleWorkspaceDrop = (files) => {
+    if (!files || files.length === 0) return;
+    if (files.length === 1 && files[0].name.toLowerCase().endsWith('.zip')) {
+      importCommunityAssetFromZip(files[0]);
+    } else if (files.length > 1) {
+      importCommunityAssetFromFiles(files);
+    } else {
+      processUploadedFile(files[0]);
+    }
+  };
 
-    ['dragleave', 'drop'].forEach(eventName => {
-      dropZone.addEventListener(eventName, (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        dropZone.classList.remove('dragover');
-      }, false);
-    });
-
-    dropZone.addEventListener('drop', (e) => {
-      const dt = e.dataTransfer;
-      const files = dt.files;
-      if (!files || files.length === 0) return;
-
-      if (files.length === 1 && files[0].name.toLowerCase().endsWith('.zip')) {
-        importCommunityAssetFromZip(files[0]);
-      } else if (files.length > 1) {
-        importCommunityAssetFromFiles(files);
-      } else {
-        processUploadedFile(files[0]);
-      }
-    });
-  }
-
-  // Also support drag-and-drop onto the preview area directly
-  const previewArea = document.querySelector('.preview-area');
-  if (previewArea) {
-    ['dragenter', 'dragover'].forEach(eventName => {
-      previewArea.addEventListener(eventName, (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-      }, false);
-    });
-
-    previewArea.addEventListener('drop', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const dt = e.dataTransfer;
-      const files = dt ? dt.files : null;
-      if (!files || files.length === 0) return;
-
-      if (files.length === 1 && files[0].name.toLowerCase().endsWith('.zip')) {
-        importCommunityAssetFromZip(files[0]);
-      } else if (files.length > 1) {
-        importCommunityAssetFromFiles(files);
-      } else {
-        processUploadedFile(files[0]);
-      }
-    });
-  }
+  bindDragAndDropZone('dropZone', handleWorkspaceDrop);
+  bindDragAndDropZone(document.querySelector('.preview-area'), handleWorkspaceDrop);
 
   document.addEventListener('click', (e) => {
     const importMenu = document.getElementById('importDropdownMenu');

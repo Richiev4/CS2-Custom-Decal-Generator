@@ -1078,7 +1078,7 @@ export async function confirmNewStandaloneAsset() {
     console.warn('Map generation warning:', err);
   }
 
-  // 6. If user chose to assign to an existing set, add it
+  // 6. If user chose to assign to an existing set, add it; otherwise ensure standalone (no pack)
   if (membership === 'existing' && setId) {
     try {
       const registry = getSetsRegistry();
@@ -1108,12 +1108,30 @@ export async function confirmNewStandaloneAsset() {
         });
 
         saveSetsRegistry(registry);
+        if (typeof window.setAssetSeriesName === 'function') {
+          window.setAssetSeriesName(targetSet.setName);
+        }
+        if (state.setSlots && state.setSlots[standWizardMode]) {
+          state.setSlots[standWizardMode].seriesName = targetSet.setName;
+          state.setSlots[standWizardMode].assetSeries = targetSet.setName;
+        }
         if (typeof window.renderSetThumbnailsStrip === 'function') {
           window.renderSetThumbnailsStrip();
         }
       }
     } catch (err) {
       console.warn('Set registration error:', err);
+    }
+  } else {
+    if (typeof window.setAssetSeriesName === 'function') {
+      window.setAssetSeriesName('');
+    }
+    if (state.setSlots && state.setSlots[standWizardMode]) {
+      state.setSlots[standWizardMode].seriesName = '';
+      state.setSlots[standWizardMode].assetSeries = '';
+    }
+    if (typeof window.updateActiveDecalPackStatus === 'function') {
+      window.updateActiveDecalPackStatus();
     }
   }
 

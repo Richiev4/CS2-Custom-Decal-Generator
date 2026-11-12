@@ -1918,6 +1918,7 @@
               <div style="display: flex; gap: 4px;">
                 <input type="text" id="wizardCategory" value="RoadMarkings" placeholder="Subfolder name" spellcheck="false" style="flex: 1; padding: 6px 8px; font-size: 12px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; color: #f1f5f9;">
                 <select id="wizardCategorySelect" onchange="document.getElementById('wizardCategory').value=this.value; onWizardBasePriorityChange();" style="width: 90px; font-size: 11px;">
+                  <option value="None">None</option>
                   <option value="RoadMarkings" selected>RoadMarkings</option>
                   <option value="Utilities">Utilities</option>
                   <option value="Cracks">Cracks</option>
@@ -2533,6 +2534,7 @@
               <div style="display: flex; gap: 4px;">
                 <input type="text" id="standCategory" value="RoadMarkings" placeholder="Subfolder" spellcheck="false" oninput="updateStandWizardSummary()" style="flex: 1; padding: 6px 8px; font-size: 12px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; color: #f1f5f9;">
                 <select id="standCategorySelect" onchange="document.getElementById('standCategory').value=this.value; updateStandWizardSummary();" style="width: 95px; font-size: 11px;">
+                  <option value="None">None</option>
                   <option value="RoadMarkings" selected>RoadMarkings</option>
                   <option value="Utilities">Utilities</option>
                   <option value="Cracks">Cracks</option>

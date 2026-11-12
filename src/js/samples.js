@@ -37,7 +37,7 @@ export function loadSample(type, force = false) {
   if (type === 'manhole') {
     document.getElementById('assetName').value = 'CityUtility_Manhole_01';
     setAssetCategory('Utilities');
-    setAssetSeriesName('City Utilities');
+    setAssetSeriesName('');
     document.getElementById('dimWidth').value = '1.8';
     document.getElementById('dimHeight').value = '1.8';
     document.getElementById('dimDepth').value = '0.5';
@@ -109,7 +109,7 @@ export function loadSample(type, force = false) {
   } else if (type === 'arrow') {
     document.getElementById('assetName').value = 'RoadMarking_TurnArrow_01';
     setAssetCategory('RoadMarkings');
-    setAssetSeriesName('Road Markings');
+    setAssetSeriesName('');
     document.getElementById('dimWidth').value = '3.0';
     document.getElementById('dimHeight').value = '6.0';
     document.getElementById('dimDepth').value = '0.5';
@@ -145,7 +145,7 @@ export function loadSample(type, force = false) {
   } else if (type === 'poster') {
     document.getElementById('assetName').value = 'CityPoster_MetroTransit_01';
     setAssetCategory('Posters');
-    setAssetSeriesName('City Posters');
+    setAssetSeriesName('');
     document.getElementById('dimWidth').value = '1.2';
     document.getElementById('dimHeight').value = '1.8';
     document.getElementById('dimDepth').value = '0.2';
@@ -290,7 +290,7 @@ export function loadSample(type, force = false) {
   } else if (type === 'crack') {
     document.getElementById('assetName').value = 'RoadDamage_AsphaltFissure_01';
     setAssetCategory('Cracks');
-    setAssetSeriesName('Asphalt Wear');
+    setAssetSeriesName('');
     document.getElementById('dimWidth').value = '4.0';
     document.getElementById('dimHeight').value = '4.0';
     document.getElementById('dimDepth').value = '0.8';
@@ -587,7 +587,7 @@ export function createSampleSlot(type) {
 
   let assetName = 'CustomAsset_01';
   let category = 'Utilities';
-  let seriesName = 'City Utilities';
+  let seriesName = '';
   let bump = 2.5;
   let metal = 0;
   let smooth = 40;

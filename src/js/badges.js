@@ -1,4527 +1,1007 @@
 // ==========================================
-// Badges, Watermarks & Typography Module
+// Cities: Skylines 2 Custom Asset Generator
+// Icon Backdrop & 4-Layer Badge Overlays Engine
 // ==========================================
-import { state, getCanvases, showToast } from './state.js';
 
-export const BADGE_DEFAULTS_STORAGE_KEY = 'cs2_icon_badge_defaults_v2';
+import { state, showToast, getCanvases, drawImageSquare } from './state.js';
+import { getEl, setElText, setElValue, setElChecked, setElDisplay, syncActiveClass } from './domUtils.js';
 
-export const SYSTEM_FONTS = [
-  { name: 'Montserrat (Modern Geometric)', value: 'Montserrat' },
-  { name: 'Inter (Clean Sans)', value: 'Inter' },
-  { name: 'Bebas Neue (Condensed Display)', value: 'Bebas Neue' },
-  { name: 'Oswald (Heavy Industrial)', value: 'Oswald' },
-  { name: 'Teko (Tall Compact Bold)', value: 'Teko' },
-  { name: 'Orbitron (Sci-Fi / Modernist)', value: 'Orbitron' },
-  { name: 'Cinzel (Classical Serif)', value: 'Cinzel' },
-  { name: 'Righteous (Retro Display)', value: 'Righteous' },
-  { name: 'Press Start 2P (Pixel Arcade)', value: 'Press Start 2P' },
-  { name: 'Permanent Marker (Graffiti / Grunge)', value: 'Permanent Marker' },
-  { name: 'System Sans-Serif', value: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
-  { name: 'System Monospace', value: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace' }
+export const BADGE_DEFAULTS_KEY = 'cs2_icon_badge_defaults';
+export const CUSTOM_GOOGLE_FONTS_KEY = 'cs2_custom_google_fonts';
+
+export const DEFAULT_FONT_OPTIONS = [
+  { label: 'Inter / Sans-Serif (Default)', value: "'Inter', system-ui, -apple-system, sans-serif" },
+  { label: 'Montserrat / Geometric Bold', value: "'Montserrat', 'Inter', sans-serif" },
+  { label: 'Oswald / Condensed Industrial', value: "'Oswald', Impact, sans-serif" },
+  { label: 'Bebas Neue / Tall Highway', value: "'Bebas Neue', Impact, sans-serif" },
+  { label: 'Orbitron / Sci-Fi Tech', value: "'Orbitron', sans-serif" },
+  { label: 'Rajdhani / Tactical Modern', value: "'Rajdhani', sans-serif" },
+  { label: 'JetBrains Mono / Technical Code', value: "'JetBrains Mono', monospace" },
+  { label: 'Playfair Display / Classic Serif', value: "'Playfair Display', Georgia, serif" }
 ];
 
-export const CURATED_GOOGLE_FONTS = [
-  'Anton',
-  'Poppins',
-  'Rajdhani',
-  'Rubik',
-  'Space Grotesk',
-  'Chakra Petch',
-  'Black Ops One',
-  'Russo One',
-  'Audiowide',
-  'Bungee',
-  'Fugaz One',
-  'Alfa Slab One',
-  'Titan One',
-  'Syne',
-  'Silkscreen'
-];
+export const BADGE_COLOR_THEMES = {
+  cyan: { bg1: '#0a192f', bg2: '#0f2942', stroke: '#38bdf8', text: '#ffffff' },
+  purple: { bg1: '#151326', bg2: '#251336', stroke: '#c084fc', text: '#ffffff' },
+  emerald: { bg1: '#06241a', bg2: '#0d3d2c', stroke: '#34d399', text: '#ffffff' },
+  amber: { bg1: '#241806', bg2: '#3d2a0d', stroke: '#fbbf24', text: '#ffffff' },
+  crimson: { bg1: '#280a10', bg2: '#42101a', stroke: '#f87171', text: '#ffffff' },
+  slate: { bg1: '#0f172a', bg2: '#1e293b', stroke: '#94a3b8', text: '#f8fafc' },
+  orange: { bg1: '#2a1205', bg2: '#431d08', stroke: '#fb923c', text: '#ffffff' },
+  gold: { bg1: '#1c1917', bg2: '#292524', stroke: '#facc15', text: '#fef08a' }
+};
 
-export const SERIES_COLOR_THEMES = {
-  purple: {
-    bgStart: '#151326',
-    bgEnd: '#251336',
-    stroke: '#c084fc',
-    glow: 'rgba(192, 132, 252, 0.4)',
-    textColor: '#ffffff'
+export const GRADIENT_PRESETS = {
+  ocean: { c1: '#0a192f', c2: '#0f2942', stroke: '#38bdf8', text: '#ffffff' },
+  neon: { c1: '#082032', c2: '#0e3746', stroke: '#00e5ff', text: '#ffffff' },
+  violet: { c1: '#151326', c2: '#251336', stroke: '#c084fc', text: '#ffffff' },
+  cyber: { c1: '#1e0b28', c2: '#0d1b3e', stroke: '#f472b6', text: '#ffffff' },
+  sunset: { c1: '#241806', c2: '#3d2a0d', stroke: '#fbbf24', text: '#ffffff' },
+  forest: { c1: '#06241a', c2: '#0d3d2c', stroke: '#34d399', text: '#ffffff' },
+  ruby: { c1: '#280a10', c2: '#42101a', stroke: '#f87171', text: '#ffffff' },
+  stealth: { c1: '#0f172a', c2: '#1e293b', stroke: '#94a3b8', text: '#f8fafc' },
+  gold: { c1: '#221a07', c2: '#3b2d0c', stroke: '#facc15', text: '#fef08a' }
+};
+
+export const TEXT_GRAD_PRESETS = {
+  sky: { c1: '#ffffff', c2: '#38bdf8' },
+  cyan: { c1: '#ffffff', c2: '#00e5ff' },
+  violet: { c1: '#ffffff', c2: '#c084fc' },
+  emerald: { c1: '#ffffff', c2: '#34d399' },
+  amber: { c1: '#ffffff', c2: '#fbbf24' },
+  gold: { c1: '#fef08a', c2: '#f59e0b' },
+  fire: { c1: '#fde047', c2: '#ef4444' },
+  chrome: { c1: '#ffffff', c2: '#94a3b8' },
+  silver: { c1: '#ffffff', c2: '#cbd5e1' },
+  neon: { c1: '#f472b6', c2: '#38bdf8' }
+};
+
+export const SERIES_PRESET_MAP = {
+  graffiti: { text: 'GRAFFITI', theme: 'purple' },
+  poster: { text: 'POSTERS', theme: 'cyan' },
+  transit: { text: 'TRANSIT', theme: 'emerald' },
+  props: { text: 'PROPS', theme: 'slate' },
+  hazard: { text: 'HAZARD', theme: 'amber' },
+  nature: { text: 'NATURE', theme: 'emerald' }
+};
+
+// Metadata mapping for the 4 badge layers
+export const BADGE_CONFIG = {
+  1: {
+    index: 1,
+    key: 'creator',
+    enableCheckboxId: 'enableBadge1',
+    gridCheckboxId: 'toggleGridOverlay1',
+    mainCheckboxId: 'toggleMainOverlay1',
+    wizardCheckboxId: 'wizEnableBadge1',
+    modeSelectId: 'creatorModeSelect',
+    textSectionId: 'creatorTextSection',
+    imageSectionId: 'creatorImageSection',
+    presetSectionId: 'creatorPresetSection',
+    textInputId: 'badge1TextInput',
+    textLengthBadgeId: 'badge1TextLengthBadge',
+    fontSelectId: 'badge1FontFamily',
+    boldBtnId: 'btnBadge1Bold',
+    italicBtnId: 'btnBadge1Italic',
+    spacingBtnId: 'btnBadge1LetterSpacing',
+    ptSizeId: 'badge1PtSize',
+    ptSizeValId: 'badge1PtSizeVal',
+    textGradEnableId: 'badge1TextGradEnable',
+    textGradControlsId: 'badge1TextGradControls',
+    textGrad1Id: 'badge1TextGrad1',
+    textGrad1HexId: 'badge1TextGrad1Hex',
+    textGrad2Id: 'badge1TextGrad2',
+    textGrad2HexId: 'badge1TextGrad2Hex',
+    textGradDirId: 'creatorTextGradDirSelect',
+    colorModeSelectId: 'creatorColorModeSelect',
+    colorModeBadgeId: 'creatorColorModeBadge',
+    themePanelId: 'creatorColorThemePanel',
+    gradPanelId: 'creatorCustomGradPanel',
+    solidPanelId: 'creatorCustomSolidPanel',
+    themeSelectId: 'creatorThemeSelect',
+    gradPreviewId: 'creatorGradPreview',
+    gradDirSelectId: 'creatorGradDirSelect',
+    color1Id: 'creatorColor1',
+    color1HexId: 'creatorColor1Hex',
+    color2Id: 'creatorColor2',
+    color2HexId: 'creatorColor2Hex',
+    strokeColorId: 'creatorStrokeColor',
+    strokeHexId: 'creatorStrokeHex',
+    textColorId: 'creatorTextColor',
+    textColorHexId: 'creatorTextColorHex',
+    solidBgId: 'creatorSolidBg',
+    solidBgHexId: 'creatorSolidBgHex',
+    solidStrokeId: 'creatorSolidStroke',
+    solidStrokeHexId: 'creatorSolidStrokeHex',
+    solidTextId: 'creatorSolidText',
+    solidTextHexId: 'creatorSolidTextHex',
+    positionSelectId: 'logoPosition',
+    customPosContainerId: 'creatorCustomPosContainer',
+    posXId: 'creatorPosX',
+    posXValId: 'creatorPosXVal',
+    posYId: 'creatorPosY',
+    posYValId: 'creatorPosYVal',
+    frameSelectId: 'badge1Frame',
+    scaleId: 'badgeScale',
+    scaleValId: 'badgeScaleVal',
+    paddingId: 'badge1Padding',
+    paddingValId: 'badge1PaddingVal',
+    innerPaddingId: 'badge1InnerPadding',
+    innerPaddingValId: 'badge1InnerPaddingVal',
+    opacityId: 'badgeOpacity',
+    opacityValId: 'badgeOpacityVal',
+    imgStateKey: 'designerLogoImg',
+    fileNameStateKey: 'badge1FileName',
+    uploadBtnTextId: 'logoUploadBtnText',
+    clearLogoBtnId: 'btnClearLogo'
   },
-  cyan: {
-    bgStart: '#071a2e',
-    bgEnd: '#0d324d',
-    stroke: '#38bdf8',
-    glow: 'rgba(56, 189, 248, 0.4)',
-    textColor: '#ffffff'
+  2: {
+    index: 2,
+    key: 'series',
+    enableCheckboxId: 'enableBadge2',
+    gridCheckboxId: 'toggleGridOverlay2',
+    mainCheckboxId: 'toggleMainOverlay2',
+    wizardCheckboxId: 'wizEnableBadge2',
+    modeSelectId: 'seriesModeSelect',
+    textSectionId: 'seriesTextSection',
+    imageSectionId: 'seriesImageSection',
+    presetSectionId: 'seriesPresetSection',
+    textInputId: 'seriesTextInput',
+    textLengthBadgeId: 'seriesTextLengthBadge',
+    fontSelectId: 'seriesFontFamily',
+    boldBtnId: 'btnSeriesBold',
+    italicBtnId: 'btnSeriesItalic',
+    spacingBtnId: 'btnSeriesLetterSpacing',
+    ptSizeId: 'seriesPtSize',
+    ptSizeValId: 'seriesPtSizeVal',
+    textGradEnableId: 'badge2TextGradEnable',
+    textGradControlsId: 'badge2TextGradControls',
+    textGrad1Id: 'badge2TextGrad1',
+    textGrad1HexId: 'badge2TextGrad1Hex',
+    textGrad2Id: 'badge2TextGrad2',
+    textGrad2HexId: 'badge2TextGrad2Hex',
+    textGradDirId: 'seriesTextGradDirSelect',
+    colorModeSelectId: 'seriesColorModeSelect',
+    colorModeBadgeId: 'seriesColorModeBadge',
+    themePanelId: 'seriesColorThemePanel',
+    gradPanelId: 'seriesCustomGradPanel',
+    solidPanelId: 'seriesCustomSolidPanel',
+    themeSelectId: 'seriesThemeSelect',
+    gradPreviewId: 'seriesGradPreview',
+    gradDirSelectId: 'seriesGradDirSelect',
+    color1Id: 'seriesColor1',
+    color1HexId: 'seriesColor1Hex',
+    color2Id: 'seriesColor2',
+    color2HexId: 'seriesColor2Hex',
+    strokeColorId: 'seriesStrokeColor',
+    strokeHexId: 'seriesStrokeHex',
+    textColorId: 'seriesTextColor',
+    textColorHexId: 'seriesTextColorHex',
+    solidBgId: 'seriesSolidBg',
+    solidBgHexId: 'seriesSolidBgHex',
+    solidStrokeId: 'seriesSolidStroke',
+    solidStrokeHexId: 'seriesSolidStrokeHex',
+    solidTextId: 'seriesSolidText',
+    solidTextHexId: 'seriesSolidTextHex',
+    positionSelectId: 'seriesPosition',
+    customPosContainerId: 'seriesCustomPosContainer',
+    posXId: 'seriesPosX',
+    posXValId: 'seriesPosXVal',
+    posYId: 'seriesPosY',
+    posYValId: 'seriesPosYVal',
+    frameSelectId: 'badge2Frame',
+    scaleId: 'seriesScale',
+    scaleValId: 'seriesScaleVal',
+    paddingId: 'seriesPadding',
+    paddingValId: 'seriesPaddingVal',
+    innerPaddingId: 'seriesInnerPadding',
+    innerPaddingValId: 'seriesInnerPaddingVal',
+    opacityId: 'seriesOpacity',
+    opacityValId: 'seriesOpacityVal',
+    imgStateKey: 'badge2Img',
+    fileNameStateKey: 'badge2FileName',
+    uploadBtnTextId: 'seriesLogoUploadBtnText',
+    clearLogoBtnId: 'btnClearSeriesLogo'
   },
-  emerald: {
-    bgStart: '#06241a',
-    bgEnd: '#0d3d2c',
-    stroke: '#34d399',
-    glow: 'rgba(52, 211, 153, 0.4)',
-    textColor: '#ffffff'
+  3: {
+    index: 3,
+    key: 'extra1',
+    enableCheckboxId: 'enableBadge3',
+    gridCheckboxId: 'toggleGridOverlay3',
+    mainCheckboxId: 'toggleMainOverlay3',
+    wizardCheckboxId: null,
+    modeSelectId: 'extra1ModeSelect',
+    textSectionId: 'extra1TextSection',
+    imageSectionId: 'extra1ImageSection',
+    presetSectionId: 'extra1PresetSection',
+    textInputId: 'extra1TextInput',
+    textLengthBadgeId: 'extra1TextLengthBadge',
+    fontSelectId: 'extra1FontFamily',
+    boldBtnId: 'btnExtra1Bold',
+    italicBtnId: 'btnExtra1Italic',
+    spacingBtnId: 'btnExtra1LetterSpacing',
+    ptSizeId: 'extra1PtSize',
+    ptSizeValId: 'extra1PtSizeVal',
+    textGradEnableId: 'badge3TextGradEnable',
+    textGradControlsId: 'badge3TextGradControls',
+    textGrad1Id: 'badge3TextGrad1',
+    textGrad1HexId: 'badge3TextGrad1Hex',
+    textGrad2Id: 'badge3TextGrad2',
+    textGrad2HexId: 'badge3TextGrad2Hex',
+    textGradDirId: 'extra1TextGradDirSelect',
+    colorModeSelectId: 'extra1ColorModeSelect',
+    colorModeBadgeId: 'extra1ColorModeBadge',
+    themePanelId: 'extra1ColorThemePanel',
+    gradPanelId: 'extra1CustomGradPanel',
+    solidPanelId: 'extra1CustomSolidPanel',
+    themeSelectId: 'extra1ThemeSelect',
+    gradPreviewId: 'extra1GradPreview',
+    gradDirSelectId: null,
+    color1Id: 'extra1Color1',
+    color1HexId: 'extra1Color1Hex',
+    color2Id: 'extra1Color2',
+    color2HexId: 'extra1Color2Hex',
+    strokeColorId: 'extra1StrokeColor',
+    strokeHexId: 'extra1StrokeHex',
+    textColorId: 'extra1TextColor',
+    textColorHexId: 'extra1TextColorHex',
+    solidBgId: 'extra1SolidBg',
+    solidBgHexId: 'extra1SolidBgHex',
+    solidStrokeId: 'extra1SolidStroke',
+    solidStrokeHexId: 'extra1SolidStrokeHex',
+    solidTextId: 'extra1SolidText',
+    solidTextHexId: 'extra1SolidTextHex',
+    positionSelectId: 'extra1Position',
+    customPosContainerId: 'extra1CustomPosContainer',
+    posXId: 'extra1PosX',
+    posXValId: 'extra1PosXVal',
+    posYId: 'extra1PosY',
+    posYValId: 'extra1PosYVal',
+    frameSelectId: 'badge3Frame',
+    scaleId: 'extra1Scale',
+    scaleValId: 'extra1ScaleVal',
+    paddingId: 'extra1Padding',
+    paddingValId: 'extra1PaddingVal',
+    innerPaddingId: null,
+    innerPaddingValId: null,
+    opacityId: 'extra1Opacity',
+    opacityValId: 'extra1OpacityVal',
+    imgStateKey: 'badge3Img',
+    fileNameStateKey: 'badge3FileName',
+    uploadBtnTextId: 'extra1LogoUploadBtnText',
+    clearLogoBtnId: 'btnClearExtra1Logo'
   },
-  amber: {
-    bgStart: '#241806',
-    bgEnd: '#3d2a0d',
-    stroke: '#fbbf24',
-    glow: 'rgba(251, 191, 36, 0.4)',
-    textColor: '#ffffff'
-  },
-  crimson: {
-    bgStart: '#290913',
-    bgEnd: '#451020',
-    stroke: '#f43f5e',
-    glow: 'rgba(244, 63, 94, 0.4)',
-    textColor: '#ffffff'
-  },
-  slate: {
-    bgStart: '#0f172a',
-    bgEnd: '#1e293b',
-    stroke: '#94a3b8',
-    glow: 'rgba(148, 163, 184, 0.4)',
-    textColor: '#ffffff'
-  },
-  orange: {
-    bgStart: '#261206',
-    bgEnd: '#3d1d0a',
-    stroke: '#fb923c',
-    glow: 'rgba(251, 146, 60, 0.4)',
-    textColor: '#ffffff'
-  },
-  gold: {
-    bgStart: '#2a2007',
-    bgEnd: '#47360c',
-    stroke: '#fde047',
-    glow: 'rgba(253, 224, 71, 0.4)',
-    textColor: '#ffffff'
+  4: {
+    index: 4,
+    key: 'extra2',
+    enableCheckboxId: 'enableBadge4',
+    gridCheckboxId: 'toggleGridOverlay4',
+    mainCheckboxId: 'toggleMainOverlay4',
+    wizardCheckboxId: null,
+    modeSelectId: 'extra2ModeSelect',
+    textSectionId: 'extra2TextSection',
+    imageSectionId: 'extra2ImageSection',
+    presetSectionId: 'extra2PresetSection',
+    textInputId: 'extra2TextInput',
+    textLengthBadgeId: 'extra2TextLengthBadge',
+    fontSelectId: 'extra2FontFamily',
+    boldBtnId: 'btnExtra2Bold',
+    italicBtnId: 'btnExtra2Italic',
+    spacingBtnId: 'btnExtra2LetterSpacing',
+    ptSizeId: 'extra2PtSize',
+    ptSizeValId: 'extra2PtSizeVal',
+    textGradEnableId: 'badge4TextGradEnable',
+    textGradControlsId: 'badge4TextGradControls',
+    textGrad1Id: 'badge4TextGrad1',
+    textGrad1HexId: 'badge4TextGrad1Hex',
+    textGrad2Id: 'badge4TextGrad2',
+    textGrad2HexId: 'badge4TextGrad2Hex',
+    textGradDirId: 'extra2TextGradDirSelect',
+    colorModeSelectId: 'extra2ColorModeSelect',
+    colorModeBadgeId: 'extra2ColorModeBadge',
+    themePanelId: 'extra2ColorThemePanel',
+    gradPanelId: 'extra2CustomGradPanel',
+    solidPanelId: 'extra2CustomSolidPanel',
+    themeSelectId: 'extra2ThemeSelect',
+    gradPreviewId: 'extra2GradPreview',
+    gradDirSelectId: null,
+    color1Id: 'extra2Color1',
+    color1HexId: 'extra2Color1Hex',
+    color2Id: 'extra2Color2',
+    color2HexId: 'extra2Color2Hex',
+    strokeColorId: 'extra2StrokeColor',
+    strokeHexId: 'extra2StrokeHex',
+    textColorId: 'extra2TextColor',
+    textColorHexId: 'extra2TextColorHex',
+    solidBgId: 'extra2SolidBg',
+    solidBgHexId: 'extra2SolidBgHex',
+    solidStrokeId: 'extra2SolidStroke',
+    solidStrokeHexId: 'extra2SolidStrokeHex',
+    solidTextId: 'extra2SolidText',
+    solidTextHexId: 'extra2SolidTextHex',
+    positionSelectId: 'extra2Position',
+    customPosContainerId: 'extra2CustomPosContainer',
+    posXId: 'extra2PosX',
+    posXValId: 'extra2PosXVal',
+    posYId: 'extra2PosY',
+    posYValId: 'extra2PosYVal',
+    frameSelectId: 'badge4Frame',
+    scaleId: 'extra2Scale',
+    scaleValId: 'extra2ScaleVal',
+    paddingId: 'extra2Padding',
+    paddingValId: 'extra2PaddingVal',
+    innerPaddingId: null,
+    innerPaddingValId: null,
+    opacityId: 'extra2Opacity',
+    opacityValId: 'extra2OpacityVal',
+    imgStateKey: 'badge4Img',
+    fileNameStateKey: 'badge4FileName',
+    uploadBtnTextId: 'extra2LogoUploadBtnText',
+    clearLogoBtnId: 'btnClearExtra2Logo'
   }
 };
 
-export function populateFontDropdowns() {
-  const d1 = document.getElementById('badge1FontFamily');
-  const d2 = document.getElementById('seriesFontFamily');
-  const d3 = document.getElementById('extra1FontFamily');
-  const d4 = document.getElementById('extra2FontFamily');
-  if (!d1 && !d2 && !d3 && !d4) return;
-
-  const buildOptions = (selectedVal) => {
-    let out = '<optgroup label="Popular Display & Modding Fonts">';
-    SYSTEM_FONTS.forEach(f => {
-      out += `<option value="${f.value}" ${f.value === selectedVal ? 'selected' : ''}>${f.name}</option>`;
-    });
-    out += '</optgroup>';
-
-    out += '<optgroup label="Curated Google Fonts">';
-    CURATED_GOOGLE_FONTS.forEach(g => {
-      out += `<option value="${g}" ${g === selectedVal ? 'selected' : ''}>${g}</option>`;
-    });
-    out += '</optgroup>';
-
-    if (state.customGoogleFonts.length > 0) {
-      out += '<optgroup label="Custom Added Google Fonts">';
-      state.customGoogleFonts.forEach(c => {
-        out += `<option value="${c}" ${c === selectedVal ? 'selected' : ''}>${c}</option>`;
-      });
-      out += '</optgroup>';
-    }
-    return out;
-  };
-
-  if (d1) d1.innerHTML = buildOptions(state.badge1Font);
-  if (d2) d2.innerHTML = buildOptions(state.badge2Font);
-  if (d3) d3.innerHTML = buildOptions(state.badge3Font);
-  if (d4) d4.innerHTML = buildOptions(state.badge4Font);
+function getCfgByKeyOrIndex(target) {
+  if (typeof target === 'number') return BADGE_CONFIG[target] || BADGE_CONFIG[1];
+  const str = String(target || '').toLowerCase();
+  if (str === 'series' || str === '2') return BADGE_CONFIG[2];
+  if (str === 'extra1' || str === '3') return BADGE_CONFIG[3];
+  if (str === 'extra2' || str === '4') return BADGE_CONFIG[4];
+  return BADGE_CONFIG[1];
 }
 
-export function loadGoogleFont(fontName, callback) {
-  if (!fontName || fontName.startsWith('-apple-system') || fontName.startsWith('ui-monospace')) {
-    if (callback) callback();
-    return;
-  }
-  const isSystem = SYSTEM_FONTS.some(f => f.value === fontName);
-  if (isSystem) {
-    if (callback) callback();
-    return;
-  }
+// ==========================================
+// Google Fonts Management
+// ==========================================
 
-  const cleanName = fontName.trim();
-  const fontId = 'gfont-' + cleanName.toLowerCase().replace(/[^a-z0-9]/g, '-');
-  if (!document.getElementById(fontId)) {
+function getStoredGoogleFonts() {
+  try {
+    const raw = localStorage.getItem(CUSTOM_GOOGLE_FONTS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+export function loadGoogleFont(fontName) {
+  const clean = String(fontName || '').trim();
+  if (!clean) return;
+  const id = `gfont-${clean.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
+  if (!document.getElementById(id)) {
     const link = document.createElement('link');
-    link.id = fontId;
+    link.id = id;
     link.rel = 'stylesheet';
-    link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(cleanName).replace(/%20/g, '+')}:ital,wght@0,400;0,700;0,900;1,400;1,700&display=swap`;
+    link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(clean)}:ital,wght@0,400;0,700;1,400;1,700&display=swap`;
     document.head.appendChild(link);
   }
+}
 
-  if (document.fonts && document.fonts.load) {
-    Promise.all([
-      document.fonts.load(`14px "${cleanName}"`),
-      document.fonts.load(`bold 14px "${cleanName}"`),
-      document.fonts.load(`italic 14px "${cleanName}"`)
-    ]).then(() => {
-      if (callback) callback();
-      renderIconMap();
-    }).catch(err => {
-      console.warn('Font load notice:', err);
-      if (callback) callback();
-      renderIconMap();
-    });
-  } else {
-    setTimeout(() => {
-      if (callback) callback();
-      renderIconMap();
-    }, 300);
-  }
+export function populateFontDropdowns() {
+  const customFonts = getStoredGoogleFonts();
+  customFonts.forEach((f) => loadGoogleFont(f));
+
+  const allOptions = [
+    ...DEFAULT_FONT_OPTIONS,
+    ...customFonts.map((f) => ({ label: `${f} (Google Font)`, value: `'${f}', sans-serif` }))
+  ];
+
+  [1, 2, 3, 4].forEach((idx) => {
+    const sel = getEl(BADGE_CONFIG[idx].fontSelectId);
+    if (!sel) return;
+    const prev = sel.value;
+    sel.innerHTML = allOptions
+      .map((opt) => `<option value="${opt.value}">${opt.label}</option>`)
+      .join('');
+    if (prev && Array.from(sel.options).some((o) => o.value === prev)) {
+      sel.value = prev;
+    }
+  });
 }
 
 export function toggleGoogleFontInput(target) {
-  const rowId = (target === 'creator') ? 'creatorGoogleFontRow' : (target === 'series' ? 'seriesGoogleFontRow' : (target === 'extra1' ? 'extra1GoogleFontRow' : 'extra2GoogleFontRow'));
-  const row = document.getElementById(rowId);
+  const cfg = getCfgByKeyOrIndex(target);
+  const row = getEl(`${cfg.key}GoogleFontRow`);
   if (!row) return;
-  const isVisible = (row.style.display === 'block');
-  row.style.display = isVisible ? 'none' : 'block';
-  if (!isVisible) {
-    const inputId = (target === 'creator') ? 'creatorGoogleFontInput' : (target === 'series' ? 'seriesGoogleFontInput' : (target === 'extra1' ? 'extra1GoogleFontInput' : 'extra2GoogleFontInput'));
-    const input = document.getElementById(inputId);
-    if (input) input.focus();
-  }
+  const isShown = row.classList.toggle('active');
+  row.style.display = isShown ? 'block' : 'none';
 }
 
-export function addCustomGoogleFontFromInput(target, closeRow = false) {
-  const inputId = (target === 'creator') ? 'creatorGoogleFontInput' : (target === 'series' ? 'seriesGoogleFontInput' : (target === 'extra1' ? 'extra1GoogleFontInput' : 'extra2GoogleFontInput'));
-  const input = document.getElementById(inputId);
-  if (!input) return;
-  const fontName = input.value.trim();
-  if (!fontName) {
-    showToast('Please type a Google Font name');
-    return;
+export function addCustomGoogleFontFromInput(target, silent = false) {
+  const cfg = getCfgByKeyOrIndex(target);
+  const input = getEl(`${cfg.key}GoogleFontInput`);
+  const fontName = input?.value?.trim();
+  if (!fontName) return;
+
+  loadGoogleFont(fontName);
+  const list = getStoredGoogleFonts();
+  if (!list.includes(fontName)) {
+    list.push(fontName);
+    try {
+      localStorage.setItem(CUSTOM_GOOGLE_FONTS_KEY, JSON.stringify(list));
+    } catch (_) {}
   }
-
-  if (!state.customGoogleFonts.includes(fontName) && !CURATED_GOOGLE_FONTS.includes(fontName)) {
-    state.customGoogleFonts.push(fontName);
-  }
-
-  loadGoogleFont(fontName, () => {
-    populateFontDropdowns();
-    if (target === 'creator') {
-      state.badge1Font = fontName;
-      const sel = document.getElementById('badge1FontFamily');
-      if (sel) sel.value = fontName;
-    } else if (target === 'series') {
-      state.badge2Font = fontName;
-      const sel = document.getElementById('seriesFontFamily');
-      if (sel) sel.value = fontName;
-    } else if (target === 'extra1') {
-      state.badge3Font = fontName;
-      const sel = document.getElementById('extra1FontFamily');
-      if (sel) sel.value = fontName;
-    } else if (target === 'extra2') {
-      state.badge4Font = fontName;
-      const sel = document.getElementById('extra2FontFamily');
-      if (sel) sel.value = fontName;
-    }
-    renderIconMap();
-    showToast(`Loaded Google Font "${fontName}"!`);
-  });
-
-  // Do not close the window/row on Enter - keep open so user can keep testing or view status
-  if (closeRow) {
-    input.value = '';
-    const rowId = (target === 'creator') ? 'creatorGoogleFontRow' : (target === 'series' ? 'seriesGoogleFontRow' : (target === 'extra1' ? 'extra1GoogleFontRow' : 'extra2GoogleFontRow'));
-    const row = document.getElementById(rowId);
-    if (row) row.style.display = 'none';
-  } else {
-    // Keep focus and select text for effortless replacement if desired
-    input.select();
-  }
-}
-
-export function switchBadgeSubtab(tab) {
-  state.activeBadgeTab = tab;
-  const subtabs = ['creator', 'series', 'extra1', 'extra2', 'defaults'];
-  subtabs.forEach(t => {
-    const btnKey = t.charAt(0).toUpperCase() + t.slice(1);
-    const btn = document.getElementById(`badgeSubtab${btnKey}`) || document.getElementById(`tabBadge${btnKey}`);
-    const panel = document.getElementById(`panelBadge${btnKey}`) || document.getElementById(`badge${btnKey}Panel`);
-    if (btn) btn.classList.toggle('active', t === tab);
-    if (panel) {
-      if (t === tab) panel.classList.add('active');
-      else panel.classList.remove('active');
-      panel.style.display = (t === tab) ? 'block' : 'none';
-    }
-  });
-
-  const sel = document.getElementById('badgeLayerSelect');
-  if (sel && sel.value !== tab) sel.value = tab;
-
-  const badge = document.getElementById('activeOverlayLayerBadge');
-  if (badge) {
-    if (tab === 'creator') badge.textContent = 'Overlay 1/4';
-    else if (tab === 'series') badge.textContent = 'Overlay 2/4';
-    else if (tab === 'extra1') badge.textContent = 'Overlay 3/4';
-    else if (tab === 'extra2') badge.textContent = 'Overlay 4/4';
-    else if (tab === 'defaults') badge.textContent = 'Defaults';
-  }
+  populateFontDropdowns();
+  const sel = getEl(cfg.fontSelectId);
+  if (sel) sel.value = `'${fontName}', sans-serif`;
+  if (input) input.value = '';
   renderIconMap();
-}
-export const switchBadgeTab = switchBadgeSubtab;
-
-export function runBadgeStyleCopyAction(actionStr) {
-  if (!actionStr) return;
-  const parts = actionStr.split(':');
-  if (parts.length === 2) {
-    copyBadgeStyle(parts[0], parts[1]);
-  }
+  if (!silent) showToast(`Loaded Google Font "${fontName}"`);
 }
 
-export const BADGE_GRADIENT_PRESETS = {
-  neon: { c1: '#071a2e', c2: '#0d324d', stroke: '#38bdf8', text: '#ffffff' },
-  violet: { c1: '#151326', c2: '#251336', stroke: '#c084fc', text: '#ffffff' },
-  forest: { c1: '#06241a', c2: '#0d3d2c', stroke: '#34d399', text: '#ffffff' },
-  sunset: { c1: '#241806', c2: '#3d2a0d', stroke: '#fbbf24', text: '#ffffff' },
-  ruby: { c1: '#290913', c2: '#451020', stroke: '#f43f5e', text: '#ffffff' },
-  stealth: { c1: '#0a0f18', c2: '#1e293b', stroke: '#94a3b8', text: '#ffffff' },
-  cyber: { c1: '#2b0638', c2: '#09253d', stroke: '#ec4899', text: '#fdf2f8' },
-  gold: { c1: '#2a2007', c2: '#47360c', stroke: '#fde047', text: '#ffffff' }
-};
+// ==========================================
+// Badge Tabs & Subtabs Navigation
+// ==========================================
 
-export function applyCreatorGradPresetByName(name) {
-  const p = BADGE_GRADIENT_PRESETS[name];
-  if (p) applyCreatorGradPreset(p.c1, p.c2, p.stroke, p.text);
+export function switchBadgeTab(tab) {
+  const isBackdrop = tab === 'backdrop';
+  syncActiveClass('tabBadgeBackdrop', isBackdrop);
+  syncActiveClass('tabBadgeOverlays', !isBackdrop);
+  setElDisplay('panelBadgeBackdrop', isBackdrop ? 'block' : 'none');
+  setElDisplay('panelBadgeOverlays', isBackdrop ? 'none' : 'block');
 }
 
-export function applySeriesGradPresetByName(name) {
-  const p = BADGE_GRADIENT_PRESETS[name];
-  if (p) applySeriesGradPreset(p.c1, p.c2, p.stroke, p.text);
-}
-
-export function applyExtra1GradPresetByName(name) {
-  const p = BADGE_GRADIENT_PRESETS[name];
-  if (p) {
-    state.badge3CustomBg1 = p.c1;
-    state.badge3CustomBg2 = p.c2;
-    state.badge3CustomStroke = p.stroke;
-    state.badge3CustomText = p.text;
-    const inp1 = document.getElementById('extra1Color1'); if (inp1) inp1.value = p.c1;
-    const inp2 = document.getElementById('extra1Color2'); if (inp2) inp2.value = p.c2;
-    const inps = document.getElementById('extra1StrokeColor'); if (inps) inps.value = p.stroke;
-    const inpt = document.getElementById('extra1TextColor'); if (inpt) inpt.value = p.text;
-    const c1Hex = document.getElementById('extra1Color1Hex'); if (c1Hex) c1Hex.textContent = p.c1;
-    const c2Hex = document.getElementById('extra1Color2Hex'); if (c2Hex) c2Hex.textContent = p.c2;
-    const sHex = document.getElementById('extra1StrokeHex'); if (sHex) sHex.textContent = p.stroke;
-    const tHex = document.getElementById('extra1TextColorHex'); if (tHex) tHex.textContent = p.text;
-    const prev = document.getElementById('extra1GradPreview');
-    if (prev) prev.style.background = `linear-gradient(135deg, ${p.c1}, ${p.c2})`;
-    renderIconMap();
-  }
-}
-
-export function applyExtra2GradPresetByName(name) {
-  const p = BADGE_GRADIENT_PRESETS[name];
-  if (p) {
-    state.badge4CustomBg1 = p.c1;
-    state.badge4CustomBg2 = p.c2;
-    state.badge4CustomStroke = p.stroke;
-    state.badge4CustomText = p.text;
-    const inp1 = document.getElementById('extra2Color1'); if (inp1) inp1.value = p.c1;
-    const inp2 = document.getElementById('extra2Color2'); if (inp2) inp2.value = p.c2;
-    const inps = document.getElementById('extra2StrokeColor'); if (inps) inps.value = p.stroke;
-    const inpt = document.getElementById('extra2TextColor'); if (inpt) inpt.value = p.text;
-    const c1Hex = document.getElementById('extra2Color1Hex'); if (c1Hex) c1Hex.textContent = p.c1;
-    const c2Hex = document.getElementById('extra2Color2Hex'); if (c2Hex) c2Hex.textContent = p.c2;
-    const sHex = document.getElementById('extra2StrokeHex'); if (sHex) sHex.textContent = p.stroke;
-    const tHex = document.getElementById('extra2TextColorHex'); if (tHex) tHex.textContent = p.text;
-    const prev = document.getElementById('extra2GradPreview');
-    if (prev) prev.style.background = `linear-gradient(135deg, ${p.c1}, ${p.c2})`;
-    renderIconMap();
-  }
-}
-
-export function applyBadge1TextGradPresetByName(name) {
-  if (name === 'cyan') applyBadge1TextGradPreset('#ffffff', '#38bdf8');
-  else if (name === 'gold') applyBadge1TextGradPreset('#fff3bf', '#f59e0b');
-  else if (name === 'silver') applyBadge1TextGradPreset('#ffffff', '#94a3b8');
-}
-
-export function applyBadge2TextGradPresetByName(name) {
-  if (name === 'violet') applyBadge2TextGradPreset('#ffffff', '#c084fc');
-  else if (name === 'gold') applyBadge2TextGradPreset('#fff3bf', '#f59e0b');
-  else if (name === 'cyan') applyBadge2TextGradPreset('#ffffff', '#38bdf8');
-}
-
-export function applyBadge3TextGradPresetByName(name) {
-  if (name === 'emerald') applyBadge3TextGradPreset('#ffffff', '#34d399');
-  else if (name === 'gold') applyBadge3TextGradPreset('#fff3bf', '#f59e0b');
-  else if (name === 'silver') applyBadge3TextGradPreset('#ffffff', '#94a3b8');
-}
-
-export function applyBadge4TextGradPresetByName(name) {
-  if (name === 'amber') applyBadge4TextGradPreset('#ffffff', '#fbbf24');
-  else if (name === 'gold') applyBadge4TextGradPreset('#fff3bf', '#f59e0b');
-  else if (name === 'silver') applyBadge4TextGradPreset('#ffffff', '#94a3b8');
-}
-
-export function syncBadgeCheckboxes(num, checked) {
-  const sidebarCb = document.getElementById(`enableBadge${num}`);
-  if (sidebarCb && sidebarCb.checked !== checked) sidebarCb.checked = checked;
-
-  const mainCb = document.getElementById(`toggleMainOverlay${num}`);
-  if (mainCb && mainCb.checked !== checked) mainCb.checked = checked;
-
-  const gridCb = document.getElementById(`toggleGridOverlay${num}`);
-  if (gridCb && gridCb.checked !== checked) gridCb.checked = checked;
+export function switchBadgeSubtab(sub) {
+  const map = {
+    creator: { btn: 'subtabCreator', panel: 'panelBadgeCreator', badgeLabel: 'Overlay 1/4' },
+    series: { btn: 'subtabSeries', panel: 'panelBadgeSeries', badgeLabel: 'Overlay 2/4' },
+    extra1: { btn: 'subtabExtra1', panel: 'panelBadgeExtra1', badgeLabel: 'Overlay 3/4' },
+    extra2: { btn: 'subtabExtra2', panel: 'panelBadgeExtra2', badgeLabel: 'Overlay 4/4' },
+    defaults: { btn: 'subtabDefaults', panel: 'panelBadgeDefaults', badgeLabel: 'Defaults' }
+  };
+  Object.entries(map).forEach(([k, info]) => {
+    const active = k === sub;
+    syncActiveClass(info.btn, active);
+    const panel = getEl(info.panel);
+    if (panel) {
+      panel.classList.toggle('active', active);
+      panel.style.display = active ? 'block' : 'none';
+    }
+    if (active && info.badgeLabel) {
+      setElText('activeOverlayLayerBadge', info.badgeLabel);
+    }
+  });
+  setElValue('badgeLayerSelect', sub);
 }
 
 export function syncAllBadgeCheckboxes() {
-  syncBadgeCheckboxes(1, !!state.badge1Enabled);
-  syncBadgeCheckboxes(2, !!state.badge2Enabled);
-  syncBadgeCheckboxes(3, !!state.badge3Enabled);
-  syncBadgeCheckboxes(4, !!state.badge4Enabled);
-}
-
-export function toggleBadge1Enable(checked) {
-  state.badge1Enabled = checked;
-  const dot = document.getElementById('dotBadge1');
-  if (dot) dot.className = checked ? 'badge-tab-indicator active-dot' : 'badge-tab-indicator';
-  syncBadgeCheckboxes(1, checked);
-  renderIconMap();
-}
-
-export function toggleBadge2Enable(checked) {
-  state.badge2Enabled = checked;
-  const dot = document.getElementById('dotBadge2');
-  if (dot) dot.className = checked ? 'badge-tab-indicator active-dot' : 'badge-tab-indicator';
-  syncBadgeCheckboxes(2, checked);
-  renderIconMap();
-}
-
-export function toggleBadge3Enable(checked) {
-  state.badge3Enabled = checked;
-  const dot = document.getElementById('dotBadge3');
-  if (dot) dot.className = checked ? 'badge-tab-indicator active-dot' : 'badge-tab-indicator';
-  syncBadgeCheckboxes(3, checked);
-  renderIconMap();
-}
-
-export function toggleBadge4Enable(checked) {
-  state.badge4Enabled = checked;
-  const dot = document.getElementById('dotBadge4');
-  if (dot) dot.className = checked ? 'badge-tab-indicator active-dot' : 'badge-tab-indicator';
-  syncBadgeCheckboxes(4, checked);
-  renderIconMap();
-}
-
-// Badge 1 Handlers
-export function setCreatorBadgeMode(mode) {
-  state.badge1Type = mode;
-  document.getElementById('btnCreatorModePreset')?.classList.toggle('active', mode === 'preset');
-  document.getElementById('btnCreatorModeText')?.classList.toggle('active', mode === 'text');
-  document.getElementById('btnCreatorModeImage')?.classList.toggle('active', mode === 'image');
-  const modeSel = document.getElementById('creatorModeSelect');
-  if (modeSel && modeSel.value !== mode) modeSel.value = mode;
-
-  const secPreset = document.getElementById('creatorPresetSection');
-  const secText = document.getElementById('creatorTextSection');
-  const secImg = document.getElementById('creatorImageSection');
-
-  if (secPreset) secPreset.style.display = mode === 'preset' ? 'block' : 'none';
-  if (secText) secText.style.display = mode === 'text' ? 'block' : 'none';
-  if (secImg) secImg.style.display = mode === 'image' ? 'block' : 'none';
-
-  document.getElementById('btnPresetCreatorCustom')?.classList.toggle('active', mode === 'text');
-
-  if (mode === 'text') {
-    const inp = document.getElementById('badge1TextInput');
-    if (inp) {
-      setTimeout(() => {
-        inp.focus();
-        inp.select();
-      }, 40);
-    }
-  }
-
-  onBadge1TextChange(false);
-  renderIconMap();
-}
-
-export function onBadge1TextChange(doRender = true) {
-  const input = document.getElementById('badge1TextInput');
-  state.badge1Text = input ? input.value : '';
-  const lenBadge = document.getElementById('badge1TextLengthBadge');
-  if (lenBadge) {
-    lenBadge.textContent = `${state.badge1Text.length} / 20`;
-  }
-  if (doRender) {
-    renderIconMap();
-  }
-}
-
-export function clearCreatorText() {
-  const inp = document.getElementById('badge1TextInput');
-  if (inp) {
-    inp.value = '';
-    state.badge1Text = '';
-    onBadge1TextChange();
-    inp.focus();
-  }
-}
-
-export function setBadge1TextPreset(text) {
-  const input = document.getElementById('badge1TextInput');
-  if (input) {
-    input.value = text;
-    state.badge1Text = text;
-  }
-  setCreatorBadgeMode('text');
-  onBadge1TextChange();
-  showToast(`Set custom creator text: "${text}"`);
-}
-
-export function onBadge1FontChange() {
-  const sel = document.getElementById('badge1FontFamily');
-  state.badge1Font = sel ? sel.value : 'Montserrat';
-  loadGoogleFont(state.badge1Font, () => {
-    renderIconMap();
+  [1, 2, 3, 4].forEach((idx) => {
+    const cfg = BADGE_CONFIG[idx];
+    const enabled = Boolean(state[`badge${idx}Enabled`]);
+    setElChecked(cfg.enableCheckboxId, enabled);
+    setElChecked(cfg.gridCheckboxId, enabled);
+    setElChecked(cfg.mainCheckboxId, enabled);
+    if (cfg.wizardCheckboxId) setElChecked(cfg.wizardCheckboxId, enabled);
   });
 }
 
-export function toggleBadge1Bold() {
-  state.badge1Bold = !state.badge1Bold;
-  document.getElementById('btnBadge1Bold')?.classList.toggle('active', state.badge1Bold);
+// ==========================================
+// Parameterized Badge Layer Controllers
+// ==========================================
+
+function toggleBadgeLayerEnable(idx, checked) {
+  const cfg = BADGE_CONFIG[idx];
+  const val = typeof checked === 'boolean' ? checked : Boolean(getEl(cfg.enableCheckboxId)?.checked);
+  state[`badge${idx}Enabled`] = val;
+  syncAllBadgeCheckboxes();
   renderIconMap();
 }
 
-export function toggleBadge1Italic() {
-  state.badge1Italic = !state.badge1Italic;
-  document.getElementById('btnBadge1Italic')?.classList.toggle('active', state.badge1Italic);
+function setBadgeLayerMode(idx, mode) {
+  const cfg = BADGE_CONFIG[idx];
+  setElValue(cfg.modeSelectId, mode);
+  if (cfg.textSectionId) setElDisplay(cfg.textSectionId, mode === 'text' ? 'block' : 'none');
+  if (cfg.imageSectionId) setElDisplay(cfg.imageSectionId, mode === 'image' ? 'block' : 'none');
+  if (cfg.presetSectionId) setElDisplay(cfg.presetSectionId, mode === 'preset' ? 'block' : 'none');
   renderIconMap();
 }
 
-export function toggleBadge1LetterSpacing() {
-  state.badge1LetterSpacing = !state.badge1LetterSpacing;
-  document.getElementById('btnBadge1LetterSpacing')?.classList.toggle('active', state.badge1LetterSpacing);
-  renderIconMap();
-}
-
-export function onBadge1PtSizeChange() {
-  const val = parseInt(document.getElementById('badge1PtSize').value, 10) || 13;
-  state.badge1PtSize = val;
-  const valEl = document.getElementById('badge1PtSizeVal');
-  if (valEl) valEl.textContent = `${val} pt`;
-  renderIconMap();
-}
-
-export function updateCreatorGradPreview() {
-  const el = document.getElementById('creatorGradPreview');
-  if (!el) return;
-  const angle = state.badge1GradDir === 'horizontal' ? '90deg' : (state.badge1GradDir === 'vertical' ? '180deg' : '135deg');
-  el.style.background = `linear-gradient(${angle}, ${state.badge1CustomBg1}, ${state.badge1CustomBg2})`;
-}
-
-export function setCreatorColorMode(mode) {
-  state.badge1ColorMode = mode;
-  document.getElementById('btnCreatorColorTheme')?.classList.toggle('active', mode === 'theme');
-  document.getElementById('btnCreatorColorGradient')?.classList.toggle('active', mode === 'gradient');
-  document.getElementById('btnCreatorColorSolid')?.classList.toggle('active', mode === 'solid');
-  const sel = document.getElementById('creatorColorModeSelect');
-  if (sel && sel.value !== mode) sel.value = mode;
-
-  const pTheme = document.getElementById('creatorColorThemePanel');
-  const pGrad = document.getElementById('creatorCustomGradPanel');
-  const pSolid = document.getElementById('creatorCustomSolidPanel');
-
-  if (pTheme) pTheme.style.display = mode === 'theme' ? 'block' : 'none';
-  if (pGrad) pGrad.style.display = mode === 'gradient' ? 'block' : 'none';
-  if (pSolid) pSolid.style.display = mode === 'solid' ? 'block' : 'none';
-
-  const badge = document.getElementById('creatorColorModeBadge');
-  if (badge) {
-    badge.textContent = mode === 'theme' ? 'Themes' : (mode === 'gradient' ? 'Custom Gradient' : 'Solid Color');
+function onBadgeLayerTextChange(idx) {
+  const cfg = BADGE_CONFIG[idx];
+  const text = getEl(cfg.textInputId)?.value || '';
+  setElText(cfg.textLengthBadgeId, `${text.length} / ${idx === 1 ? 18 : 20}`);
+  if (text.trim().length > 0 && !state[`badge${idx}Enabled`]) {
+    state[`badge${idx}Enabled`] = true;
+    syncAllBadgeCheckboxes();
   }
-
-  if (mode === 'gradient') updateCreatorGradPreview();
   renderIconMap();
 }
 
-export function setCreatorColorTheme(themeName) {
-  if (!SERIES_COLOR_THEMES[themeName]) return;
-  state.badge1ColorTheme = themeName;
-  document.querySelectorAll('#creatorColorThemes .theme-chip').forEach(btn => {
-    btn.classList.toggle('active', btn.id === `themeBtn1_${themeName}`);
-  });
-  const sel = document.getElementById('creatorThemeSelect');
-  if (sel && sel.value !== themeName) sel.value = themeName;
+function clearBadgeLayerText(idx) {
+  const cfg = BADGE_CONFIG[idx];
+  setElValue(cfg.textInputId, '');
+  onBadgeLayerTextChange(idx);
+}
+
+function setBadgeLayerTextPreset(idx, val) {
+  const cfg = BADGE_CONFIG[idx];
+  setElValue(cfg.textInputId, val);
+  onBadgeLayerTextChange(idx);
+}
+
+function toggleBadgeLayerTypoBtn(idx, btnKey) {
+  const cfg = BADGE_CONFIG[idx];
+  const btn = getEl(cfg[btnKey]);
+  if (btn) btn.classList.toggle('active');
   renderIconMap();
 }
 
-export function setCreatorGradDirection(dir) {
-  state.badge1GradDir = dir;
-  document.getElementById('btnCreatorGradDir_diag')?.classList.toggle('active', dir === 'diagonal');
-  document.getElementById('btnCreatorGradDir_horiz')?.classList.toggle('active', dir === 'horizontal');
-  document.getElementById('btnCreatorGradDir_vert')?.classList.toggle('active', dir === 'vertical');
-  const sel = document.getElementById('creatorGradDirSelect');
-  if (sel && sel.value !== dir) sel.value = dir;
-  updateCreatorGradPreview();
+function onBadgeLayerPtSizeChange(idx) {
+  const cfg = BADGE_CONFIG[idx];
+  const val = getEl(cfg.ptSizeId)?.value || '13';
+  setElText(cfg.ptSizeValId, `${val} pt`);
   renderIconMap();
 }
 
-export function onCreatorCustomColorInput() {
-  const c1 = document.getElementById('creatorColor1')?.value || '#091524';
-  const c2 = document.getElementById('creatorColor2')?.value || '#0e243d';
-  const stroke = document.getElementById('creatorStrokeColor')?.value || '#00a8ff';
-  const text = document.getElementById('creatorTextColor')?.value || '#ffffff';
-
-  state.badge1CustomBg1 = c1;
-  state.badge1CustomBg2 = c2;
-  state.badge1CustomStroke = stroke;
-  state.badge1CustomText = text;
-
-  const c1Hex = document.getElementById('creatorColor1Hex');
-  if (c1Hex) c1Hex.textContent = c1;
-  const c2Hex = document.getElementById('creatorColor2Hex');
-  if (c2Hex) c2Hex.textContent = c2;
-  const sHex = document.getElementById('creatorStrokeHex');
-  if (sHex) sHex.textContent = stroke;
-  const tHex = document.getElementById('creatorTextColorHex');
-  if (tHex) tHex.textContent = text;
-
-  updateCreatorGradPreview();
+function toggleBadgeLayerTextGrad(idx, checked) {
+  const cfg = BADGE_CONFIG[idx];
+  const enabled = typeof checked === 'boolean' ? checked : Boolean(getEl(cfg.textGradEnableId)?.checked);
+  setElChecked(cfg.textGradEnableId, enabled);
+  setElDisplay(cfg.textGradControlsId, enabled ? 'block' : 'none');
   renderIconMap();
 }
 
-export function onCreatorSolidColorInput() {
-  const bg = document.getElementById('creatorSolidBg')?.value || '#091524';
-  const stroke = document.getElementById('creatorSolidStroke')?.value || '#00a8ff';
-  const text = document.getElementById('creatorSolidText')?.value || '#ffffff';
-
-  state.badge1SolidBg = bg;
-  state.badge1SolidStroke = stroke;
-  state.badge1SolidText = text;
-
-  const bgHex = document.getElementById('creatorSolidBgHex');
-  if (bgHex) bgHex.textContent = bg;
-  const sHex = document.getElementById('creatorSolidStrokeHex');
-  if (sHex) sHex.textContent = stroke;
-  const tHex = document.getElementById('creatorSolidTextHex');
-  if (tHex) tHex.textContent = text;
-
+function onBadgeLayerTextGradInput(idx) {
+  const cfg = BADGE_CONFIG[idx];
+  setElText(cfg.textGrad1HexId, getEl(cfg.textGrad1Id)?.value || '#ffffff');
+  setElText(cfg.textGrad2HexId, getEl(cfg.textGrad2Id)?.value || '#38bdf8');
   renderIconMap();
 }
 
-export function applyCreatorGradPreset(c1, c2, stroke, text) {
-  state.badge1CustomBg1 = c1;
-  state.badge1CustomBg2 = c2;
-  state.badge1CustomStroke = stroke;
-  state.badge1CustomText = text;
-
-  const inp1 = document.getElementById('creatorColor1'); if (inp1) inp1.value = c1;
-  const inp2 = document.getElementById('creatorColor2'); if (inp2) inp2.value = c2;
-  const inps = document.getElementById('creatorStrokeColor'); if (inps) inps.value = stroke;
-  const inpt = document.getElementById('creatorTextColor'); if (inpt) inpt.value = text;
-
-  const c1Hex = document.getElementById('creatorColor1Hex'); if (c1Hex) c1Hex.textContent = c1;
-  const c2Hex = document.getElementById('creatorColor2Hex'); if (c2Hex) c2Hex.textContent = c2;
-  const sHex = document.getElementById('creatorStrokeHex'); if (sHex) sHex.textContent = stroke;
-  const tHex = document.getElementById('creatorTextColorHex'); if (tHex) tHex.textContent = text;
-
-  setCreatorColorMode('gradient');
-  updateCreatorGradPreview();
+function setBadgeLayerTextGradDir(idx, dir) {
+  const cfg = BADGE_CONFIG[idx];
+  setElValue(cfg.textGradDirId, dir);
   renderIconMap();
-  showToast('Applied custom gradient preset');
 }
 
-export function handleDesignerLogoSelect(e) {
-  if (e.target.files && e.target.files.length > 0) {
-    const file = e.target.files[0];
-    state.badge1FileName = file.name;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        state.designerLogoImg = img;
-        state.presetLogoType = null;
-        const btn = document.getElementById('logoUploadBtnText');
-        if (btn) btn.textContent = file.name.substring(0, 16) + '...';
-        const btnClear = document.getElementById('btnClearLogo');
-        if (btnClear) btnClear.style.display = 'block';
-        renderIconMap();
-        showToast('Creator logo applied to icon');
-      };
-      img.src = event.target.result;
+function applyBadgeLayerTextGradPreset(idx, presetName) {
+  const cfg = BADGE_CONFIG[idx];
+  const p = TEXT_GRAD_PRESETS[presetName];
+  if (!p) return;
+  setElValue(cfg.textGrad1Id, p.c1);
+  setElValue(cfg.textGrad2Id, p.c2);
+  onBadgeLayerTextGradInput(idx);
+}
+
+function updateBadgeLayerGradPreview(idx) {
+  const cfg = BADGE_CONFIG[idx];
+  const bar = getEl(cfg.gradPreviewId);
+  if (!bar) return;
+  const c1 = getEl(cfg.color1Id)?.value || '#0a192f';
+  const c2 = getEl(cfg.color2Id)?.value || '#0f2942';
+  const dir = getEl(cfg.gradDirSelectId)?.value || 'diagonal';
+  const angle = dir === 'horizontal' ? '90deg' : dir === 'vertical' ? '180deg' : '135deg';
+  bar.style.background = `linear-gradient(${angle}, ${c1}, ${c2})`;
+}
+
+function setBadgeLayerColorMode(idx, mode) {
+  const cfg = BADGE_CONFIG[idx];
+  setElValue(cfg.colorModeSelectId, mode);
+  setElDisplay(cfg.themePanelId, mode === 'theme' ? 'block' : 'none');
+  setElDisplay(cfg.gradPanelId, mode === 'gradient' ? 'block' : 'none');
+  setElDisplay(cfg.solidPanelId, mode === 'solid' ? 'block' : 'none');
+  const label = mode === 'gradient' ? 'Gradient' : mode === 'solid' ? 'Solid' : 'Themes';
+  setElText(cfg.colorModeBadgeId, label);
+  renderIconMap();
+}
+
+function setBadgeLayerColorTheme(idx, theme) {
+  const cfg = BADGE_CONFIG[idx];
+  setElValue(cfg.themeSelectId, theme);
+  renderIconMap();
+}
+
+function setBadgeLayerGradDirection(idx, dir) {
+  const cfg = BADGE_CONFIG[idx];
+  if (cfg.gradDirSelectId) setElValue(cfg.gradDirSelectId, dir);
+  updateBadgeLayerGradPreview(idx);
+  renderIconMap();
+}
+
+function onBadgeLayerCustomColorInput(idx) {
+  const cfg = BADGE_CONFIG[idx];
+  setElText(cfg.color1HexId, getEl(cfg.color1Id)?.value || '');
+  setElText(cfg.color2HexId, getEl(cfg.color2Id)?.value || '');
+  setElText(cfg.strokeHexId, getEl(cfg.strokeColorId)?.value || '');
+  setElText(cfg.textColorHexId, getEl(cfg.textColorId)?.value || '');
+  updateBadgeLayerGradPreview(idx);
+  renderIconMap();
+}
+
+function onBadgeLayerSolidColorInput(idx) {
+  const cfg = BADGE_CONFIG[idx];
+  setElText(cfg.solidBgHexId, getEl(cfg.solidBgId)?.value || '');
+  setElText(cfg.solidStrokeHexId, getEl(cfg.solidStrokeId)?.value || '');
+  setElText(cfg.solidTextHexId, getEl(cfg.solidTextId)?.value || '');
+  renderIconMap();
+}
+
+function applyBadgeLayerGradPreset(idx, c1, c2, stroke, text) {
+  const cfg = BADGE_CONFIG[idx];
+  setElValue(cfg.color1Id, c1);
+  setElValue(cfg.color2Id, c2);
+  if (stroke) setElValue(cfg.strokeColorId, stroke);
+  if (text) setElValue(cfg.textColorId, text);
+  onBadgeLayerCustomColorInput(idx);
+}
+
+function applyBadgeLayerGradPresetByName(idx, name) {
+  const p = GRADIENT_PRESETS[name];
+  if (!p) return;
+  applyBadgeLayerGradPreset(idx, p.c1, p.c2, p.stroke, p.text);
+}
+
+function handleBadgeLayerLogoSelect(idx, event) {
+  const cfg = BADGE_CONFIG[idx];
+  const file = event?.target?.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      state[cfg.imgStateKey] = img;
+      state[cfg.fileNameStateKey] = file.name;
+      state[`badge${idx}Enabled`] = true;
+      syncAllBadgeCheckboxes();
+      setElText(cfg.uploadBtnTextId, file.name);
+      setElDisplay(cfg.clearLogoBtnId, 'inline-block');
+      renderIconMap();
+      showToast(`Loaded badge image: ${file.name}`);
     };
-    reader.readAsDataURL(file);
-  }
-}
-
-export function clearDesignerLogo() {
-  state.designerLogoImg = null;
-  state.presetLogoType = null;
-  state.badge1FileName = '';
-  const btn = document.getElementById('logoUploadBtnText');
-  if (btn) btn.textContent = 'Upload Creator Logo...';
-  const btnClear = document.getElementById('btnClearLogo');
-  if (btnClear) btnClear.style.display = 'none';
-  const inp = document.getElementById('designerLogoInput');
-  if (inp) inp.value = '';
-  renderIconMap();
-  showToast('Creator logo removed');
-}
-
-export function applyPresetLogo(type) {
-  if (type === 'none') {
-    clearDesignerLogo();
-    return;
-  }
-  state.presetLogoType = type;
-  state.designerLogoImg = null;
-  state.badge1FileName = '';
-  state.badge1Type = 'preset';
-  setCreatorBadgeMode('preset');
-  const sel = document.getElementById('creatorPresetSelect');
-  if (sel && sel.value !== type) sel.value = type;
-  const btn = document.getElementById('logoUploadBtnText');
-  if (btn) btn.textContent = 'Upload Creator Logo...';
-  const btnClear = document.getElementById('btnClearLogo');
-  if (btnClear) btnClear.style.display = 'block';
-
-  document.querySelectorAll('#creatorPresetSection .preset-btn').forEach(b => {
-    b.classList.toggle('active', b.getAttribute('onclick')?.includes(`'${type}'`));
-  });
-
-  renderIconMap();
-  showToast(`Applied ${type} creator seal`);
-}
-
-export function onBadge1PaddingChange() {
-  const val = parseInt(document.getElementById('badge1Padding')?.value || '12', 10);
-  state.badge1EdgePadding = val;
-  const valEl = document.getElementById('badge1PaddingVal');
-  if (valEl) valEl.textContent = `${val} px`;
-  renderIconMap();
-}
-
-export function onBadge1InnerPaddingChange() {
-  const val = parseInt(document.getElementById('badge1InnerPadding')?.value || '8', 10);
-  state.badge1InnerPadding = val;
-  const valEl = document.getElementById('badge1InnerPaddingVal');
-  if (valEl) valEl.textContent = `${val} px`;
-  renderIconMap();
-}
-
-export function toggleBadge1TextGrad(checked) {
-  state.badge1TextGradEnabled = checked;
-  const c = document.getElementById('badge1TextGradControls');
-  if (c) c.style.display = checked ? 'block' : 'none';
-  renderIconMap();
-}
-
-export function onBadge1TextGradInput() {
-  const c1 = document.getElementById('badge1TextGrad1')?.value || '#ffffff';
-  const c2 = document.getElementById('badge1TextGrad2')?.value || '#38bdf8';
-  state.badge1TextGradColor1 = c1;
-  state.badge1TextGradColor2 = c2;
-  const hex1 = document.getElementById('badge1TextGrad1Hex'); if (hex1) hex1.textContent = c1;
-  const hex2 = document.getElementById('badge1TextGrad2Hex'); if (hex2) hex2.textContent = c2;
-  renderIconMap();
-}
-
-export function setBadge1TextGradDir(dir) {
-  state.badge1TextGradDir = dir;
-  document.getElementById('btnBadge1TextDir_vert')?.classList.toggle('active', dir === 'vertical');
-  document.getElementById('btnBadge1TextDir_horiz')?.classList.toggle('active', dir === 'horizontal');
-  renderIconMap();
-}
-
-export function applyBadge1TextGradPreset(c1, c2) {
-  state.badge1TextGradColor1 = c1;
-  state.badge1TextGradColor2 = c2;
-  const el1 = document.getElementById('badge1TextGrad1'); if (el1) el1.value = c1;
-  const el2 = document.getElementById('badge1TextGrad2'); if (el2) el2.value = c2;
-  const hex1 = document.getElementById('badge1TextGrad1Hex'); if (hex1) hex1.textContent = c1;
-  const hex2 = document.getElementById('badge1TextGrad2Hex'); if (hex2) hex2.textContent = c2;
-  state.badge1TextGradEnabled = true;
-  const chk = document.getElementById('badge1TextGradEnable'); if (chk) chk.checked = true;
-  const c = document.getElementById('badge1TextGradControls'); if (c) c.style.display = 'block';
-  renderIconMap();
-}
-
-// Badge 2 Handlers
-export function onSeriesFontChange() {
-  const sel = document.getElementById('seriesFontFamily');
-  state.badge2Font = sel ? sel.value : 'Bebas Neue';
-  loadGoogleFont(state.badge2Font, () => {
-    renderIconMap();
-  });
-}
-
-export function toggleSeriesBold() {
-  state.badge2Bold = !state.badge2Bold;
-  document.getElementById('btnSeriesBold')?.classList.toggle('active', state.badge2Bold);
-  renderIconMap();
-}
-
-export function toggleSeriesItalic() {
-  state.badge2Italic = !state.badge2Italic;
-  document.getElementById('btnSeriesItalic')?.classList.toggle('active', state.badge2Italic);
-  renderIconMap();
-}
-
-export function onSeriesPtSizeChange() {
-  const val = parseInt(document.getElementById('seriesPtSize').value, 10) || 13;
-  state.badge2PtSize = val;
-  const valEl = document.getElementById('seriesPtSizeVal');
-  if (valEl) valEl.textContent = `${val} pt`;
-  renderIconMap();
-}
-
-export function setSeriesBadgeMode(mode) {
-  state.badge2Type = mode;
-  document.getElementById('btnSeriesModePreset')?.classList.toggle('active', mode === 'preset');
-  document.getElementById('btnSeriesModeText')?.classList.toggle('active', mode === 'text');
-  document.getElementById('btnSeriesModeImage')?.classList.toggle('active', mode === 'image');
-  const sel = document.getElementById('seriesModeSelect');
-  if (sel && sel.value !== mode) sel.value = mode;
-
-  const secPreset = document.getElementById('seriesPresetSection');
-  const secText = document.getElementById('seriesTextSection');
-  const secImg = document.getElementById('seriesImageSection');
-
-  if (secPreset) secPreset.style.display = mode === 'preset' ? 'block' : 'none';
-  if (secText) secText.style.display = mode === 'text' ? 'block' : 'none';
-  if (secImg) secImg.style.display = mode === 'image' ? 'block' : 'none';
-
-  document.getElementById('btnPresetSeriesCustom')?.classList.toggle('active', mode === 'text');
-
-  if (mode === 'text') {
-    const inp = document.getElementById('seriesTextInput');
-    if (inp) {
-      setTimeout(() => {
-        inp.focus();
-        inp.select();
-      }, 40);
-    }
-  }
-
-  onSeriesTextChange(false);
-  renderIconMap();
-}
-
-export function applySeriesPreset(presetName) {
-  state.badge2Preset = presetName;
-  state.badge2Type = 'preset';
-  setSeriesBadgeMode('preset');
-  const sel = document.getElementById('seriesPresetSelect');
-  if (sel && sel.value !== presetName) sel.value = presetName;
-
-  document.querySelectorAll('#seriesPresetSection .preset-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.getAttribute('onclick')?.includes(`'${presetName}'`));
-  });
-
-  renderIconMap();
-  showToast(`Selected "${presetName.toUpperCase()}" series preset`);
-}
-
-export function setSeriesTextPreset(text) {
-  const input = document.getElementById('seriesTextInput');
-  if (input) {
-    input.value = text;
-    state.badge2Text = text;
-  }
-  setSeriesBadgeMode('text');
-  onSeriesTextChange();
-  showToast(`Set custom series text: "${text}"`);
-}
-
-export function onSeriesTextChange(doRender = true) {
-  const input = document.getElementById('seriesTextInput');
-  state.badge2Text = input ? input.value : '';
-  const lenBadge = document.getElementById('seriesTextLengthBadge');
-  if (lenBadge) {
-    lenBadge.textContent = `${state.badge2Text.length} / 20`;
-  }
-  if (doRender) {
-    renderIconMap();
-  }
-}
-
-export function clearSeriesText() {
-  const inp = document.getElementById('seriesTextInput');
-  if (inp) {
-    inp.value = '';
-    state.badge2Text = '';
-    onSeriesTextChange();
-    inp.focus();
-  }
-}
-
-export function setSeriesColorTheme(themeName) {
-  if (!SERIES_COLOR_THEMES[themeName]) return;
-  state.badge2ColorTheme = themeName;
-  document.querySelectorAll('#seriesColorThemes .theme-chip').forEach(btn => {
-    btn.classList.toggle('active', btn.id === `themeBtn_${themeName}`);
-  });
-  const sel = document.getElementById('seriesThemeSelect');
-  if (sel && sel.value !== themeName) sel.value = themeName;
-  const valBadge = document.getElementById('seriesColorThemeVal');
-  if (valBadge) {
-    valBadge.textContent = themeName.charAt(0).toUpperCase() + themeName.slice(1);
-  }
-  renderIconMap();
-}
-
-export function updateSeriesGradPreview() {
-  const el = document.getElementById('seriesGradPreview');
-  if (!el) return;
-  const angle = state.badge2GradDir === 'horizontal' ? '90deg' : (state.badge2GradDir === 'vertical' ? '180deg' : '135deg');
-  el.style.background = `linear-gradient(${angle}, ${state.badge2CustomBg1}, ${state.badge2CustomBg2})`;
-}
-
-export function setSeriesColorMode(mode) {
-  state.badge2ColorMode = mode;
-  document.getElementById('btnSeriesColorTheme')?.classList.toggle('active', mode === 'theme');
-  document.getElementById('btnSeriesColorGradient')?.classList.toggle('active', mode === 'gradient');
-  document.getElementById('btnSeriesColorSolid')?.classList.toggle('active', mode === 'solid');
-  const sel = document.getElementById('seriesColorModeSelect');
-  if (sel && sel.value !== mode) sel.value = mode;
-
-  const pTheme = document.getElementById('seriesColorThemePanel');
-  const pGrad = document.getElementById('seriesCustomGradPanel');
-  const pSolid = document.getElementById('seriesCustomSolidPanel');
-
-  if (pTheme) pTheme.style.display = mode === 'theme' ? 'block' : 'none';
-  if (pGrad) pGrad.style.display = mode === 'gradient' ? 'block' : 'none';
-  if (pSolid) pSolid.style.display = mode === 'solid' ? 'block' : 'none';
-
-  const badge = document.getElementById('seriesColorModeBadge');
-  if (badge) {
-    badge.textContent = mode === 'theme' ? 'Themes' : (mode === 'gradient' ? 'Custom Gradient' : 'Solid Color');
-  }
-
-  if (mode === 'gradient') updateSeriesGradPreview();
-  renderIconMap();
-}
-
-export function setSeriesGradDirection(dir) {
-  state.badge2GradDir = dir;
-  document.getElementById('btnSeriesGradDir_diag')?.classList.toggle('active', dir === 'diagonal');
-  document.getElementById('btnSeriesGradDir_horiz')?.classList.toggle('active', dir === 'horizontal');
-  document.getElementById('btnSeriesGradDir_vert')?.classList.toggle('active', dir === 'vertical');
-  const sel = document.getElementById('seriesGradDirSelect');
-  if (sel && sel.value !== dir) sel.value = dir;
-  updateSeriesGradPreview();
-  renderIconMap();
-}
-
-export function onSeriesCustomColorInput() {
-  const c1 = document.getElementById('seriesColor1')?.value || '#151326';
-  const c2 = document.getElementById('seriesColor2')?.value || '#251336';
-  const stroke = document.getElementById('seriesStrokeColor')?.value || '#c084fc';
-  const text = document.getElementById('seriesTextColor')?.value || '#ffffff';
-
-  state.badge2CustomBg1 = c1;
-  state.badge2CustomBg2 = c2;
-  state.badge2CustomStroke = stroke;
-  state.badge2CustomText = text;
-
-  const c1Hex = document.getElementById('seriesColor1Hex'); if (c1Hex) c1Hex.textContent = c1;
-  const c2Hex = document.getElementById('seriesColor2Hex'); if (c2Hex) c2Hex.textContent = c2;
-  const sHex = document.getElementById('seriesStrokeHex'); if (sHex) sHex.textContent = stroke;
-  const tHex = document.getElementById('seriesTextColorHex'); if (tHex) tHex.textContent = text;
-
-  updateSeriesGradPreview();
-  renderIconMap();
-}
-
-export function onSeriesSolidColorInput() {
-  const bg = document.getElementById('seriesSolidBg')?.value || '#151326';
-  const stroke = document.getElementById('seriesSolidStroke')?.value || '#c084fc';
-  const text = document.getElementById('seriesSolidText')?.value || '#ffffff';
-
-  state.badge2SolidBg = bg;
-  state.badge2SolidStroke = stroke;
-  state.badge2SolidText = text;
-
-  const bgHex = document.getElementById('seriesSolidBgHex'); if (bgHex) bgHex.textContent = bg;
-  const sHex = document.getElementById('seriesSolidStrokeHex'); if (sHex) sHex.textContent = stroke;
-  const tHex = document.getElementById('seriesSolidTextHex'); if (tHex) tHex.textContent = text;
-
-  renderIconMap();
-}
-
-export function applySeriesGradPreset(c1, c2, stroke, text) {
-  state.badge2CustomBg1 = c1;
-  state.badge2CustomBg2 = c2;
-  state.badge2CustomStroke = stroke;
-  state.badge2CustomText = text;
-
-  const inp1 = document.getElementById('seriesColor1'); if (inp1) inp1.value = c1;
-  const inp2 = document.getElementById('seriesColor2'); if (inp2) inp2.value = c2;
-  const inps = document.getElementById('seriesStrokeColor'); if (inps) inps.value = stroke;
-  const inpt = document.getElementById('seriesTextColor'); if (inpt) inpt.value = text;
-
-  const c1Hex = document.getElementById('seriesColor1Hex'); if (c1Hex) c1Hex.textContent = c1;
-  const c2Hex = document.getElementById('seriesColor2Hex'); if (c2Hex) c2Hex.textContent = c2;
-  const sHex = document.getElementById('seriesStrokeHex'); if (sHex) sHex.textContent = stroke;
-  const tHex = document.getElementById('seriesTextColorHex'); if (tHex) tHex.textContent = text;
-
-  setSeriesColorMode('gradient');
-  updateSeriesGradPreview();
-  renderIconMap();
-  showToast('Applied custom gradient preset');
-}
-
-export function handleSeriesLogoSelect(e) {
-  if (e.target.files && e.target.files.length > 0) {
-    const file = e.target.files[0];
-    state.badge2FileName = file.name;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        state.badge2Img = img;
-        const btn = document.getElementById('seriesLogoUploadBtnText');
-        if (btn) btn.textContent = file.name.substring(0, 16) + '...';
-        const btnClear = document.getElementById('btnClearSeriesLogo');
-        if (btnClear) btnClear.style.display = 'block';
-        renderIconMap();
-        showToast('Series badge image loaded');
-      };
-      img.src = event.target.result;
-    };
-    reader.readAsDataURL(file);
-  }
-}
-
-export function clearSeriesLogo() {
-  state.badge2Img = null;
-  state.badge2FileName = '';
-  const btn = document.getElementById('seriesLogoUploadBtnText');
-  if (btn) btn.textContent = 'Upload Series Logo...';
-  const btnClear = document.getElementById('btnClearSeriesLogo');
-  if (btnClear) btnClear.style.display = 'none';
-  const inp = document.getElementById('seriesLogoInput');
-  if (inp) inp.value = '';
-  renderIconMap();
-  showToast('Series logo removed');
-}
-
-export function onBadge2PaddingChange() {
-  const val = parseInt(document.getElementById('seriesPadding')?.value || '12', 10);
-  state.badge2EdgePadding = val;
-  const valEl = document.getElementById('seriesPaddingVal');
-  if (valEl) valEl.textContent = `${val} px`;
-  renderIconMap();
-}
-
-export function onBadge2InnerPaddingChange() {
-  const val = parseInt(document.getElementById('seriesInnerPadding')?.value || '8', 10);
-  state.badge2InnerPadding = val;
-  const valEl = document.getElementById('seriesInnerPaddingVal');
-  if (valEl) valEl.textContent = `${val} px`;
-  renderIconMap();
-}
-
-export function onIconBadgeScaleChange() {
-  const val = document.getElementById('badgeScale')?.value || '26';
-  const valEl = document.getElementById('badgeScaleVal');
-  if (valEl) valEl.textContent = `${val}%`;
-  renderIconMap();
-}
-
-export function onIconBadgeOpacityChange() {
-  const val = document.getElementById('badgeOpacity')?.value || '95';
-  const valEl = document.getElementById('badgeOpacityVal');
-  if (valEl) valEl.textContent = `${val}%`;
-  renderIconMap();
-}
-
-export function onCreatorPositionChange() {
-  const pos = document.getElementById('logoPosition')?.value;
-  const c = document.getElementById('creatorCustomPosContainer');
-  if (c) c.style.display = pos === 'custom' ? 'block' : 'none';
-  renderIconMap();
-}
-
-export function onCreatorCoordChange() {
-  state.badge1PosX = parseInt(document.getElementById('creatorPosX')?.value || '85', 10);
-  state.badge1PosY = parseInt(document.getElementById('creatorPosY')?.value || '85', 10);
-  const xVal = document.getElementById('creatorPosXVal'); if (xVal) xVal.textContent = `${state.badge1PosX}%`;
-  const yVal = document.getElementById('creatorPosYVal'); if (yVal) yVal.textContent = `${state.badge1PosY}%`;
-  renderIconMap();
-}
-
-export function snapCreatorCoord(x, y) {
-  state.badge1PosX = x;
-  state.badge1PosY = y;
-  const sx = document.getElementById('creatorPosX'); if (sx) sx.value = x;
-  const sy = document.getElementById('creatorPosY'); if (sy) sy.value = y;
-  const xVal = document.getElementById('creatorPosXVal'); if (xVal) xVal.textContent = `${x}%`;
-  const yVal = document.getElementById('creatorPosYVal'); if (yVal) yVal.textContent = `${y}%`;
-  renderIconMap();
-}
-
-export function onSeriesPositionChange() {
-  const pos = document.getElementById('seriesPosition')?.value;
-  const c = document.getElementById('seriesCustomPosContainer');
-  if (c) c.style.display = pos === 'custom' ? 'block' : 'none';
-  renderIconMap();
-}
-
-export function onSeriesCoordChange() {
-  state.badge2PosX = parseInt(document.getElementById('seriesPosX')?.value || '15', 10);
-  state.badge2PosY = parseInt(document.getElementById('seriesPosY')?.value || '15', 10);
-  const xVal = document.getElementById('seriesPosXVal'); if (xVal) xVal.textContent = `${state.badge2PosX}%`;
-  const yVal = document.getElementById('seriesPosYVal'); if (yVal) yVal.textContent = `${state.badge2PosY}%`;
-  renderIconMap();
-}
-
-export function snapSeriesCoord(x, y) {
-  state.badge2PosX = x;
-  state.badge2PosY = y;
-  const sx = document.getElementById('seriesPosX'); if (sx) sx.value = x;
-  const sy = document.getElementById('seriesPosY'); if (sy) sy.value = y;
-  const xVal = document.getElementById('seriesPosXVal'); if (xVal) xVal.textContent = `${x}%`;
-  const yVal = document.getElementById('seriesPosYVal'); if (yVal) yVal.textContent = `${y}%`;
-  renderIconMap();
-}
-export function onSeriesBadgeScaleChange() {
-  const val = document.getElementById('seriesScale')?.value || '24';
-  const valEl = document.getElementById('seriesScaleVal');
-  if (valEl) valEl.textContent = `${val}%`;
-  renderIconMap();
-}
-export function onSeriesBadgeOpacityChange() {
-  const val = document.getElementById('seriesOpacity')?.value || '95';
-  const valEl = document.getElementById('seriesOpacityVal');
-  if (valEl) valEl.textContent = `${val}%`;
-  renderIconMap();
-}
-export function onSeriesPaddingChange() { onBadge2PaddingChange(); }
-export function onSeriesInnerPaddingChange() { onBadge2InnerPaddingChange(); }
-
-export function toggleBadge2TextGrad(checked) {
-  state.badge2TextGradEnabled = checked;
-  const c = document.getElementById('badge2TextGradControls');
-  if (c) c.style.display = checked ? 'block' : 'none';
-  renderIconMap();
-}
-
-export function onBadge2TextGradInput() {
-  const c1 = document.getElementById('badge2TextGrad1')?.value || '#ffffff';
-  const c2 = document.getElementById('badge2TextGrad2')?.value || '#c084fc';
-  state.badge2TextGradColor1 = c1;
-  state.badge2TextGradColor2 = c2;
-  const hex1 = document.getElementById('badge2TextGrad1Hex'); if (hex1) hex1.textContent = c1;
-  const hex2 = document.getElementById('badge2TextGrad2Hex'); if (hex2) hex2.textContent = c2;
-  renderIconMap();
-}
-
-export function setBadge2TextGradDir(dir) {
-  state.badge2TextGradDir = dir;
-  document.getElementById('btnBadge2TextDir_vert')?.classList.toggle('active', dir === 'vertical');
-  document.getElementById('btnBadge2TextDir_horiz')?.classList.toggle('active', dir === 'horizontal');
-  renderIconMap();
-}
-
-export function applyBadge2TextGradPreset(c1, c2) {
-  state.badge2TextGradColor1 = c1;
-  state.badge2TextGradColor2 = c2;
-  const el1 = document.getElementById('badge2TextGrad1'); if (el1) el1.value = c1;
-  const el2 = document.getElementById('badge2TextGrad2'); if (el2) el2.value = c2;
-  const hex1 = document.getElementById('badge2TextGrad1Hex'); if (hex1) hex1.textContent = c1;
-  const hex2 = document.getElementById('badge2TextGrad2Hex'); if (hex2) hex2.textContent = c2;
-  state.badge2TextGradEnabled = true;
-  const chk = document.getElementById('badge2TextGradEnable'); if (chk) chk.checked = true;
-  const c = document.getElementById('badge2TextGradControls'); if (c) c.style.display = 'block';
-  renderIconMap();
-}
-
-// ==========================================
-// Extra 1 Badge Handlers (Overlay 3)
-// ==========================================
-export function setExtra1BadgeMode(mode) {
-  state.badge3Type = mode;
-  document.getElementById('btnExtra1ModeText')?.classList.toggle('active', mode === 'text');
-  document.getElementById('btnExtra1ModePreset')?.classList.toggle('active', mode === 'preset');
-  document.getElementById('btnExtra1ModeImage')?.classList.toggle('active', mode === 'image');
-  const sel = document.getElementById('extra1ModeSelect');
-  if (sel && sel.value !== mode) sel.value = mode;
-
-  const secText = document.getElementById('extra1TextSection');
-  const secPreset = document.getElementById('extra1PresetSection');
-  const secImg = document.getElementById('extra1ImageSection');
-
-  if (secText) secText.style.display = mode === 'text' ? 'block' : 'none';
-  if (secPreset) secPreset.style.display = mode === 'preset' ? 'block' : 'none';
-  if (secImg) secImg.style.display = mode === 'image' ? 'block' : 'none';
-
-  if (mode === 'text') {
-    const inp = document.getElementById('extra1TextInput');
-    if (inp) {
-      setTimeout(() => { inp.focus(); inp.select(); }, 40);
-    }
-  }
-  onExtra1TextChange(false);
-  renderIconMap();
-}
-
-export function onExtra1TextChange(doRender = true) {
-  const input = document.getElementById('extra1TextInput');
-  state.badge3Text = input ? input.value : '';
-  const lenBadge = document.getElementById('extra1TextLengthBadge');
-  if (lenBadge) lenBadge.textContent = `${state.badge3Text.length} / 20`;
-  if (doRender) renderIconMap();
-}
-
-export function clearExtra1Text() {
-  const inp = document.getElementById('extra1TextInput');
-  if (inp) {
-    inp.value = '';
-    state.badge3Text = '';
-    onExtra1TextChange();
-    inp.focus();
-  }
-}
-
-export function setExtra1TextPreset(text) {
-  const input = document.getElementById('extra1TextInput');
-  if (input) {
-    input.value = text;
-    state.badge3Text = text;
-  }
-  setExtra1BadgeMode('text');
-  onExtra1TextChange();
-  showToast(`Set Extra 1 text: "${text}"`);
-}
-
-export function onExtra1FontChange() {
-  const sel = document.getElementById('extra1FontFamily');
-  state.badge3Font = sel ? sel.value : 'Montserrat';
-  loadGoogleFont(state.badge3Font, () => renderIconMap());
-}
-
-export function toggleExtra1Bold() {
-  state.badge3Bold = !state.badge3Bold;
-  document.getElementById('btnExtra1Bold')?.classList.toggle('active', state.badge3Bold);
-  renderIconMap();
-}
-
-export function toggleExtra1Italic() {
-  state.badge3Italic = !state.badge3Italic;
-  document.getElementById('btnExtra1Italic')?.classList.toggle('active', state.badge3Italic);
-  renderIconMap();
-}
-
-export function toggleExtra1LetterSpacing() {
-  state.badge3LetterSpacing = !state.badge3LetterSpacing;
-  document.getElementById('btnExtra1LetterSpacing')?.classList.toggle('active', state.badge3LetterSpacing);
-  renderIconMap();
-}
-
-export function onExtra1PtSizeChange() {
-  const val = parseInt(document.getElementById('extra1PtSize')?.value || '13', 10);
-  state.badge3PtSize = val;
-  const valEl = document.getElementById('extra1PtSizeVal');
-  if (valEl) valEl.textContent = `${val} pt`;
-  renderIconMap();
-}
-
-export function setExtra1ColorMode(mode) {
-  state.badge3ColorMode = mode;
-  document.getElementById('btnExtra1ColorTheme')?.classList.toggle('active', mode === 'theme');
-  document.getElementById('btnExtra1ColorGradient')?.classList.toggle('active', mode === 'gradient');
-  document.getElementById('btnExtra1ColorSolid')?.classList.toggle('active', mode === 'solid');
-  const sel = document.getElementById('extra1ColorModeSelect');
-  if (sel && sel.value !== mode) sel.value = mode;
-
-  const pTheme = document.getElementById('extra1ColorThemePanel');
-  const pGrad = document.getElementById('extra1CustomGradPanel');
-  const pSolid = document.getElementById('extra1CustomSolidPanel');
-
-  if (pTheme) pTheme.style.display = mode === 'theme' ? 'block' : 'none';
-  if (pGrad) pGrad.style.display = mode === 'gradient' ? 'block' : 'none';
-  if (pSolid) pSolid.style.display = mode === 'solid' ? 'block' : 'none';
-
-  const badge = document.getElementById('extra1ColorModeBadge');
-  if (badge) badge.textContent = mode === 'theme' ? 'Themes' : (mode === 'gradient' ? 'Custom Gradient' : 'Solid Color');
-
-  renderIconMap();
-}
-
-export function setExtra1ColorTheme(themeName) {
-  if (!SERIES_COLOR_THEMES[themeName]) return;
-  state.badge3ColorTheme = themeName;
-  document.querySelectorAll('#extra1ColorThemes .theme-chip').forEach(btn => {
-    btn.classList.toggle('active', btn.id === `themeBtnExtra1_${themeName}`);
-  });
-  const sel = document.getElementById('extra1ThemeSelect');
-  if (sel && sel.value !== themeName) sel.value = themeName;
-  renderIconMap();
-}
-
-export function onExtra1CustomColorInput() {
-  const c1 = document.getElementById('extra1Color1')?.value || '#06241a';
-  const c2 = document.getElementById('extra1Color2')?.value || '#0d3d2c';
-  const stroke = document.getElementById('extra1StrokeColor')?.value || '#34d399';
-  const text = document.getElementById('extra1TextColor')?.value || '#ffffff';
-
-  state.badge3CustomBg1 = c1;
-  state.badge3CustomBg2 = c2;
-  state.badge3CustomStroke = stroke;
-  state.badge3CustomText = text;
-
-  const c1Hex = document.getElementById('extra1Color1Hex'); if (c1Hex) c1Hex.textContent = c1;
-  const c2Hex = document.getElementById('extra1Color2Hex'); if (c2Hex) c2Hex.textContent = c2;
-  const sHex = document.getElementById('extra1StrokeHex'); if (sHex) sHex.textContent = stroke;
-  const tHex = document.getElementById('extra1TextColorHex'); if (tHex) tHex.textContent = text;
-
-  const prev = document.getElementById('extra1GradPreview');
-  if (prev) prev.style.background = `linear-gradient(135deg, ${c1}, ${c2})`;
-  renderIconMap();
-}
-
-export function onExtra1SolidColorInput() {
-  const bg = document.getElementById('extra1SolidBg')?.value || '#06241a';
-  const stroke = document.getElementById('extra1SolidStroke')?.value || '#34d399';
-  const text = document.getElementById('extra1SolidText')?.value || '#ffffff';
-
-  state.badge3SolidBg = bg;
-  state.badge3SolidStroke = stroke;
-  state.badge3SolidText = text;
-
-  const bgHex = document.getElementById('extra1SolidBgHex'); if (bgHex) bgHex.textContent = bg;
-  const sHex = document.getElementById('extra1SolidStrokeHex'); if (sHex) sHex.textContent = stroke;
-  const tHex = document.getElementById('extra1SolidTextHex'); if (tHex) tHex.textContent = text;
-
-  renderIconMap();
-}
-
-export function applyExtra1Preset(presetName) {
-  state.badge3Preset = presetName;
-  state.badge3Type = 'preset';
-  setExtra1BadgeMode('preset');
-  const sel = document.getElementById('extra1PresetSelect');
-  if (sel && sel.value !== presetName) sel.value = presetName;
-  renderIconMap();
-  showToast(`Selected "${presetName.toUpperCase()}" for Extra 1`);
-}
-
-export function handleExtra1LogoSelect(e) {
-  if (e.target.files && e.target.files.length > 0) {
-    const file = e.target.files[0];
-    state.badge3FileName = file.name;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        state.badge3Img = img;
-        const btn = document.getElementById('extra1LogoUploadBtnText');
-        if (btn) btn.textContent = file.name.substring(0, 16) + '...';
-        const btnClear = document.getElementById('btnClearExtra1Logo');
-        if (btnClear) btnClear.style.display = 'block';
-        renderIconMap();
-        showToast('Extra 1 badge image loaded');
-      };
-      img.src = event.target.result;
-    };
-    reader.readAsDataURL(file);
-  }
-}
-
-export function clearExtra1Logo() {
-  state.badge3Img = null;
-  state.badge3FileName = '';
-  const btn = document.getElementById('extra1LogoUploadBtnText');
-  if (btn) btn.textContent = 'Upload Graphic...';
-  const btnClear = document.getElementById('btnClearExtra1Logo');
-  if (btnClear) btnClear.style.display = 'none';
-  const inp = document.getElementById('extra1LogoInput');
-  if (inp) inp.value = '';
-  renderIconMap();
-  showToast('Extra 1 logo removed');
-}
-
-export function onExtra1PositionChange() {
-  const pos = document.getElementById('extra1Position')?.value;
-  const c = document.getElementById('extra1CustomPosContainer');
-  if (c) c.style.display = pos === 'custom' ? 'block' : 'none';
-  renderIconMap();
-}
-
-export function onExtra1CoordChange() {
-  state.badge3PosX = parseInt(document.getElementById('extra1PosX')?.value || '20', 10);
-  state.badge3PosY = parseInt(document.getElementById('extra1PosY')?.value || '80', 10);
-  const xVal = document.getElementById('extra1PosXVal'); if (xVal) xVal.textContent = `${state.badge3PosX}%`;
-  const yVal = document.getElementById('extra1PosYVal'); if (yVal) yVal.textContent = `${state.badge3PosY}%`;
-  renderIconMap();
-}
-
-export function snapExtra1Coord(x, y) {
-  state.badge3PosX = x;
-  state.badge3PosY = y;
-  const sx = document.getElementById('extra1PosX'); if (sx) sx.value = x;
-  const sy = document.getElementById('extra1PosY'); if (sy) sy.value = y;
-  const xVal = document.getElementById('extra1PosXVal'); if (xVal) xVal.textContent = `${x}%`;
-  const yVal = document.getElementById('extra1PosYVal'); if (yVal) yVal.textContent = `${y}%`;
-  renderIconMap();
-}
-export function onExtra1ScaleChange() {
-  const val = document.getElementById('extra1Scale')?.value || '24';
-  const valEl = document.getElementById('extra1ScaleVal');
-  if (valEl) valEl.textContent = `${val}%`;
-  renderIconMap();
-}
-export function onExtra1PaddingChange() {
-  const val = parseInt(document.getElementById('extra1Padding')?.value || '12', 10);
-  state.badge3EdgePadding = val;
-  const valEl = document.getElementById('extra1PaddingVal');
-  if (valEl) valEl.textContent = `${val} px`;
-  renderIconMap();
-}
-export function onExtra1OpacityChange() {
-  const val = document.getElementById('extra1Opacity')?.value || '95';
-  const valEl = document.getElementById('extra1OpacityVal');
-  if (valEl) valEl.textContent = `${val}%`;
-  renderIconMap();
-}
-
-export function toggleBadge3TextGrad(checked) {
-  state.badge3TextGradEnabled = checked;
-  const c = document.getElementById('badge3TextGradControls');
-  if (c) c.style.display = checked ? 'block' : 'none';
-  renderIconMap();
-}
-
-export function onBadge3TextGradInput() {
-  const c1 = document.getElementById('badge3TextGrad1')?.value || '#ffffff';
-  const c2 = document.getElementById('badge3TextGrad2')?.value || '#34d399';
-  state.badge3TextGradColor1 = c1;
-  state.badge3TextGradColor2 = c2;
-  const hex1 = document.getElementById('badge3TextGrad1Hex'); if (hex1) hex1.textContent = c1;
-  const hex2 = document.getElementById('badge3TextGrad2Hex'); if (hex2) hex2.textContent = c2;
-  renderIconMap();
-}
-
-export function setBadge3TextGradDir(dir) {
-  state.badge3TextGradDir = dir;
-  document.getElementById('btnBadge3TextDir_vert')?.classList.toggle('active', dir === 'vertical');
-  document.getElementById('btnBadge3TextDir_horiz')?.classList.toggle('active', dir === 'horizontal');
-  const sel = document.getElementById('extra1TextGradDirSelect');
-  if (sel && sel.value !== dir) sel.value = dir;
-  renderIconMap();
-}
-
-export function applyBadge3TextGradPreset(c1, c2) {
-  state.badge3TextGradColor1 = c1;
-  state.badge3TextGradColor2 = c2;
-  const el1 = document.getElementById('badge3TextGrad1'); if (el1) el1.value = c1;
-  const el2 = document.getElementById('badge3TextGrad2'); if (el2) el2.value = c2;
-  const hex1 = document.getElementById('badge3TextGrad1Hex'); if (hex1) hex1.textContent = c1;
-  const hex2 = document.getElementById('badge3TextGrad2Hex'); if (hex2) hex2.textContent = c2;
-  state.badge3TextGradEnabled = true;
-  const chk = document.getElementById('badge3TextGradEnable'); if (chk) chk.checked = true;
-  const c = document.getElementById('badge3TextGradControls'); if (c) c.style.display = 'block';
-  renderIconMap();
-}
-
-// ==========================================
-// Extra 2 Badge Handlers (Overlay 4)
-// ==========================================
-export function setExtra2BadgeMode(mode) {
-  state.badge4Type = mode;
-  document.getElementById('btnExtra2ModeText')?.classList.toggle('active', mode === 'text');
-  document.getElementById('btnExtra2ModePreset')?.classList.toggle('active', mode === 'preset');
-  document.getElementById('btnExtra2ModeImage')?.classList.toggle('active', mode === 'image');
-  const sel = document.getElementById('extra2ModeSelect');
-  if (sel && sel.value !== mode) sel.value = mode;
-
-  const secText = document.getElementById('extra2TextSection');
-  const secPreset = document.getElementById('extra2PresetSection');
-  const secImg = document.getElementById('extra2ImageSection');
-
-  if (secText) secText.style.display = mode === 'text' ? 'block' : 'none';
-  if (secPreset) secPreset.style.display = mode === 'preset' ? 'block' : 'none';
-  if (secImg) secImg.style.display = mode === 'image' ? 'block' : 'none';
-
-  if (mode === 'text') {
-    const inp = document.getElementById('extra2TextInput');
-    if (inp) {
-      setTimeout(() => { inp.focus(); inp.select(); }, 40);
-    }
-  }
-  onExtra2TextChange(false);
-  renderIconMap();
-}
-
-export function onExtra2TextChange(doRender = true) {
-  const input = document.getElementById('extra2TextInput');
-  state.badge4Text = input ? input.value : '';
-  const lenBadge = document.getElementById('extra2TextLengthBadge');
-  if (lenBadge) lenBadge.textContent = `${state.badge4Text.length} / 20`;
-  if (doRender) renderIconMap();
-}
-
-export function clearExtra2Text() {
-  const inp = document.getElementById('extra2TextInput');
-  if (inp) {
-    inp.value = '';
-    state.badge4Text = '';
-    onExtra2TextChange();
-    inp.focus();
-  }
-}
-
-export function setExtra2TextPreset(text) {
-  const input = document.getElementById('extra2TextInput');
-  if (input) {
-    input.value = text;
-    state.badge4Text = text;
-  }
-  setExtra2BadgeMode('text');
-  onExtra2TextChange();
-  showToast(`Set Extra 2 text: "${text}"`);
-}
-
-export function onExtra2FontChange() {
-  const sel = document.getElementById('extra2FontFamily');
-  state.badge4Font = sel ? sel.value : 'Montserrat';
-  loadGoogleFont(state.badge4Font, () => renderIconMap());
-}
-
-export function toggleExtra2Bold() {
-  state.badge4Bold = !state.badge4Bold;
-  document.getElementById('btnExtra2Bold')?.classList.toggle('active', state.badge4Bold);
-  renderIconMap();
-}
-
-export function toggleExtra2Italic() {
-  state.badge4Italic = !state.badge4Italic;
-  document.getElementById('btnExtra2Italic')?.classList.toggle('active', state.badge4Italic);
-  renderIconMap();
-}
-
-export function toggleExtra2LetterSpacing() {
-  state.badge4LetterSpacing = !state.badge4LetterSpacing;
-  document.getElementById('btnExtra2LetterSpacing')?.classList.toggle('active', state.badge4LetterSpacing);
-  renderIconMap();
-}
-
-export function onExtra2PtSizeChange() {
-  const val = parseInt(document.getElementById('extra2PtSize')?.value || '13', 10);
-  state.badge4PtSize = val;
-  const valEl = document.getElementById('extra2PtSizeVal');
-  if (valEl) valEl.textContent = `${val} pt`;
-  renderIconMap();
-}
-
-export function setExtra2ColorMode(mode) {
-  state.badge4ColorMode = mode;
-  document.getElementById('btnExtra2ColorTheme')?.classList.toggle('active', mode === 'theme');
-  document.getElementById('btnExtra2ColorGradient')?.classList.toggle('active', mode === 'gradient');
-  document.getElementById('btnExtra2ColorSolid')?.classList.toggle('active', mode === 'solid');
-  const sel = document.getElementById('extra2ColorModeSelect');
-  if (sel && sel.value !== mode) sel.value = mode;
-
-  const pTheme = document.getElementById('extra2ColorThemePanel');
-  const pGrad = document.getElementById('extra2CustomGradPanel');
-  const pSolid = document.getElementById('extra2CustomSolidPanel');
-
-  if (pTheme) pTheme.style.display = mode === 'theme' ? 'block' : 'none';
-  if (pGrad) pGrad.style.display = mode === 'gradient' ? 'block' : 'none';
-  if (pSolid) pSolid.style.display = mode === 'solid' ? 'block' : 'none';
-
-  const badge = document.getElementById('extra2ColorModeBadge');
-  if (badge) badge.textContent = mode === 'theme' ? 'Themes' : (mode === 'gradient' ? 'Custom Gradient' : 'Solid Color');
-
-  renderIconMap();
-}
-
-export function setExtra2ColorTheme(themeName) {
-  if (!SERIES_COLOR_THEMES[themeName]) return;
-  state.badge4ColorTheme = themeName;
-  document.querySelectorAll('#extra2ColorThemes .theme-chip').forEach(btn => {
-    btn.classList.toggle('active', btn.id === `themeBtnExtra2_${themeName}`);
-  });
-  const sel = document.getElementById('extra2ThemeSelect');
-  if (sel && sel.value !== themeName) sel.value = themeName;
-  renderIconMap();
-}
-
-export function onExtra2CustomColorInput() {
-  const c1 = document.getElementById('extra2Color1')?.value || '#241806';
-  const c2 = document.getElementById('extra2Color2')?.value || '#3d2a0d';
-  const stroke = document.getElementById('extra2StrokeColor')?.value || '#fbbf24';
-  const text = document.getElementById('extra2TextColor')?.value || '#ffffff';
-
-  state.badge4CustomBg1 = c1;
-  state.badge4CustomBg2 = c2;
-  state.badge4CustomStroke = stroke;
-  state.badge4CustomText = text;
-
-  const c1Hex = document.getElementById('extra2Color1Hex'); if (c1Hex) c1Hex.textContent = c1;
-  const c2Hex = document.getElementById('extra2Color2Hex'); if (c2Hex) c2Hex.textContent = c2;
-  const sHex = document.getElementById('extra2StrokeHex'); if (sHex) sHex.textContent = stroke;
-  const tHex = document.getElementById('extra2TextColorHex'); if (tHex) tHex.textContent = text;
-
-  const prev = document.getElementById('extra2GradPreview');
-  if (prev) prev.style.background = `linear-gradient(135deg, ${c1}, ${c2})`;
-  renderIconMap();
-}
-
-export function onExtra2SolidColorInput() {
-  const bg = document.getElementById('extra2SolidBg')?.value || '#241806';
-  const stroke = document.getElementById('extra2SolidStroke')?.value || '#fbbf24';
-  const text = document.getElementById('extra2SolidText')?.value || '#ffffff';
-
-  state.badge4SolidBg = bg;
-  state.badge4SolidStroke = stroke;
-  state.badge4SolidText = text;
-
-  const bgHex = document.getElementById('extra2SolidBgHex'); if (bgHex) bgHex.textContent = bg;
-  const sHex = document.getElementById('extra2SolidStrokeHex'); if (sHex) sHex.textContent = stroke;
-  const tHex = document.getElementById('extra2SolidTextHex'); if (tHex) tHex.textContent = text;
-
-  renderIconMap();
-}
-
-export function applyExtra2Preset(presetName) {
-  state.badge4Preset = presetName;
-  state.badge4Type = 'preset';
-  setExtra2BadgeMode('preset');
-  const sel = document.getElementById('extra2PresetSelect');
-  if (sel && sel.value !== presetName) sel.value = presetName;
-  renderIconMap();
-  showToast(`Selected "${presetName.toUpperCase()}" for Extra 2`);
-}
-
-export function handleExtra2LogoSelect(e) {
-  if (e.target.files && e.target.files.length > 0) {
-    const file = e.target.files[0];
-    state.badge4FileName = file.name;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        state.badge4Img = img;
-        const btn = document.getElementById('extra2LogoUploadBtnText');
-        if (btn) btn.textContent = file.name.substring(0, 16) + '...';
-        const btnClear = document.getElementById('btnClearExtra2Logo');
-        if (btnClear) btnClear.style.display = 'block';
-        renderIconMap();
-        showToast('Extra 2 badge image loaded');
-      };
-      img.src = event.target.result;
-    };
-    reader.readAsDataURL(file);
-  }
-}
-
-export function clearExtra2Logo() {
-  state.badge4Img = null;
-  state.badge4FileName = '';
-  const btn = document.getElementById('extra2LogoUploadBtnText');
-  if (btn) btn.textContent = 'Upload Graphic...';
-  const btnClear = document.getElementById('btnClearExtra2Logo');
-  if (btnClear) btnClear.style.display = 'none';
-  const inp = document.getElementById('extra2LogoInput');
-  if (inp) inp.value = '';
-  renderIconMap();
-  showToast('Extra 2 logo removed');
-}
-
-export function onExtra2PositionChange() {
-  const pos = document.getElementById('extra2Position')?.value;
-  const c = document.getElementById('extra2CustomPosContainer');
-  if (c) c.style.display = pos === 'custom' ? 'block' : 'none';
-  renderIconMap();
-}
-
-export function onExtra2CoordChange() {
-  state.badge4PosX = parseInt(document.getElementById('extra2PosX')?.value || '80', 10);
-  state.badge4PosY = parseInt(document.getElementById('extra2PosY')?.value || '20', 10);
-  const xVal = document.getElementById('extra2PosXVal'); if (xVal) xVal.textContent = `${state.badge4PosX}%`;
-  const yVal = document.getElementById('extra2PosYVal'); if (yVal) yVal.textContent = `${state.badge4PosY}%`;
-  renderIconMap();
-}
-
-export function snapExtra2Coord(x, y) {
-  state.badge4PosX = x;
-  state.badge4PosY = y;
-  const sx = document.getElementById('extra2PosX'); if (sx) sx.value = x;
-  const sy = document.getElementById('extra2PosY'); if (sy) sy.value = y;
-  const xVal = document.getElementById('extra2PosXVal'); if (xVal) xVal.textContent = `${x}%`;
-  const yVal = document.getElementById('extra2PosYVal'); if (yVal) yVal.textContent = `${y}%`;
-  renderIconMap();
-}
-export function onExtra2ScaleChange() {
-  const val = document.getElementById('extra2Scale')?.value || '24';
-  const valEl = document.getElementById('extra2ScaleVal');
-  if (valEl) valEl.textContent = `${val}%`;
-  renderIconMap();
-}
-export function onExtra2PaddingChange() {
-  const val = parseInt(document.getElementById('extra2Padding')?.value || '12', 10);
-  state.badge4EdgePadding = val;
-  const valEl = document.getElementById('extra2PaddingVal');
-  if (valEl) valEl.textContent = `${val} px`;
-  renderIconMap();
-}
-export function onExtra2OpacityChange() {
-  const val = document.getElementById('extra2Opacity')?.value || '95';
-  const valEl = document.getElementById('extra2OpacityVal');
-  if (valEl) valEl.textContent = `${val}%`;
-  renderIconMap();
-}
-
-export function toggleBadge4TextGrad(checked) {
-  state.badge4TextGradEnabled = checked;
-  const c = document.getElementById('badge4TextGradControls');
-  if (c) c.style.display = checked ? 'block' : 'none';
-  renderIconMap();
-}
-
-export function onBadge4TextGradInput() {
-  const c1 = document.getElementById('badge4TextGrad1')?.value || '#ffffff';
-  const c2 = document.getElementById('badge4TextGrad2')?.value || '#fbbf24';
-  state.badge4TextGradColor1 = c1;
-  state.badge4TextGradColor2 = c2;
-  const hex1 = document.getElementById('badge4TextGrad1Hex'); if (hex1) hex1.textContent = c1;
-  const hex2 = document.getElementById('badge4TextGrad2Hex'); if (hex2) hex2.textContent = c2;
-  renderIconMap();
-}
-
-export function setBadge4TextGradDir(dir) {
-  state.badge4TextGradDir = dir;
-  document.getElementById('btnBadge4TextDir_vert')?.classList.toggle('active', dir === 'vertical');
-  document.getElementById('btnBadge4TextDir_horiz')?.classList.toggle('active', dir === 'horizontal');
-  const sel = document.getElementById('extra2TextGradDirSelect');
-  if (sel && sel.value !== dir) sel.value = dir;
-  renderIconMap();
-}
-
-export function applyBadge4TextGradPreset(c1, c2) {
-  state.badge4TextGradColor1 = c1;
-  state.badge4TextGradColor2 = c2;
-  const el1 = document.getElementById('badge4TextGrad1'); if (el1) el1.value = c1;
-  const el2 = document.getElementById('badge4TextGrad2'); if (el2) el2.value = c2;
-  const hex1 = document.getElementById('badge4TextGrad1Hex'); if (hex1) hex1.textContent = c1;
-  const hex2 = document.getElementById('badge4TextGrad2Hex'); if (hex2) hex2.textContent = c2;
-  state.badge4TextGradEnabled = true;
-  const chk = document.getElementById('badge4TextGradEnable'); if (chk) chk.checked = true;
-  const c = document.getElementById('badge4TextGradControls'); if (c) c.style.display = 'block';
-  renderIconMap();
-}
-
-// ==========================================
-// Copy & Sync Style Across Any Badges
-// ==========================================
-export function copyBadgeStyle(source, target) {
-  const getBadgeConfig = (role) => {
-    if (role === 'creator') {
-      return {
-        font: state.badge1Font,
-        bold: state.badge1Bold,
-        italic: state.badge1Italic,
-        ptSize: state.badge1PtSize,
-        letterSpacing: state.badge1LetterSpacing,
-        colorMode: state.badge1ColorMode,
-        colorTheme: state.badge1ColorTheme,
-        customBg1: state.badge1CustomBg1,
-        customBg2: state.badge1CustomBg2,
-        customStroke: state.badge1CustomStroke,
-        customText: state.badge1CustomText,
-        solidBg: state.badge1SolidBg,
-        solidStroke: state.badge1SolidStroke,
-        solidText: state.badge1SolidText,
-        gradDir: state.badge1GradDir,
-        textGradEnabled: state.badge1TextGradEnabled,
-        textGradColor1: state.badge1TextGradColor1,
-        textGradColor2: state.badge1TextGradColor2,
-        textGradDir: state.badge1TextGradDir
-      };
-    }
-    if (role === 'series') {
-      return {
-        font: state.badge2Font,
-        bold: state.badge2Bold,
-        italic: state.badge2Italic,
-        ptSize: state.badge2PtSize,
-        letterSpacing: state.badge2LetterSpacing,
-        colorMode: state.badge2ColorMode,
-        colorTheme: state.badge2ColorTheme,
-        customBg1: state.badge2CustomBg1,
-        customBg2: state.badge2CustomBg2,
-        customStroke: state.badge2CustomStroke,
-        customText: state.badge2CustomText,
-        solidBg: state.badge2SolidBg,
-        solidStroke: state.badge2SolidStroke,
-        solidText: state.badge2SolidText,
-        gradDir: state.badge2GradDir,
-        textGradEnabled: state.badge2TextGradEnabled,
-        textGradColor1: state.badge2TextGradColor1,
-        textGradColor2: state.badge2TextGradColor2,
-        textGradDir: state.badge2TextGradDir
-      };
-    }
-    if (role === 'extra1') {
-      return {
-        font: state.badge3Font,
-        bold: state.badge3Bold,
-        italic: state.badge3Italic,
-        ptSize: state.badge3PtSize,
-        letterSpacing: state.badge3LetterSpacing,
-        colorMode: state.badge3ColorMode,
-        colorTheme: state.badge3ColorTheme,
-        customBg1: state.badge3CustomBg1,
-        customBg2: state.badge3CustomBg2,
-        customStroke: state.badge3CustomStroke,
-        customText: state.badge3CustomText,
-        solidBg: state.badge3SolidBg,
-        solidStroke: state.badge3SolidStroke,
-        solidText: state.badge3SolidText,
-        gradDir: state.badge3GradDir,
-        textGradEnabled: state.badge3TextGradEnabled,
-        textGradColor1: state.badge3TextGradColor1,
-        textGradColor2: state.badge3TextGradColor2,
-        textGradDir: state.badge3TextGradDir
-      };
-    }
-    return {
-      font: state.badge4Font,
-      bold: state.badge4Bold,
-      italic: state.badge4Italic,
-      ptSize: state.badge4PtSize,
-      letterSpacing: state.badge4LetterSpacing,
-      colorMode: state.badge4ColorMode,
-      colorTheme: state.badge4ColorTheme,
-      customBg1: state.badge4CustomBg1,
-      customBg2: state.badge4CustomBg2,
-      customStroke: state.badge4CustomStroke,
-      customText: state.badge4CustomText,
-      solidBg: state.badge4SolidBg,
-      solidStroke: state.badge4SolidStroke,
-      solidText: state.badge4SolidText,
-      gradDir: state.badge4GradDir,
-      textGradEnabled: state.badge4TextGradEnabled,
-      textGradColor1: state.badge4TextGradColor1,
-      textGradColor2: state.badge4TextGradColor2,
-      textGradDir: state.badge4TextGradDir
-    };
+    img.src = e.target.result;
   };
+  reader.readAsDataURL(file);
+}
 
-  const applyToRole = (cfg, role) => {
-    if (role === 'creator') {
-      state.badge1Font = cfg.font;
-      state.badge1Bold = cfg.bold;
-      state.badge1Italic = cfg.italic;
-      state.badge1PtSize = cfg.ptSize;
-      state.badge1LetterSpacing = cfg.letterSpacing;
-      state.badge1ColorMode = cfg.colorMode;
-      state.badge1ColorTheme = cfg.colorTheme;
-      state.badge1CustomBg1 = cfg.customBg1;
-      state.badge1CustomBg2 = cfg.customBg2;
-      state.badge1CustomStroke = cfg.customStroke;
-      state.badge1CustomText = cfg.customText;
-      state.badge1SolidBg = cfg.solidBg;
-      state.badge1SolidStroke = cfg.solidStroke;
-      state.badge1SolidText = cfg.solidText;
-      state.badge1GradDir = cfg.gradDir;
-      state.badge1TextGradEnabled = cfg.textGradEnabled;
-      state.badge1TextGradColor1 = cfg.textGradColor1;
-      state.badge1TextGradColor2 = cfg.textGradColor2;
-      state.badge1TextGradDir = cfg.textGradDir;
-      if (document.getElementById('badge1FontFamily')) document.getElementById('badge1FontFamily').value = cfg.font;
-      document.getElementById('btnBadge1Bold')?.classList.toggle('active', cfg.bold);
-      document.getElementById('btnBadge1Italic')?.classList.toggle('active', cfg.italic);
-      document.getElementById('btnBadge1LetterSpacing')?.classList.toggle('active', cfg.letterSpacing);
-      if (document.getElementById('badge1PtSize')) document.getElementById('badge1PtSize').value = cfg.ptSize;
-      if (document.getElementById('badge1PtSizeVal')) document.getElementById('badge1PtSizeVal').textContent = `${cfg.ptSize} pt`;
-      if (document.getElementById('badge1TextGradEnable')) document.getElementById('badge1TextGradEnable').checked = cfg.textGradEnabled;
-      if (document.getElementById('badge1TextGradControls')) document.getElementById('badge1TextGradControls').style.display = cfg.textGradEnabled ? 'block' : 'none';
-      if (document.getElementById('badge1TextGrad1')) document.getElementById('badge1TextGrad1').value = cfg.textGradColor1;
-      if (document.getElementById('badge1TextGrad2')) document.getElementById('badge1TextGrad2').value = cfg.textGradColor2;
-      if (document.getElementById('badge1TextGrad1Hex')) document.getElementById('badge1TextGrad1Hex').textContent = cfg.textGradColor1;
-      if (document.getElementById('badge1TextGrad2Hex')) document.getElementById('badge1TextGrad2Hex').textContent = cfg.textGradColor2;
-      setBadge1TextGradDir(cfg.textGradDir);
-      setCreatorColorMode(cfg.colorMode);
-      setCreatorColorTheme(cfg.colorTheme);
-    } else if (role === 'series') {
-      state.badge2Font = cfg.font;
-      state.badge2Bold = cfg.bold;
-      state.badge2Italic = cfg.italic;
-      state.badge2PtSize = cfg.ptSize;
-      state.badge2LetterSpacing = cfg.letterSpacing;
-      state.badge2ColorMode = cfg.colorMode;
-      state.badge2ColorTheme = cfg.colorTheme;
-      state.badge2CustomBg1 = cfg.customBg1;
-      state.badge2CustomBg2 = cfg.customBg2;
-      state.badge2CustomStroke = cfg.customStroke;
-      state.badge2CustomText = cfg.customText;
-      state.badge2SolidBg = cfg.solidBg;
-      state.badge2SolidStroke = cfg.solidStroke;
-      state.badge2SolidText = cfg.solidText;
-      state.badge2GradDir = cfg.gradDir;
-      state.badge2TextGradEnabled = cfg.textGradEnabled;
-      state.badge2TextGradColor1 = cfg.textGradColor1;
-      state.badge2TextGradColor2 = cfg.textGradColor2;
-      state.badge2TextGradDir = cfg.textGradDir;
-      if (document.getElementById('seriesFontFamily')) document.getElementById('seriesFontFamily').value = cfg.font;
-      document.getElementById('btnSeriesBold')?.classList.toggle('active', cfg.bold);
-      document.getElementById('btnSeriesItalic')?.classList.toggle('active', cfg.italic);
-      document.getElementById('btnSeriesLetterSpacing')?.classList.toggle('active', cfg.letterSpacing);
-      if (document.getElementById('seriesPtSize')) document.getElementById('seriesPtSize').value = cfg.ptSize;
-      if (document.getElementById('seriesPtSizeVal')) document.getElementById('seriesPtSizeVal').textContent = `${cfg.ptSize} pt`;
-      if (document.getElementById('badge2TextGradEnable')) document.getElementById('badge2TextGradEnable').checked = cfg.textGradEnabled;
-      if (document.getElementById('badge2TextGradControls')) document.getElementById('badge2TextGradControls').style.display = cfg.textGradEnabled ? 'block' : 'none';
-      if (document.getElementById('badge2TextGrad1')) document.getElementById('badge2TextGrad1').value = cfg.textGradColor1;
-      if (document.getElementById('badge2TextGrad2')) document.getElementById('badge2TextGrad2').value = cfg.textGradColor2;
-      if (document.getElementById('badge2TextGrad1Hex')) document.getElementById('badge2TextGrad1Hex').textContent = cfg.textGradColor1;
-      if (document.getElementById('badge2TextGrad2Hex')) document.getElementById('badge2TextGrad2Hex').textContent = cfg.textGradColor2;
-      setBadge2TextGradDir(cfg.textGradDir);
-      setSeriesColorMode(cfg.colorMode);
-      setSeriesColorTheme(cfg.colorTheme);
-    } else if (role === 'extra1') {
-      state.badge3Font = cfg.font;
-      state.badge3Bold = cfg.bold;
-      state.badge3Italic = cfg.italic;
-      state.badge3PtSize = cfg.ptSize;
-      state.badge3LetterSpacing = cfg.letterSpacing;
-      state.badge3ColorMode = cfg.colorMode;
-      state.badge3ColorTheme = cfg.colorTheme;
-      state.badge3CustomBg1 = cfg.customBg1;
-      state.badge3CustomBg2 = cfg.customBg2;
-      state.badge3CustomStroke = cfg.customStroke;
-      state.badge3CustomText = cfg.customText;
-      state.badge3SolidBg = cfg.solidBg;
-      state.badge3SolidStroke = cfg.solidStroke;
-      state.badge3SolidText = cfg.solidText;
-      state.badge3GradDir = cfg.gradDir;
-      state.badge3TextGradEnabled = cfg.textGradEnabled;
-      state.badge3TextGradColor1 = cfg.textGradColor1;
-      state.badge3TextGradColor2 = cfg.textGradColor2;
-      state.badge3TextGradDir = cfg.textGradDir;
-      if (document.getElementById('extra1FontFamily')) document.getElementById('extra1FontFamily').value = cfg.font;
-      document.getElementById('btnExtra1Bold')?.classList.toggle('active', cfg.bold);
-      document.getElementById('btnExtra1Italic')?.classList.toggle('active', cfg.italic);
-      document.getElementById('btnExtra1LetterSpacing')?.classList.toggle('active', cfg.letterSpacing);
-      if (document.getElementById('extra1PtSize')) document.getElementById('extra1PtSize').value = cfg.ptSize;
-      if (document.getElementById('extra1PtSizeVal')) document.getElementById('extra1PtSizeVal').textContent = `${cfg.ptSize} pt`;
-      if (document.getElementById('badge3TextGradEnable')) document.getElementById('badge3TextGradEnable').checked = cfg.textGradEnabled;
-      if (document.getElementById('badge3TextGradControls')) document.getElementById('badge3TextGradControls').style.display = cfg.textGradEnabled ? 'block' : 'none';
-      if (document.getElementById('badge3TextGrad1')) document.getElementById('badge3TextGrad1').value = cfg.textGradColor1;
-      if (document.getElementById('badge3TextGrad2')) document.getElementById('badge3TextGrad2').value = cfg.textGradColor2;
-      if (document.getElementById('badge3TextGrad1Hex')) document.getElementById('badge3TextGrad1Hex').textContent = cfg.textGradColor1;
-      if (document.getElementById('badge3TextGrad2Hex')) document.getElementById('badge3TextGrad2Hex').textContent = cfg.textGradColor2;
-      setBadge3TextGradDir(cfg.textGradDir);
-      setExtra1ColorMode(cfg.colorMode);
-      setExtra1ColorTheme(cfg.colorTheme);
-    } else if (role === 'extra2') {
-      state.badge4Font = cfg.font;
-      state.badge4Bold = cfg.bold;
-      state.badge4Italic = cfg.italic;
-      state.badge4PtSize = cfg.ptSize;
-      state.badge4LetterSpacing = cfg.letterSpacing;
-      state.badge4ColorMode = cfg.colorMode;
-      state.badge4ColorTheme = cfg.colorTheme;
-      state.badge4CustomBg1 = cfg.customBg1;
-      state.badge4CustomBg2 = cfg.customBg2;
-      state.badge4CustomStroke = cfg.customStroke;
-      state.badge4CustomText = cfg.customText;
-      state.badge4SolidBg = cfg.solidBg;
-      state.badge4SolidStroke = cfg.solidStroke;
-      state.badge4SolidText = cfg.solidText;
-      state.badge4GradDir = cfg.gradDir;
-      state.badge4TextGradEnabled = cfg.textGradEnabled;
-      state.badge4TextGradColor1 = cfg.textGradColor1;
-      state.badge4TextGradColor2 = cfg.textGradColor2;
-      state.badge4TextGradDir = cfg.textGradDir;
-      if (document.getElementById('extra2FontFamily')) document.getElementById('extra2FontFamily').value = cfg.font;
-      document.getElementById('btnExtra2Bold')?.classList.toggle('active', cfg.bold);
-      document.getElementById('btnExtra2Italic')?.classList.toggle('active', cfg.italic);
-      document.getElementById('btnExtra2LetterSpacing')?.classList.toggle('active', cfg.letterSpacing);
-      if (document.getElementById('extra2PtSize')) document.getElementById('extra2PtSize').value = cfg.ptSize;
-      if (document.getElementById('extra2PtSizeVal')) document.getElementById('extra2PtSizeVal').textContent = `${cfg.ptSize} pt`;
-      if (document.getElementById('badge4TextGradEnable')) document.getElementById('badge4TextGradEnable').checked = cfg.textGradEnabled;
-      if (document.getElementById('badge4TextGradControls')) document.getElementById('badge4TextGradControls').style.display = cfg.textGradEnabled ? 'block' : 'none';
-      if (document.getElementById('badge4TextGrad1')) document.getElementById('badge4TextGrad1').value = cfg.textGradColor1;
-      if (document.getElementById('badge4TextGrad2')) document.getElementById('badge4TextGrad2').value = cfg.textGradColor2;
-      if (document.getElementById('badge4TextGrad1Hex')) document.getElementById('badge4TextGrad1Hex').textContent = cfg.textGradColor1;
-      if (document.getElementById('badge4TextGrad2Hex')) document.getElementById('badge4TextGrad2Hex').textContent = cfg.textGradColor2;
-      setBadge4TextGradDir(cfg.textGradDir);
-      setExtra2ColorMode(cfg.colorMode);
-      setExtra2ColorTheme(cfg.colorTheme);
-    }
-  };
-
-  const srcConfig = getBadgeConfig(source);
-  if (target === 'all') {
-    ['series', 'extra1', 'extra2'].forEach(r => applyToRole(srcConfig, r));
-    showToast(`Copied ${source} style to all badges`);
-  } else {
-    applyToRole(srcConfig, target);
-    showToast(`Copied ${source} style to ${target}`);
-  }
+function clearBadgeLayerLogo(idx) {
+  const cfg = BADGE_CONFIG[idx];
+  state[cfg.imgStateKey] = null;
+  state[cfg.fileNameStateKey] = '';
+  setElText(cfg.uploadBtnTextId, 'Upload Graphic...');
+  setElDisplay(cfg.clearLogoBtnId, 'none');
   renderIconMap();
 }
 
-// Defaults
-export function saveIconBadgeDefaults() {
-  try {
-    let b1Data = null;
-    if (state.designerLogoImg) {
-      const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = state.designerLogoImg.naturalWidth || state.designerLogoImg.width;
-      tempCanvas.height = state.designerLogoImg.naturalHeight || state.designerLogoImg.height;
-      const tCtx = tempCanvas.getContext('2d');
-      tCtx.drawImage(state.designerLogoImg, 0, 0);
-      b1Data = tempCanvas.toDataURL('image/png');
-    }
-
-    let b2Data = null;
-    if (state.badge2Img) {
-      const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = state.badge2Img.naturalWidth || state.badge2Img.width;
-      tempCanvas.height = state.badge2Img.naturalHeight || state.badge2Img.height;
-      const tCtx = tempCanvas.getContext('2d');
-      tCtx.drawImage(state.badge2Img, 0, 0);
-      b2Data = tempCanvas.toDataURL('image/png');
-    }
-
-    let b3Data = null;
-    if (state.badge3Img) {
-      const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = state.badge3Img.naturalWidth || state.badge3Img.width;
-      tempCanvas.height = state.badge3Img.naturalHeight || state.badge3Img.height;
-      const tCtx = tempCanvas.getContext('2d');
-      tCtx.drawImage(state.badge3Img, 0, 0);
-      b3Data = tempCanvas.toDataURL('image/png');
-    }
-
-    let b4Data = null;
-    if (state.badge4Img) {
-      const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = state.badge4Img.naturalWidth || state.badge4Img.width;
-      tempCanvas.height = state.badge4Img.naturalHeight || state.badge4Img.height;
-      const tCtx = tempCanvas.getContext('2d');
-      tCtx.drawImage(state.badge4Img, 0, 0);
-      b4Data = tempCanvas.toDataURL('image/png');
-    }
-
-    const defaults = {
-      hasDefaults: true,
-      savedAt: Date.now(),
-      iconBgStyle: document.getElementById('iconBgStyle') ? document.getElementById('iconBgStyle').value : 'cs2-dark',
-      customBg: {
-        type: state.customIconBgType || 'image',
-        fit: state.iconBgFit || 'cover',
-        blur: state.iconBgBlur || 0,
-        brightness: state.iconBgBrightness !== undefined ? state.iconBgBrightness : 100,
-        vignette: state.iconBgVignette !== false,
-        gradType: state.iconBgGradType || 'radial',
-        grad1: state.iconBgGrad1 || '#1a2638',
-        grad2: state.iconBgGrad2 || '#080d16',
-        gradGrid: state.iconBgGradGrid === true,
-        color: state.iconBgColor || '#141e2e',
-        fileName: state.iconBgFileName || '',
-        imageData: state.iconBgImg ? (function() {
-          try {
-            const temp = document.createElement('canvas');
-            temp.width = state.iconBgImg.naturalWidth || state.iconBgImg.width || 512;
-            temp.height = state.iconBgImg.naturalHeight || state.iconBgImg.height || 512;
-            temp.getContext('2d').drawImage(state.iconBgImg, 0, 0);
-            return temp.toDataURL('image/png');
-          } catch(e) { return null; }
-        })() : null
-      },
-      customGoogleFonts: state.customGoogleFonts || [],
-      badge1: {
-        enabled: document.getElementById('enableBadge1') ? document.getElementById('enableBadge1').checked : true,
-        type: state.badge1Type,
-        preset: state.presetLogoType,
-        text: document.getElementById('badge1TextInput') ? document.getElementById('badge1TextInput').value : 'CREATOR',
-        colorMode: state.badge1ColorMode,
-        colorTheme: state.badge1ColorTheme,
-        customBg1: state.badge1CustomBg1,
-        customBg2: state.badge1CustomBg2,
-        customStroke: state.badge1CustomStroke,
-        customText: state.badge1CustomText,
-        solidBg: state.badge1SolidBg,
-        solidStroke: state.badge1SolidStroke,
-        solidText: state.badge1SolidText,
-        gradDir: state.badge1GradDir,
-        letterSpacing: state.badge1LetterSpacing,
-        textGradEnabled: state.badge1TextGradEnabled,
-        textGradColor1: state.badge1TextGradColor1,
-        textGradColor2: state.badge1TextGradColor2,
-        textGradDir: state.badge1TextGradDir,
-        font: document.getElementById('badge1FontFamily') ? document.getElementById('badge1FontFamily').value : 'Montserrat',
-        bold: state.badge1Bold,
-        italic: state.badge1Italic,
-        ptSize: state.badge1PtSize,
-        position: document.getElementById('logoPosition') ? document.getElementById('logoPosition').value : 'custom',
-        posX: state.badge1PosX ?? 85,
-        posY: state.badge1PosY ?? 85,
-        frame: document.getElementById('badge1Frame') ? document.getElementById('badge1Frame').value : 'circle',
-        scale: parseInt(document.getElementById('badgeScale')?.value || '26', 10),
-        opacity: parseInt(document.getElementById('badgeOpacity')?.value || '95', 10),
-        edgePadding: state.badge1EdgePadding,
-        innerPadding: state.badge1InnerPadding,
-        fileName: state.badge1FileName || '',
-        imageData: b1Data
-      },
-      badge2: {
-        enabled: document.getElementById('enableBadge2') ? document.getElementById('enableBadge2').checked : true,
-        type: state.badge2Type,
-        preset: state.badge2Preset,
-        text: document.getElementById('seriesTextInput') ? document.getElementById('seriesTextInput').value : 'GRAFFITI',
-        colorMode: state.badge2ColorMode,
-        colorTheme: state.badge2ColorTheme || 'purple',
-        customBg1: state.badge2CustomBg1,
-        customBg2: state.badge2CustomBg2,
-        customStroke: state.badge2CustomStroke,
-        customText: state.badge2CustomText,
-        solidBg: state.badge2SolidBg,
-        solidStroke: state.badge2SolidStroke,
-        solidText: state.badge2SolidText,
-        gradDir: state.badge2GradDir,
-        letterSpacing: state.badge2LetterSpacing,
-        textGradEnabled: state.badge2TextGradEnabled,
-        textGradColor1: state.badge2TextGradColor1,
-        textGradColor2: state.badge2TextGradColor2,
-        textGradDir: state.badge2TextGradDir,
-        font: document.getElementById('seriesFontFamily') ? document.getElementById('seriesFontFamily').value : 'Bebas Neue',
-        bold: state.badge2Bold,
-        italic: state.badge2Italic,
-        ptSize: state.badge2PtSize,
-        position: document.getElementById('seriesPosition') ? document.getElementById('seriesPosition').value : 'custom',
-        posX: state.badge2PosX ?? 15,
-        posY: state.badge2PosY ?? 15,
-        frame: document.getElementById('badge2Frame') ? document.getElementById('badge2Frame').value : 'pill',
-        scale: parseInt(document.getElementById('seriesScale')?.value || '24', 10),
-        opacity: parseInt(document.getElementById('seriesOpacity')?.value || '95', 10),
-        edgePadding: state.badge2EdgePadding,
-        innerPadding: state.badge2InnerPadding,
-        fileName: state.badge2FileName || '',
-        imageData: b2Data
-      },
-      badge3: {
-        enabled: document.getElementById('enableBadge3') ? document.getElementById('enableBadge3').checked : state.badge3Enabled,
-        type: state.badge3Type,
-        preset: state.badge3Preset,
-        text: document.getElementById('extra1TextInput') ? document.getElementById('extra1TextInput').value : 'EXTRA 1',
-        colorMode: state.badge3ColorMode,
-        colorTheme: state.badge3ColorTheme || 'emerald',
-        customBg1: state.badge3CustomBg1,
-        customBg2: state.badge3CustomBg2,
-        customStroke: state.badge3CustomStroke,
-        customText: state.badge3CustomText,
-        solidBg: state.badge3SolidBg,
-        solidStroke: state.badge3SolidStroke,
-        solidText: state.badge3SolidText,
-        gradDir: state.badge3GradDir,
-        letterSpacing: state.badge3LetterSpacing,
-        textGradEnabled: state.badge3TextGradEnabled,
-        textGradColor1: state.badge3TextGradColor1,
-        textGradColor2: state.badge3TextGradColor2,
-        textGradDir: state.badge3TextGradDir,
-        font: document.getElementById('extra1FontFamily') ? document.getElementById('extra1FontFamily').value : 'Montserrat',
-        bold: state.badge3Bold,
-        italic: state.badge3Italic,
-        ptSize: state.badge3PtSize,
-        position: document.getElementById('extra1Position') ? document.getElementById('extra1Position').value : 'custom',
-        posX: state.badge3PosX ?? 15,
-        posY: state.badge3PosY ?? 85,
-        frame: document.getElementById('badge3Frame') ? document.getElementById('badge3Frame').value : 'pill',
-        scale: parseInt(document.getElementById('extra1Scale')?.value || '24', 10),
-        opacity: parseInt(document.getElementById('extra1Opacity')?.value || '95', 10),
-        edgePadding: state.badge3EdgePadding,
-        innerPadding: state.badge3InnerPadding,
-        fileName: state.badge3FileName || '',
-        imageData: b3Data
-      },
-      badge4: {
-        enabled: document.getElementById('enableBadge4') ? document.getElementById('enableBadge4').checked : state.badge4Enabled,
-        type: state.badge4Type,
-        preset: state.badge4Preset,
-        text: document.getElementById('extra2TextInput') ? document.getElementById('extra2TextInput').value : 'EXTRA 2',
-        colorMode: state.badge4ColorMode,
-        colorTheme: state.badge4ColorTheme || 'amber',
-        customBg1: state.badge4CustomBg1,
-        customBg2: state.badge4CustomBg2,
-        customStroke: state.badge4CustomStroke,
-        customText: state.badge4CustomText,
-        solidBg: state.badge4SolidBg,
-        solidStroke: state.badge4SolidStroke,
-        solidText: state.badge4SolidText,
-        gradDir: state.badge4GradDir,
-        letterSpacing: state.badge4LetterSpacing,
-        textGradEnabled: state.badge4TextGradEnabled,
-        textGradColor1: state.badge4TextGradColor1,
-        textGradColor2: state.badge4TextGradColor2,
-        textGradDir: state.badge4TextGradDir,
-        font: document.getElementById('extra2FontFamily') ? document.getElementById('extra2FontFamily').value : 'Montserrat',
-        bold: state.badge4Bold,
-        italic: state.badge4Italic,
-        ptSize: state.badge4PtSize,
-        position: document.getElementById('extra2Position') ? document.getElementById('extra2Position').value : 'custom',
-        posX: state.badge4PosX ?? 85,
-        posY: state.badge4PosY ?? 15,
-        frame: document.getElementById('badge4Frame') ? document.getElementById('badge4Frame').value : 'pill',
-        scale: parseInt(document.getElementById('extra2Scale')?.value || '24', 10),
-        opacity: parseInt(document.getElementById('extra2Opacity')?.value || '95', 10),
-        edgePadding: state.badge4EdgePadding,
-        innerPadding: state.badge4InnerPadding,
-        fileName: state.badge4FileName || '',
-        imageData: b4Data
-      }
-    };
-
-    localStorage.setItem(BADGE_DEFAULTS_STORAGE_KEY, JSON.stringify(defaults));
-    updateBadgeDefaultsUI();
-    showToast('Default In-Game icon overlays saved! They will load automatically.');
-  } catch (e) {
-    console.error('Failed to save badge defaults', e);
-    showToast('Could not save defaults (storage quota exceeded)');
-  }
+function onBadgeLayerPositionChange(idx) {
+  const cfg = BADGE_CONFIG[idx];
+  const pos = getEl(cfg.positionSelectId)?.value || 'custom';
+  setElDisplay(cfg.customPosContainerId, pos === 'custom' ? 'block' : 'none');
+  renderIconMap();
 }
 
-export function loadIconBadgeDefaults(silent = false) {
-  try {
-    const raw = localStorage.getItem(BADGE_DEFAULTS_STORAGE_KEY);
-    if (!raw) {
-      if (!silent) showToast('No default badges saved yet');
-      return false;
-    }
+function onBadgeLayerCoordChange(idx) {
+  const cfg = BADGE_CONFIG[idx];
+  setElText(cfg.posXValId, `${getEl(cfg.posXId)?.value || 50}%`);
+  setElText(cfg.posYValId, `${getEl(cfg.posYId)?.value || 50}%`);
+  renderIconMap();
+}
 
-    const d = JSON.parse(raw);
-    if (!d) return false;
+function snapBadgeLayerCoord(idx, x, y) {
+  const cfg = BADGE_CONFIG[idx];
+  setElValue(cfg.posXId, x);
+  setElValue(cfg.posYId, y);
+  onBadgeLayerCoordChange(idx);
+}
 
-    if (d.customGoogleFonts && Array.isArray(d.customGoogleFonts)) {
-      d.customGoogleFonts.forEach(font => {
-        if (!state.customGoogleFonts.includes(font)) state.customGoogleFonts.push(font);
-        loadGoogleFont(font);
+function onBadgeLayerSliderChange(idx, propId, valId, suffix) {
+  const cfg = BADGE_CONFIG[idx];
+  const val = getEl(cfg[propId])?.value || '0';
+  setElText(cfg[valId], `${val}${suffix}`);
+  renderIconMap();
+}
+
+// ==========================================
+// Copy Style Across Badge Layers
+// ==========================================
+
+export function copyBadgeStyle(fromKey, toKey) {
+  const src = getCfgByKeyOrIndex(fromKey);
+  const dst = getCfgByKeyOrIndex(toKey);
+  if (!src || !dst || src.index === dst.index) return;
+
+  const colorMode = getEl(src.colorModeSelectId)?.value || 'theme';
+  setBadgeLayerColorMode(dst.index, colorMode);
+  setElValue(dst.themeSelectId, getEl(src.themeSelectId)?.value || 'cyan');
+
+  setElValue(dst.color1Id, getEl(src.color1Id)?.value || '#0a192f');
+  setElValue(dst.color2Id, getEl(src.color2Id)?.value || '#0f2942');
+  setElValue(dst.strokeColorId, getEl(src.strokeColorId)?.value || '#38bdf8');
+  setElValue(dst.textColorId, getEl(src.textColorId)?.value || '#ffffff');
+  onBadgeLayerCustomColorInput(dst.index);
+
+  setElValue(dst.solidBgId, getEl(src.solidBgId)?.value || '#0a192f');
+  setElValue(dst.solidStrokeId, getEl(src.solidStrokeId)?.value || '#38bdf8');
+  setElValue(dst.solidTextId, getEl(src.solidTextId)?.value || '#ffffff');
+  onBadgeLayerSolidColorInput(dst.index);
+
+  setElValue(dst.fontSelectId, getEl(src.fontSelectId)?.value || DEFAULT_FONT_OPTIONS[0].value);
+  setElValue(dst.ptSizeId, getEl(src.ptSizeId)?.value || '13');
+  onBadgeLayerPtSizeChange(dst.index);
+  setElValue(dst.frameSelectId, getEl(src.frameSelectId)?.value || 'pill');
+
+  renderIconMap();
+  showToast(`Copied style from ${src.key.toUpperCase()} to ${dst.key.toUpperCase()}`);
+}
+
+export function runBadgeStyleCopyAction(fromKeyOrSpec, selectEl) {
+  // Handle single "source:target" string passed from #badgeStyleSyncSelect
+  if (!selectEl && typeof fromKeyOrSpec === 'string' && fromKeyOrSpec.includes(':')) {
+    const [srcKey, dstKey] = fromKeyOrSpec.split(':');
+    if (dstKey === 'all') {
+      ['creator', 'series', 'extra1', 'extra2'].forEach((k) => {
+        if (k !== srcKey) copyBadgeStyle(srcKey, k);
       });
+    } else if (srcKey && dstKey) {
+      copyBadgeStyle(srcKey, dstKey);
     }
-    populateFontDropdowns();
-
-    if (d.iconBgStyle && document.getElementById('iconBgStyle')) {
-      document.getElementById('iconBgStyle').value = d.iconBgStyle;
-    }
-    if (d.customBg) {
-      const cb = d.customBg;
-      state.customIconBgType = cb.type || 'image';
-      state.iconBgFit = cb.fit || 'cover';
-      state.iconBgBlur = cb.blur || 0;
-      state.iconBgBrightness = cb.brightness !== undefined ? cb.brightness : 100;
-      state.iconBgVignette = cb.vignette !== false;
-      state.iconBgGradType = cb.gradType || 'radial';
-      state.iconBgGrad1 = cb.grad1 || '#1a2638';
-      state.iconBgGrad2 = cb.grad2 || '#080d16';
-      state.iconBgGradGrid = cb.gradGrid === true;
-      state.iconBgColor = cb.color || '#141e2e';
-      state.iconBgFileName = cb.fileName || '';
-
-      const selType = document.getElementById('customIconBgType');
-      if (selType) selType.value = state.customIconBgType;
-      setCustomIconBgType(state.customIconBgType);
-
-      const selFit = document.getElementById('iconBgFitSelect');
-      if (selFit) selFit.value = state.iconBgFit;
-      const bSlider = document.getElementById('iconBgBlurSlider');
-      if (bSlider) {
-        bSlider.value = state.iconBgBlur;
-        const bVal = document.getElementById('iconBgBlurVal');
-        if (bVal) bVal.textContent = `${state.iconBgBlur} px`;
-      }
-      const brSlider = document.getElementById('iconBgBrightnessSlider');
-      if (brSlider) {
-        brSlider.value = state.iconBgBrightness;
-        const brVal = document.getElementById('iconBgBrightnessVal');
-        if (brVal) brVal.textContent = `${state.iconBgBrightness}%`;
-      }
-      const vCheck = document.getElementById('iconBgVignetteCheck');
-      if (vCheck) vCheck.checked = state.iconBgVignette;
-
-      const gDir = document.getElementById('iconBgGradDirSelect');
-      if (gDir) gDir.value = state.iconBgGradType;
-      const g1 = document.getElementById('iconBgGrad1Input');
-      const g2 = document.getElementById('iconBgGrad2Input');
-      const gh1 = document.getElementById('iconBgGrad1Hex');
-      const gh2 = document.getElementById('iconBgGrad2Hex');
-      if (g1) g1.value = state.iconBgGrad1;
-      if (g2) g2.value = state.iconBgGrad2;
-      if (gh1) gh1.textContent = state.iconBgGrad1;
-      if (gh2) gh2.textContent = state.iconBgGrad2;
-      const gGrid = document.getElementById('iconBgGradGridCheck');
-      if (gGrid) gGrid.checked = state.iconBgGradGrid;
-
-      const cInp = document.getElementById('iconBgColorInput');
-      const cHex = document.getElementById('iconBgColorHex');
-      if (cInp) cInp.value = state.iconBgColor;
-      if (cHex) cHex.textContent = state.iconBgColor;
-
-      if (cb.imageData) {
-        const img = new Image();
-        img.onload = () => {
-          state.iconBgImg = img;
-          const fn = document.getElementById('iconBgFileNameText');
-          if (fn) fn.textContent = state.iconBgFileName || 'Custom Backdrop';
-          const btnClear = document.getElementById('btnClearIconBgImg');
-          if (btnClear) btnClear.style.display = 'block';
-          renderIconMap();
-        };
-        img.src = cb.imageData;
-      }
-    }
-    onIconBgStyleChange();
-
-    if (d.badge1) {
-      const b1 = d.badge1;
-      state.badge1Enabled = b1.enabled !== false;
-      if (document.getElementById('enableBadge1')) document.getElementById('enableBadge1').checked = state.badge1Enabled;
-      state.badge1Type = b1.type || (b1.imageData ? 'image' : 'preset');
-      state.badge1Text = b1.text || 'CREATOR';
-      state.badge1Font = b1.font || 'Montserrat';
-      state.badge1Bold = b1.bold !== false;
-      state.badge1Italic = b1.italic === true;
-      state.badge1PtSize = b1.ptSize || 13;
-
-      state.badge1ColorMode = b1.colorMode || 'theme';
-      state.badge1ColorTheme = b1.colorTheme || 'cyan';
-      state.badge1CustomBg1 = b1.customBg1 || '#091524';
-      state.badge1CustomBg2 = b1.customBg2 || '#0e243d';
-      state.badge1CustomStroke = b1.customStroke || '#00a8ff';
-      state.badge1CustomText = b1.customText || '#ffffff';
-      state.badge1SolidBg = b1.solidBg || '#091524';
-      state.badge1SolidStroke = b1.solidStroke || '#00a8ff';
-      state.badge1SolidText = b1.solidText || '#ffffff';
-      state.badge1GradDir = b1.gradDir || 'diagonal';
-      state.badge1LetterSpacing = b1.letterSpacing === true;
-
-      setCreatorColorTheme(state.badge1ColorTheme);
-      setCreatorGradDirection(state.badge1GradDir);
-      setCreatorColorMode(state.badge1ColorMode);
-
-      if (document.getElementById('badge1TextInput')) document.getElementById('badge1TextInput').value = state.badge1Text;
-      onBadge1TextChange(false);
-      if (document.getElementById('badge1FontFamily')) document.getElementById('badge1FontFamily').value = state.badge1Font;
-      document.getElementById('btnBadge1Bold')?.classList.toggle('active', state.badge1Bold);
-      document.getElementById('btnBadge1Italic')?.classList.toggle('active', state.badge1Italic);
-      if (document.getElementById('badge1PtSize')) {
-        document.getElementById('badge1PtSize').value = state.badge1PtSize;
-        if (document.getElementById('badge1PtSizeVal')) document.getElementById('badge1PtSizeVal').textContent = `${state.badge1PtSize} pt`;
-      }
-
-      state.badge1TextGradEnabled = b1.textGradEnabled === true;
-      state.badge1TextGradColor1 = b1.textGradColor1 || '#ffffff';
-      state.badge1TextGradColor2 = b1.textGradColor2 || '#38bdf8';
-      state.badge1TextGradDir = b1.textGradDir || 'vertical';
-      if (document.getElementById('badge1TextGradEnable')) document.getElementById('badge1TextGradEnable').checked = state.badge1TextGradEnabled;
-      if (document.getElementById('badge1TextGradControls')) document.getElementById('badge1TextGradControls').style.display = state.badge1TextGradEnabled ? 'block' : 'none';
-      if (document.getElementById('badge1TextGrad1')) document.getElementById('badge1TextGrad1').value = state.badge1TextGradColor1;
-      if (document.getElementById('badge1TextGrad2')) document.getElementById('badge1TextGrad2').value = state.badge1TextGradColor2;
-      if (document.getElementById('badge1TextGrad1Hex')) document.getElementById('badge1TextGrad1Hex').textContent = state.badge1TextGradColor1;
-      if (document.getElementById('badge1TextGrad2Hex')) document.getElementById('badge1TextGrad2Hex').textContent = state.badge1TextGradColor2;
-      setBadge1TextGradDir(state.badge1TextGradDir);
-
-      if (b1.position && document.getElementById('logoPosition')) document.getElementById('logoPosition').value = b1.position;
-      state.badge1PosX = b1.posX !== undefined ? b1.posX : 85;
-      state.badge1PosY = b1.posY !== undefined ? b1.posY : 85;
-      if (document.getElementById('creatorPosX')) document.getElementById('creatorPosX').value = state.badge1PosX;
-      if (document.getElementById('creatorPosY')) document.getElementById('creatorPosY').value = state.badge1PosY;
-      if (document.getElementById('creatorPosXVal')) document.getElementById('creatorPosXVal').textContent = `${state.badge1PosX}%`;
-      if (document.getElementById('creatorPosYVal')) document.getElementById('creatorPosYVal').textContent = `${state.badge1PosY}%`;
-      const cCreator = document.getElementById('creatorCustomPosContainer');
-      if (cCreator) cCreator.style.display = (b1.position === 'custom' || !b1.position) ? 'block' : 'none';
-
-      if (b1.frame && document.getElementById('badge1Frame')) document.getElementById('badge1Frame').value = b1.frame;
-      if (b1.scale !== undefined && document.getElementById('badgeScale')) {
-        document.getElementById('badgeScale').value = b1.scale;
-        document.getElementById('badgeScaleVal').textContent = `${b1.scale}%`;
-      }
-      if (b1.opacity !== undefined && document.getElementById('badgeOpacity')) {
-        document.getElementById('badgeOpacity').value = b1.opacity;
-        document.getElementById('badgeOpacityVal').textContent = `${b1.opacity}%`;
-      }
-      if (b1.edgePadding !== undefined) {
-        state.badge1EdgePadding = b1.edgePadding;
-        if (document.getElementById('badge1Padding')) document.getElementById('badge1Padding').value = b1.edgePadding;
-        if (document.getElementById('badge1PaddingVal')) document.getElementById('badge1PaddingVal').textContent = `${b1.edgePadding} px`;
-      }
-      if (b1.innerPadding !== undefined) {
-        state.badge1InnerPadding = b1.innerPadding;
-        if (document.getElementById('badge1InnerPadding')) document.getElementById('badge1InnerPadding').value = b1.innerPadding;
-        if (document.getElementById('badge1InnerPaddingVal')) document.getElementById('badge1InnerPaddingVal').textContent = `${b1.innerPadding} px`;
-      }
-
-      state.presetLogoType = b1.preset || null;
-      state.badge1FileName = b1.fileName || '';
-      setCreatorBadgeMode(state.badge1Type);
-
-      if (b1.imageData) {
-        const img = new Image();
-        img.onload = () => {
-          state.designerLogoImg = img;
-          const btn = document.getElementById('logoUploadBtnText');
-          if (btn) btn.textContent = state.badge1FileName ? state.badge1FileName.substring(0, 16) + '...' : 'Default Logo Loaded';
-          const btnClear = document.getElementById('btnClearLogo');
-          if (btnClear) btnClear.style.display = 'block';
-          renderIconMap();
-        };
-        img.src = b1.imageData;
-      }
-    }
-
-    if (d.badge2) {
-      const b2 = d.badge2;
-      state.badge2Enabled = b2.enabled !== false;
-      if (document.getElementById('enableBadge2')) document.getElementById('enableBadge2').checked = state.badge2Enabled;
-      state.badge2Type = b2.type || 'preset';
-      state.badge2Preset = b2.preset || 'graffiti';
-      state.badge2Text = b2.text || 'GRAFFITI';
-      state.badge2ColorTheme = b2.colorTheme || 'purple';
-      state.badge2LetterSpacing = b2.letterSpacing === true;
-      state.badge2Font = b2.font || 'Bebas Neue';
-      state.badge2Bold = b2.bold !== false;
-      state.badge2Italic = b2.italic === true;
-      state.badge2PtSize = b2.ptSize || 13;
-
-      state.badge2ColorMode = b2.colorMode || 'theme';
-      state.badge2CustomBg1 = b2.customBg1 || '#151326';
-      state.badge2CustomBg2 = b2.customBg2 || '#251336';
-      state.badge2CustomStroke = b2.customStroke || '#c084fc';
-      state.badge2CustomText = b2.customText || '#ffffff';
-      state.badge2SolidBg = b2.solidBg || '#151326';
-      state.badge2SolidStroke = b2.solidStroke || '#c084fc';
-      state.badge2SolidText = b2.solidText || '#ffffff';
-      state.badge2GradDir = b2.gradDir || 'diagonal';
-
-      setSeriesColorTheme(state.badge2ColorTheme);
-      setSeriesGradDirection(state.badge2GradDir);
-      setSeriesColorMode(state.badge2ColorMode);
-
-      if (document.getElementById('seriesTextInput')) document.getElementById('seriesTextInput').value = state.badge2Text;
-      onSeriesTextChange(false);
-      if (document.getElementById('seriesFontFamily')) document.getElementById('seriesFontFamily').value = state.badge2Font;
-      document.getElementById('btnSeriesBold')?.classList.toggle('active', state.badge2Bold);
-      document.getElementById('btnSeriesItalic')?.classList.toggle('active', state.badge2Italic);
-      if (document.getElementById('seriesPtSize')) {
-        document.getElementById('seriesPtSize').value = state.badge2PtSize;
-        if (document.getElementById('seriesPtSizeVal')) document.getElementById('seriesPtSizeVal').textContent = `${state.badge2PtSize} pt`;
-      }
-
-      state.badge2TextGradEnabled = b2.textGradEnabled === true;
-      state.badge2TextGradColor1 = b2.textGradColor1 || '#ffffff';
-      state.badge2TextGradColor2 = b2.textGradColor2 || '#c084fc';
-      state.badge2TextGradDir = b2.textGradDir || 'vertical';
-      if (document.getElementById('badge2TextGradEnable')) document.getElementById('badge2TextGradEnable').checked = state.badge2TextGradEnabled;
-      if (document.getElementById('badge2TextGradControls')) document.getElementById('badge2TextGradControls').style.display = state.badge2TextGradEnabled ? 'block' : 'none';
-      if (document.getElementById('badge2TextGrad1')) document.getElementById('badge2TextGrad1').value = state.badge2TextGradColor1;
-      if (document.getElementById('badge2TextGrad2')) document.getElementById('badge2TextGrad2').value = state.badge2TextGradColor2;
-      if (document.getElementById('badge2TextGrad1Hex')) document.getElementById('badge2TextGrad1Hex').textContent = state.badge2TextGradColor1;
-      if (document.getElementById('badge2TextGrad2Hex')) document.getElementById('badge2TextGrad2Hex').textContent = state.badge2TextGradColor2;
-      setBadge2TextGradDir(state.badge2TextGradDir);
-
-      if (b2.position && document.getElementById('seriesPosition')) document.getElementById('seriesPosition').value = b2.position;
-      state.badge2PosX = b2.posX !== undefined ? b2.posX : 15;
-      state.badge2PosY = b2.posY !== undefined ? b2.posY : 15;
-      if (document.getElementById('seriesPosX')) document.getElementById('seriesPosX').value = state.badge2PosX;
-      if (document.getElementById('seriesPosY')) document.getElementById('seriesPosY').value = state.badge2PosY;
-      if (document.getElementById('seriesPosXVal')) document.getElementById('seriesPosXVal').textContent = `${state.badge2PosX}%`;
-      if (document.getElementById('seriesPosYVal')) document.getElementById('seriesPosYVal').textContent = `${state.badge2PosY}%`;
-      const cSeries = document.getElementById('seriesCustomPosContainer');
-      if (cSeries) cSeries.style.display = (b2.position === 'custom' || !b2.position) ? 'block' : 'none';
-      if (b2.frame && document.getElementById('badge2Frame')) document.getElementById('badge2Frame').value = b2.frame;
-      if (b2.scale !== undefined && document.getElementById('seriesScale')) {
-        document.getElementById('seriesScale').value = b2.scale;
-        document.getElementById('seriesScaleVal').textContent = `${b2.scale}%`;
-      }
-      if (b2.opacity !== undefined && document.getElementById('seriesOpacity')) {
-        document.getElementById('seriesOpacity').value = b2.opacity;
-        document.getElementById('seriesOpacityVal').textContent = `${b2.opacity}%`;
-      }
-      if (b2.edgePadding !== undefined) {
-        state.badge2EdgePadding = b2.edgePadding;
-        if (document.getElementById('seriesPadding')) document.getElementById('seriesPadding').value = b2.edgePadding;
-        if (document.getElementById('seriesPaddingVal')) document.getElementById('seriesPaddingVal').textContent = `${b2.edgePadding} px`;
-      }
-      if (b2.innerPadding !== undefined) {
-        state.badge2InnerPadding = b2.innerPadding;
-        if (document.getElementById('seriesInnerPadding')) document.getElementById('seriesInnerPadding').value = b2.innerPadding;
-        if (document.getElementById('seriesInnerPaddingVal')) document.getElementById('seriesInnerPaddingVal').textContent = `${b2.innerPadding} px`;
-      }
-
-      setSeriesBadgeMode(state.badge2Type);
-
-      if (b2.imageData) {
-        const sImg = new Image();
-        sImg.onload = () => {
-          state.badge2Img = sImg;
-          state.badge2FileName = b2.fileName || '';
-          const btn = document.getElementById('seriesLogoUploadBtnText');
-          if (btn) btn.textContent = state.badge2FileName ? state.badge2FileName.substring(0, 16) + '...' : 'Default Series Logo Loaded';
-          const btnClear = document.getElementById('btnClearSeriesLogo');
-          if (btnClear) btnClear.style.display = 'block';
-          renderIconMap();
-        };
-        sImg.src = b2.imageData;
-      }
-    }
-
-    if (d.badge3) {
-      const b3 = d.badge3;
-      state.badge3Enabled = b3.enabled === true;
-      if (document.getElementById('enableBadge3')) document.getElementById('enableBadge3').checked = state.badge3Enabled;
-      state.badge3Type = b3.type || 'text';
-      state.badge3Preset = b3.preset || 'props';
-      state.badge3Text = b3.text || 'EXTRA 1';
-      state.badge3ColorTheme = b3.colorTheme || 'emerald';
-      state.badge3LetterSpacing = b3.letterSpacing === true;
-      state.badge3Font = b3.font || 'Montserrat';
-      state.badge3Bold = b3.bold !== false;
-      state.badge3Italic = b3.italic === true;
-      state.badge3PtSize = b3.ptSize || 13;
-
-      state.badge3ColorMode = b3.colorMode || 'theme';
-      state.badge3CustomBg1 = b3.customBg1 || '#06241a';
-      state.badge3CustomBg2 = b3.customBg2 || '#0d3d2c';
-      state.badge3CustomStroke = b3.customStroke || '#34d399';
-      state.badge3CustomText = b3.customText || '#ffffff';
-      state.badge3SolidBg = b3.solidBg || '#06241a';
-      state.badge3SolidStroke = b3.solidStroke || '#34d399';
-      state.badge3SolidText = b3.solidText || '#ffffff';
-      state.badge3GradDir = b3.gradDir || 'diagonal';
-
-      setExtra1ColorTheme(state.badge3ColorTheme);
-      setExtra1ColorMode(state.badge3ColorMode);
-
-      if (document.getElementById('extra1TextInput')) document.getElementById('extra1TextInput').value = state.badge3Text;
-      onExtra1TextChange(false);
-      if (document.getElementById('extra1FontFamily')) document.getElementById('extra1FontFamily').value = state.badge3Font;
-      document.getElementById('btnExtra1Bold')?.classList.toggle('active', state.badge3Bold);
-      document.getElementById('btnExtra1Italic')?.classList.toggle('active', state.badge3Italic);
-      if (document.getElementById('extra1PtSize')) {
-        document.getElementById('extra1PtSize').value = state.badge3PtSize;
-        if (document.getElementById('extra1PtSizeVal')) document.getElementById('extra1PtSizeVal').textContent = `${state.badge3PtSize} pt`;
-      }
-
-      state.badge3TextGradEnabled = b3.textGradEnabled === true;
-      state.badge3TextGradColor1 = b3.textGradColor1 || '#ffffff';
-      state.badge3TextGradColor2 = b3.textGradColor2 || '#34d399';
-      state.badge3TextGradDir = b3.textGradDir || 'vertical';
-      if (document.getElementById('badge3TextGradEnable')) document.getElementById('badge3TextGradEnable').checked = state.badge3TextGradEnabled;
-      if (document.getElementById('badge3TextGradControls')) document.getElementById('badge3TextGradControls').style.display = state.badge3TextGradEnabled ? 'block' : 'none';
-      if (document.getElementById('badge3TextGrad1')) document.getElementById('badge3TextGrad1').value = state.badge3TextGradColor1;
-      if (document.getElementById('badge3TextGrad2')) document.getElementById('badge3TextGrad2').value = state.badge3TextGradColor2;
-      if (document.getElementById('badge3TextGrad1Hex')) document.getElementById('badge3TextGrad1Hex').textContent = state.badge3TextGradColor1;
-      if (document.getElementById('badge3TextGrad2Hex')) document.getElementById('badge3TextGrad2Hex').textContent = state.badge3TextGradColor2;
-      setBadge3TextGradDir(state.badge3TextGradDir);
-
-      if (b3.position && document.getElementById('extra1Position')) document.getElementById('extra1Position').value = b3.position;
-      state.badge3PosX = b3.posX !== undefined ? b3.posX : 20;
-      state.badge3PosY = b3.posY !== undefined ? b3.posY : 80;
-      if (document.getElementById('extra1PosX')) document.getElementById('extra1PosX').value = state.badge3PosX;
-      if (document.getElementById('extra1PosY')) document.getElementById('extra1PosY').value = state.badge3PosY;
-      if (document.getElementById('extra1PosXVal')) document.getElementById('extra1PosXVal').textContent = `${state.badge3PosX}%`;
-      if (document.getElementById('extra1PosYVal')) document.getElementById('extra1PosYVal').textContent = `${state.badge3PosY}%`;
-      const c1 = document.getElementById('extra1CustomPosContainer');
-      if (c1) c1.style.display = (b3.position === 'custom') ? 'block' : 'none';
-      if (b3.frame && document.getElementById('badge3Frame')) document.getElementById('badge3Frame').value = b3.frame;
-      if (b3.scale !== undefined && document.getElementById('extra1Scale')) {
-        document.getElementById('extra1Scale').value = b3.scale;
-        document.getElementById('extra1ScaleVal').textContent = `${b3.scale}%`;
-      }
-      if (b3.opacity !== undefined && document.getElementById('extra1Opacity')) {
-        document.getElementById('extra1Opacity').value = b3.opacity;
-        document.getElementById('extra1OpacityVal').textContent = `${b3.opacity}%`;
-      }
-      if (b3.edgePadding !== undefined) {
-        state.badge3EdgePadding = b3.edgePadding;
-        if (document.getElementById('extra1Padding')) document.getElementById('extra1Padding').value = b3.edgePadding;
-        if (document.getElementById('extra1PaddingVal')) document.getElementById('extra1PaddingVal').textContent = `${b3.edgePadding} px`;
-      }
-      if (b3.innerPadding !== undefined) {
-        state.badge3InnerPadding = b3.innerPadding;
-      }
-      setExtra1BadgeMode(state.badge3Type);
-
-      if (b3.imageData) {
-        const e1Img = new Image();
-        e1Img.onload = () => {
-          state.badge3Img = e1Img;
-          state.badge3FileName = b3.fileName || '';
-          const btn = document.getElementById('extra1LogoUploadBtnText');
-          if (btn) btn.textContent = state.badge3FileName ? state.badge3FileName.substring(0, 16) + '...' : 'Default Extra 1 Loaded';
-          const btnClear = document.getElementById('btnClearExtra1Logo');
-          if (btnClear) btnClear.style.display = 'block';
-          renderIconMap();
-        };
-        e1Img.src = b3.imageData;
-      }
-    }
-
-    if (d.badge4) {
-      const b4 = d.badge4;
-      state.badge4Enabled = b4.enabled === true;
-      if (document.getElementById('enableBadge4')) document.getElementById('enableBadge4').checked = state.badge4Enabled;
-      state.badge4Type = b4.type || 'text';
-      state.badge4Preset = b4.preset || 'hazard';
-      state.badge4Text = b4.text || 'EXTRA 2';
-      state.badge4ColorTheme = b4.colorTheme || 'amber';
-      state.badge4LetterSpacing = b4.letterSpacing === true;
-      state.badge4Font = b4.font || 'Montserrat';
-      state.badge4Bold = b4.bold !== false;
-      state.badge4Italic = b4.italic === true;
-      state.badge4PtSize = b4.ptSize || 13;
-
-      state.badge4ColorMode = b4.colorMode || 'theme';
-      state.badge4CustomBg1 = b4.customBg1 || '#241806';
-      state.badge4CustomBg2 = b4.customBg2 || '#3d2a0d';
-      state.badge4CustomStroke = b4.customStroke || '#fbbf24';
-      state.badge4CustomText = b4.customText || '#ffffff';
-      state.badge4SolidBg = b4.solidBg || '#241806';
-      state.badge4SolidStroke = b4.solidStroke || '#fbbf24';
-      state.badge4SolidText = b4.solidText || '#ffffff';
-      state.badge4GradDir = b4.gradDir || 'diagonal';
-
-      setExtra2ColorTheme(state.badge4ColorTheme);
-      setExtra2ColorMode(state.badge4ColorMode);
-
-      if (document.getElementById('extra2TextInput')) document.getElementById('extra2TextInput').value = state.badge4Text;
-      onExtra2TextChange(false);
-      if (document.getElementById('extra2FontFamily')) document.getElementById('extra2FontFamily').value = state.badge4Font;
-      document.getElementById('btnExtra2Bold')?.classList.toggle('active', state.badge4Bold);
-      document.getElementById('btnExtra2Italic')?.classList.toggle('active', state.badge4Italic);
-      if (document.getElementById('extra2PtSize')) {
-        document.getElementById('extra2PtSize').value = state.badge4PtSize;
-        if (document.getElementById('extra2PtSizeVal')) document.getElementById('extra2PtSizeVal').textContent = `${state.badge4PtSize} pt`;
-      }
-
-      state.badge4TextGradEnabled = b4.textGradEnabled === true;
-      state.badge4TextGradColor1 = b4.textGradColor1 || '#ffffff';
-      state.badge4TextGradColor2 = b4.textGradColor2 || '#fbbf24';
-      state.badge4TextGradDir = b4.textGradDir || 'vertical';
-      if (document.getElementById('badge4TextGradEnable')) document.getElementById('badge4TextGradEnable').checked = state.badge4TextGradEnabled;
-      if (document.getElementById('badge4TextGradControls')) document.getElementById('badge4TextGradControls').style.display = state.badge4TextGradEnabled ? 'block' : 'none';
-      if (document.getElementById('badge4TextGrad1')) document.getElementById('badge4TextGrad1').value = state.badge4TextGradColor1;
-      if (document.getElementById('badge4TextGrad2')) document.getElementById('badge4TextGrad2').value = state.badge4TextGradColor2;
-      if (document.getElementById('badge4TextGrad1Hex')) document.getElementById('badge4TextGrad1Hex').textContent = state.badge4TextGradColor1;
-      if (document.getElementById('badge4TextGrad2Hex')) document.getElementById('badge4TextGrad2Hex').textContent = state.badge4TextGradColor2;
-      setBadge4TextGradDir(state.badge4TextGradDir);
-
-      if (b4.position && document.getElementById('extra2Position')) document.getElementById('extra2Position').value = b4.position;
-      state.badge4PosX = b4.posX !== undefined ? b4.posX : 80;
-      state.badge4PosY = b4.posY !== undefined ? b4.posY : 20;
-      if (document.getElementById('extra2PosX')) document.getElementById('extra2PosX').value = state.badge4PosX;
-      if (document.getElementById('extra2PosY')) document.getElementById('extra2PosY').value = state.badge4PosY;
-      if (document.getElementById('extra2PosXVal')) document.getElementById('extra2PosXVal').textContent = `${state.badge4PosX}%`;
-      if (document.getElementById('extra2PosYVal')) document.getElementById('extra2PosYVal').textContent = `${state.badge4PosY}%`;
-      const c2 = document.getElementById('extra2CustomPosContainer');
-      if (c2) c2.style.display = (b4.position === 'custom') ? 'block' : 'none';
-      if (b4.frame && document.getElementById('badge4Frame')) document.getElementById('badge4Frame').value = b4.frame;
-      if (b4.scale !== undefined && document.getElementById('extra2Scale')) {
-        document.getElementById('extra2Scale').value = b4.scale;
-        document.getElementById('extra2ScaleVal').textContent = `${b4.scale}%`;
-      }
-      if (b4.opacity !== undefined && document.getElementById('extra2Opacity')) {
-        document.getElementById('extra2Opacity').value = b4.opacity;
-        document.getElementById('extra2OpacityVal').textContent = `${b4.opacity}%`;
-      }
-      if (b4.edgePadding !== undefined) {
-        state.badge4EdgePadding = b4.edgePadding;
-        if (document.getElementById('extra2Padding')) document.getElementById('extra2Padding').value = b4.edgePadding;
-        if (document.getElementById('extra2PaddingVal')) document.getElementById('extra2PaddingVal').textContent = `${b4.edgePadding} px`;
-      }
-      if (b4.innerPadding !== undefined) {
-        state.badge4InnerPadding = b4.innerPadding;
-      }
-      setExtra2BadgeMode(state.badge4Type);
-
-      if (b4.imageData) {
-        const e2Img = new Image();
-        e2Img.onload = () => {
-          state.badge4Img = e2Img;
-          state.badge4FileName = b4.fileName || '';
-          const btn = document.getElementById('extra2LogoUploadBtnText');
-          if (btn) btn.textContent = state.badge4FileName ? state.badge4FileName.substring(0, 16) + '...' : 'Default Extra 2 Loaded';
-          const btnClear = document.getElementById('btnClearExtra2Logo');
-          if (btnClear) btnClear.style.display = 'block';
-          renderIconMap();
-        };
-        e2Img.src = b4.imageData;
-      }
-    }
-
-    const dot1 = document.getElementById('dotBadge1');
-    if (dot1) dot1.className = state.badge1Enabled ? 'badge-tab-indicator active-dot' : 'badge-tab-indicator';
-    const dot2 = document.getElementById('dotBadge2');
-    if (dot2) dot2.className = state.badge2Enabled ? 'badge-tab-indicator active-dot' : 'badge-tab-indicator';
-    const dot3 = document.getElementById('dotBadge3');
-    if (dot3) dot3.className = state.badge3Enabled ? 'badge-tab-indicator active-dot' : 'badge-tab-indicator';
-    const dot4 = document.getElementById('dotBadge4');
-    if (dot4) dot4.className = state.badge4Enabled ? 'badge-tab-indicator active-dot' : 'badge-tab-indicator';
-
-    updateBadgeDefaultsUI();
-    renderIconMap();
-    if (!silent) showToast('Restored default Creator, Series & Extra badge setup!');
-    return true;
-  } catch (e) {
-    console.error('Failed to load badge defaults', e);
-    return false;
+    return;
   }
-}
 
-export function resetIconBadgeDefaults() {
-  localStorage.removeItem(BADGE_DEFAULTS_STORAGE_KEY);
-  updateBadgeDefaultsUI();
-  showToast('Saved defaults cleared. System presets will be used on next reload.');
-}
-
-export function updateBadgeDefaultsUI() {
-  const defaults = localStorage.getItem(BADGE_DEFAULTS_STORAGE_KEY);
-  const infoEl = document.getElementById('badgeDefaultsInfo');
-  const btnReset = document.getElementById('btnResetBadgeDefaults');
-  const cardBadge = document.getElementById('badgeDefaultsCardBadge');
-
-  if (defaults) {
-    try {
-      const d = JSON.parse(defaults);
-      const dateStr = d.savedAt ? new Date(d.savedAt).toLocaleDateString() : 'Previously';
-      if (infoEl) infoEl.innerHTML = `<span style="color: var(--accent-emerald); font-weight: 600;">✓ Active:</span> Creator &amp; Series badges saved on ${dateStr}. These badges automatically load when opening the app.`;
-      if (btnReset) btnReset.style.display = 'inline-flex';
-      if (cardBadge) {
-        cardBadge.textContent = 'Active Defaults';
-        cardBadge.style.background = 'rgba(16, 185, 129, 0.2)';
-        cardBadge.style.color = 'var(--accent-emerald)';
-      }
-    } catch (e) {}
-  } else {
-    if (infoEl) infoEl.innerHTML = 'No persistent defaults saved yet. Click <em>"Save Current as Default"</em> above to make your current branding badges stick permanently across app reloads.';
-    if (btnReset) btnReset.style.display = 'none';
-    if (cardBadge) {
-      cardBadge.textContent = 'None Saved';
-      cardBadge.style.background = 'rgba(148, 163, 184, 0.15)';
-      cardBadge.style.color = 'var(--text-muted)';
-    }
+  const fromKey = fromKeyOrSpec;
+  const val = selectEl?.value;
+  if (!val) return;
+  if (val === 'all') {
+    ['creator', 'series', 'extra1', 'extra2'].forEach((k) => {
+      if (k !== fromKey) copyBadgeStyle(fromKey, k);
+    });
+  } else if (val.startsWith('to:')) {
+    copyBadgeStyle(fromKey, val.slice(3));
+  } else if (val.startsWith('from:')) {
+    copyBadgeStyle(val.slice(5), fromKey);
   }
-}
-
-export function initBadgeDefaults() {
-  populateFontDropdowns();
-  updateBadgeDefaultsUI();
-  loadIconBadgeDefaults(true);
+  selectEl.value = '';
 }
 
 // ==========================================
-// Custom Icon Background Controls & Handlers
+// Named Exports for Badge 1 (Creator)
 // ==========================================
+export const toggleBadge1Enable = (c) => toggleBadgeLayerEnable(1, c);
+export const setCreatorBadgeMode = (m) => setBadgeLayerMode(1, m);
+export const onBadge1TextChange = () => onBadgeLayerTextChange(1);
+export const clearCreatorText = () => clearBadgeLayerText(1);
+export const setBadge1TextPreset = (v) => setBadgeLayerTextPreset(1, v);
+export const onBadge1FontChange = () => renderIconMap();
+export const toggleBadge1Bold = () => toggleBadgeLayerTypoBtn(1, 'boldBtnId');
+export const toggleBadge1Italic = () => toggleBadgeLayerTypoBtn(1, 'italicBtnId');
+export const toggleBadge1LetterSpacing = () => toggleBadgeLayerTypoBtn(1, 'spacingBtnId');
+export const onBadge1PtSizeChange = () => onBadgeLayerPtSizeChange(1);
+export const toggleBadge1TextGrad = (c) => toggleBadgeLayerTextGrad(1, c);
+export const onBadge1TextGradInput = () => onBadgeLayerTextGradInput(1);
+export const setBadge1TextGradDir = (d) => setBadgeLayerTextGradDir(1, d);
+export const applyBadge1TextGradPresetByName = (n) => applyBadgeLayerTextGradPreset(1, n);
+export const updateCreatorGradPreview = () => updateBadgeLayerGradPreview(1);
+export const setCreatorColorMode = (m) => setBadgeLayerColorMode(1, m);
+export const setCreatorColorTheme = (t) => setBadgeLayerColorTheme(1, t);
+export const setCreatorGradDirection = (d) => setBadgeLayerGradDirection(1, d);
+export const onCreatorCustomColorInput = () => onBadgeLayerCustomColorInput(1);
+export const onCreatorSolidColorInput = () => onBadgeLayerSolidColorInput(1);
+export const applyCreatorGradPreset = (c1, c2, s, t) => applyBadgeLayerGradPreset(1, c1, c2, s, t);
+export const applyCreatorGradPresetByName = (n) => applyBadgeLayerGradPresetByName(1, n);
+export const handleDesignerLogoSelect = (e) => handleBadgeLayerLogoSelect(1, e);
+export const clearDesignerLogo = () => clearBadgeLayerLogo(1);
+export const onCreatorPositionChange = () => onBadgeLayerPositionChange(1);
+export const onCreatorCoordChange = () => onBadgeLayerCoordChange(1);
+export const snapCreatorCoord = (x, y) => snapBadgeLayerCoord(1, x, y);
+export const onBadge1PaddingChange = () => onBadgeLayerSliderChange(1, 'paddingId', 'paddingValId', ' px');
+export const onBadge1InnerPaddingChange = () => onBadgeLayerSliderChange(1, 'innerPaddingId', 'innerPaddingValId', ' px');
+export const onIconBadgeScaleChange = () => onBadgeLayerSliderChange(1, 'scaleId', 'scaleValId', '%');
+export const onIconBadgeOpacityChange = () => onBadgeLayerSliderChange(1, 'opacityId', 'opacityValId', '%');
 
-export function onIconBgStyleChange() {
-  const val = document.getElementById('iconBgStyle')?.value || 'cs2-dark';
-  const customPanel = document.getElementById('customIconBgPanel');
-  if (customPanel) {
-    customPanel.style.display = (val === 'custom') ? 'block' : 'none';
-  }
-  renderIconMap();
-}
-
-export function setCustomIconBgType(type) {
-  state.customIconBgType = type;
-  const pImg = document.getElementById('customBgImageSubpanel');
-  const pGrad = document.getElementById('customBgGradientSubpanel');
-  const pColor = document.getElementById('customBgColorSubpanel');
-  const badge = document.getElementById('customBgModeBadge');
-
-  if (pImg) pImg.style.display = (type === 'image') ? 'block' : 'none';
-  if (pGrad) pGrad.style.display = (type === 'gradient') ? 'block' : 'none';
-  if (pColor) pColor.style.display = (type === 'color') ? 'block' : 'none';
-
-  if (badge) {
-    if (type === 'image') badge.textContent = 'Image Upload';
-    else if (type === 'gradient') badge.textContent = 'Dual Gradient';
-    else badge.textContent = 'Solid Color';
-  }
-
-  renderIconMap();
-}
-
-export function handleIconBgImageSelect(e) {
-  if (e.target.files && e.target.files.length > 0) {
-    const file = e.target.files[0];
-    state.iconBgFileName = file.name;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        state.iconBgImg = img;
-        const btn = document.getElementById('iconBgFileNameText');
-        if (btn) btn.textContent = file.name.length > 20 ? (file.name.substring(0, 18) + '...') : file.name;
-        const btnClear = document.getElementById('btnClearIconBgImg');
-        if (btnClear) btnClear.style.display = 'block';
-        renderIconMap();
-        showToast('Custom backdrop image loaded');
-      };
-      img.src = event.target.result;
-    };
-    reader.readAsDataURL(file);
-  }
-}
-
-export function clearIconBgImage() {
-  state.iconBgImg = null;
-  state.iconBgFileName = '';
-  const btn = document.getElementById('iconBgFileNameText');
-  if (btn) btn.textContent = '📁 Upload Custom Backdrop...';
-  const btnClear = document.getElementById('btnClearIconBgImg');
-  if (btnClear) btnClear.style.display = 'none';
-  const inp = document.getElementById('iconBgFileInput');
-  if (inp) inp.value = '';
-  renderIconMap();
-  showToast('Removed custom backdrop image');
-}
-
-export function applyProceduralBackdrop(type) {
-  const c = document.createElement('canvas');
-  c.width = 512;
-  c.height = 512;
-  const ctx = c.getContext('2d');
-
-  if (type === 'wet-asphalt') {
-    ctx.fillStyle = '#11161d';
-    ctx.fillRect(0, 0, 512, 512);
-
-    for (let i = 0; i < 2200; i++) {
-      const rx = (Math.sin(i * 12.9898) * 43758.5453 % 1 + 1) % 1 * 512;
-      const ry = (Math.cos(i * 78.233) * 43758.5453 % 1 + 1) % 1 * 512;
-      const alpha = 0.04 + ((i % 12) / 100);
-      ctx.fillStyle = i % 2 === 0 ? `rgba(255,255,255,${alpha})` : `rgba(0,0,0,${alpha * 1.6})`;
-      ctx.fillRect(rx, ry, (i % 3) + 1, (i % 3) + 1);
-    }
-
-    const sheen = ctx.createLinearGradient(0, 80, 512, 420);
-    sheen.addColorStop(0, 'rgba(56, 189, 248, 0.05)');
-    sheen.addColorStop(0.5, 'rgba(255, 255, 255, 0.09)');
-    sheen.addColorStop(1, 'rgba(0, 0, 0, 0.25)');
-    ctx.fillStyle = sheen;
-    ctx.fillRect(0, 0, 512, 512);
-
-    state.iconBgFileName = 'Preset: Wet Asphalt';
-  } else if (type === 'concrete') {
-    ctx.fillStyle = '#2a3038';
-    ctx.fillRect(0, 0, 512, 512);
-
-    for (let i = 0; i < 1800; i++) {
-      const rx = (Math.sin(i * 37.1) * 43758.5453 % 1 + 1) % 1 * 512;
-      const ry = (Math.cos(i * 91.7) * 43758.5453 % 1 + 1) % 1 * 512;
-      const alpha = 0.03 + ((i % 8) / 100);
-      ctx.fillStyle = i % 2 === 0 ? `rgba(255,255,255,${alpha})` : `rgba(0,0,0,${alpha * 1.2})`;
-      ctx.fillRect(rx, ry, 2, 2);
-    }
-
-    ctx.strokeStyle = 'rgba(15, 20, 26, 0.5)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(0, 256);
-    ctx.lineTo(512, 256);
-    ctx.stroke();
-
-    state.iconBgFileName = 'Preset: Concrete';
-  } else if (type === 'studio-radial') {
-    const sGrad = ctx.createRadialGradient(256, 210, 20, 256, 256, 360);
-    sGrad.addColorStop(0, '#2b394a');
-    sGrad.addColorStop(0.5, '#151d28');
-    sGrad.addColorStop(1, '#070b10');
-    ctx.fillStyle = sGrad;
-    ctx.fillRect(0, 0, 512, 512);
-
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.2)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(0, 360);
-    ctx.lineTo(512, 360);
-    ctx.stroke();
-
-    state.iconBgFileName = 'Preset: Studio Spot';
-  } else if (type === 'carbon') {
-    ctx.fillStyle = '#0f1318';
-    ctx.fillRect(0, 0, 512, 512);
-
-    ctx.fillStyle = '#1c222b';
-    const patSize = 16;
-    for (let y = 0; y < 512; y += patSize) {
-      for (let x = 0; x < 512; x += patSize) {
-        if ((Math.floor(x / patSize) + Math.floor(y / patSize)) % 2 === 0) {
-          ctx.fillRect(x, y, patSize, patSize);
-        }
-      }
-    }
-    state.iconBgFileName = 'Preset: Carbon Weave';
-  }
-
-  const img = new Image();
-  img.onload = () => {
-    state.iconBgImg = img;
-    const btn = document.getElementById('iconBgFileNameText');
-    if (btn) btn.textContent = state.iconBgFileName;
-    const btnClear = document.getElementById('btnClearIconBgImg');
-    if (btnClear) btnClear.style.display = 'block';
-    renderIconMap();
-    showToast(`Applied ${state.iconBgFileName}`);
+export function applyPresetLogo(preset) {
+  if (!preset) return;
+  const labels = {
+    star: '★ CS2 MOD',
+    shield: '🛡️ VERIFIED',
+    crown: '👑 VIP CREATOR',
+    bolt: '⚡ TURBO ASSET',
+    cube: '🧊 3D DECAL',
+    sparkle: '✨ HD PACK'
   };
-  img.src = c.toDataURL('image/png');
+  setCreatorBadgeMode('text');
+  setBadge1TextPreset(labels[preset] || preset.toUpperCase());
 }
 
-export function onIconBgFitChange(fit) {
-  state.iconBgFit = fit;
+// ==========================================
+// Named Exports for Badge 2 (Series)
+// ==========================================
+export const toggleBadge2Enable = (c) => toggleBadgeLayerEnable(2, c);
+export const setSeriesBadgeMode = (m) => setBadgeLayerMode(2, m);
+export const onSeriesTextChange = () => onBadgeLayerTextChange(2);
+export const clearSeriesText = () => clearBadgeLayerText(2);
+export const setSeriesTextPreset = (v) => setBadgeLayerTextPreset(2, v);
+export const onSeriesFontChange = () => renderIconMap();
+export const toggleSeriesBold = () => toggleBadgeLayerTypoBtn(2, 'boldBtnId');
+export const toggleSeriesItalic = () => toggleBadgeLayerTypoBtn(2, 'italicBtnId');
+export const toggleSeriesLetterSpacing = () => toggleBadgeLayerTypoBtn(2, 'spacingBtnId');
+export const onSeriesPtSizeChange = () => onBadgeLayerPtSizeChange(2);
+export const toggleBadge2TextGrad = (c) => toggleBadgeLayerTextGrad(2, c);
+export const onBadge2TextGradInput = () => onBadgeLayerTextGradInput(2);
+export const setBadge2TextGradDir = (d) => setBadgeLayerTextGradDir(2, d);
+export const applyBadge2TextGradPresetByName = (n) => applyBadgeLayerTextGradPreset(2, n);
+export const updateSeriesGradPreview = () => updateBadgeLayerGradPreview(2);
+export const setSeriesColorMode = (m) => setBadgeLayerColorMode(2, m);
+export const setSeriesColorTheme = (t) => setBadgeLayerColorTheme(2, t);
+export const setSeriesGradDirection = (d) => setBadgeLayerGradDirection(2, d);
+export const onSeriesCustomColorInput = () => onBadgeLayerCustomColorInput(2);
+export const onSeriesSolidColorInput = () => onBadgeLayerSolidColorInput(2);
+export const applySeriesGradPreset = (c1, c2, s, t) => applyBadgeLayerGradPreset(2, c1, c2, s, t);
+export const applySeriesGradPresetByName = (n) => applyBadgeLayerGradPresetByName(2, n);
+export const handleSeriesLogoSelect = (e) => handleBadgeLayerLogoSelect(2, e);
+export const clearSeriesLogo = () => clearBadgeLayerLogo(2);
+export const onSeriesPositionChange = () => onBadgeLayerPositionChange(2);
+export const onSeriesCoordChange = () => onBadgeLayerCoordChange(2);
+export const snapSeriesCoord = (x, y) => snapBadgeLayerCoord(2, x, y);
+export const onBadge2PaddingChange = () => onBadgeLayerSliderChange(2, 'paddingId', 'paddingValId', ' px');
+export const onSeriesPaddingChange = onBadge2PaddingChange;
+export const onBadge2InnerPaddingChange = () => onBadgeLayerSliderChange(2, 'innerPaddingId', 'innerPaddingValId', ' px');
+export const onSeriesInnerPaddingChange = onBadge2InnerPaddingChange;
+export const onSeriesScaleChange = () => onBadgeLayerSliderChange(2, 'scaleId', 'scaleValId', '%');
+export const onSeriesBadgeScaleChange = onSeriesScaleChange;
+export const onSeriesOpacityChange = () => onBadgeLayerSliderChange(2, 'opacityId', 'opacityValId', '%');
+export const onSeriesBadgeOpacityChange = onSeriesOpacityChange;
+export const onSeriesFrameChange = () => renderIconMap();
+
+export function applySeriesPreset(preset) {
+  const p = SERIES_PRESET_MAP[preset];
+  if (p) {
+    setElValue('seriesTextInput', p.text);
+    setElValue('seriesThemeSelect', p.theme);
+  }
   renderIconMap();
 }
 
-export function onIconBgBlurChange(val) {
-  state.iconBgBlur = parseInt(val, 10) || 0;
-  const label = document.getElementById('iconBgBlurVal');
-  if (label) label.textContent = `${state.iconBgBlur} px`;
+// ==========================================
+// Named Exports for Badge 3 (Extra 1) & Badge 4 (Extra 2)
+// ==========================================
+export const toggleBadge3Enable = (c) => toggleBadgeLayerEnable(3, c);
+export const setExtra1BadgeMode = (m) => setBadgeLayerMode(3, m);
+export const onExtra1TextChange = () => onBadgeLayerTextChange(3);
+export const clearExtra1Text = () => clearBadgeLayerText(3);
+export const setExtra1TextPreset = (v) => setBadgeLayerTextPreset(3, v);
+export const onExtra1FontChange = () => renderIconMap();
+export const toggleExtra1Bold = () => toggleBadgeLayerTypoBtn(3, 'boldBtnId');
+export const toggleExtra1Italic = () => toggleBadgeLayerTypoBtn(3, 'italicBtnId');
+export const toggleExtra1LetterSpacing = () => toggleBadgeLayerTypoBtn(3, 'spacingBtnId');
+export const onExtra1PtSizeChange = () => onBadgeLayerPtSizeChange(3);
+export const toggleBadge3TextGrad = (c) => toggleBadgeLayerTextGrad(3, c);
+export const onBadge3TextGradInput = () => onBadgeLayerTextGradInput(3);
+export const setBadge3TextGradDir = (d) => setBadgeLayerTextGradDir(3, d);
+export const applyBadge3TextGradPresetByName = (n) => applyBadgeLayerTextGradPreset(3, n);
+export const setExtra1ColorMode = (m) => setBadgeLayerColorMode(3, m);
+export const setExtra1ColorTheme = (t) => setBadgeLayerColorTheme(3, t);
+export const applyExtra1GradPresetByName = (n) => applyBadgeLayerGradPresetByName(3, n);
+export const onExtra1CustomColorInput = () => onBadgeLayerCustomColorInput(3);
+export const onExtra1SolidColorInput = () => onBadgeLayerSolidColorInput(3);
+export const applyExtra1Preset = (preset) => {
+  const p = SERIES_PRESET_MAP[preset];
+  if (p) {
+    setElValue('extra1TextInput', p.text);
+    setElValue('extra1ThemeSelect', p.theme);
+  }
   renderIconMap();
-}
+};
+export const handleExtra1LogoSelect = (e) => handleBadgeLayerLogoSelect(3, e);
+export const clearExtra1Logo = () => clearBadgeLayerLogo(3);
+export const onExtra1PositionChange = () => onBadgeLayerPositionChange(3);
+export const onExtra1CoordChange = () => onBadgeLayerCoordChange(3);
+export const snapExtra1Coord = (x, y) => snapBadgeLayerCoord(3, x, y);
+export const onExtra1ScaleChange = () => onBadgeLayerSliderChange(3, 'scaleId', 'scaleValId', '%');
+export const onExtra1PaddingChange = () => onBadgeLayerSliderChange(3, 'paddingId', 'paddingValId', ' px');
+export const onExtra1OpacityChange = () => onBadgeLayerSliderChange(3, 'opacityId', 'opacityValId', '%');
 
-export function onIconBgBrightnessChange(val) {
-  state.iconBgBrightness = parseInt(val, 10) || 100;
-  const label = document.getElementById('iconBgBrightnessVal');
-  if (label) label.textContent = `${state.iconBgBrightness}%`;
+export const toggleBadge4Enable = (c) => toggleBadgeLayerEnable(4, c);
+export const setExtra2BadgeMode = (m) => setBadgeLayerMode(4, m);
+export const onExtra2TextChange = () => onBadgeLayerTextChange(4);
+export const clearExtra2Text = () => clearBadgeLayerText(4);
+export const setExtra2TextPreset = (v) => setBadgeLayerTextPreset(4, v);
+export const onExtra2FontChange = () => renderIconMap();
+export const toggleExtra2Bold = () => toggleBadgeLayerTypoBtn(4, 'boldBtnId');
+export const toggleExtra2Italic = () => toggleBadgeLayerTypoBtn(4, 'italicBtnId');
+export const toggleExtra2LetterSpacing = () => toggleBadgeLayerTypoBtn(4, 'spacingBtnId');
+export const onExtra2PtSizeChange = () => onBadgeLayerPtSizeChange(4);
+export const toggleBadge4TextGrad = (c) => toggleBadgeLayerTextGrad(4, c);
+export const onBadge4TextGradInput = () => onBadgeLayerTextGradInput(4);
+export const setBadge4TextGradDir = (d) => setBadgeLayerTextGradDir(4, d);
+export const applyBadge4TextGradPresetByName = (n) => applyBadgeLayerTextGradPreset(4, n);
+export const setExtra2ColorMode = (m) => setBadgeLayerColorMode(4, m);
+export const setExtra2ColorTheme = (t) => setBadgeLayerColorTheme(4, t);
+export const applyExtra2GradPresetByName = (n) => applyBadgeLayerGradPresetByName(4, n);
+export const onExtra2CustomColorInput = () => onBadgeLayerCustomColorInput(4);
+export const onExtra2SolidColorInput = () => onBadgeLayerSolidColorInput(4);
+export const applyExtra2Preset = (preset) => {
+  const p = SERIES_PRESET_MAP[preset];
+  if (p) {
+    setElValue('extra2TextInput', p.text);
+    setElValue('extra2ThemeSelect', p.theme);
+  }
   renderIconMap();
-}
-
-export function onIconBgVignetteChange(checked) {
-  state.iconBgVignette = checked;
-  renderIconMap();
-}
-
-export function onIconBgGradDirChange(dir) {
-  state.iconBgGradType = dir;
-  renderIconMap();
-}
-
-export function onIconBgGradColorsChange() {
-  const c1 = document.getElementById('iconBgGrad1Input')?.value || '#1a2638';
-  const c2 = document.getElementById('iconBgGrad2Input')?.value || '#080d16';
-  state.iconBgGrad1 = c1;
-  state.iconBgGrad2 = c2;
-  const h1 = document.getElementById('iconBgGrad1Hex');
-  const h2 = document.getElementById('iconBgGrad2Hex');
-  if (h1) h1.textContent = c1;
-  if (h2) h2.textContent = c2;
-  renderIconMap();
-}
-
-export function applyIconBgGradPreset(key) {
-  const presets = {
-    'cs2-slate': ['#1e2b3c', '#090f18'],
-    'studio-dark': ['#2d3748', '#111827'],
-    'deep-midnight': ['#0a192f', '#020c1b'],
-    'neon-cyber': ['#2e1065', '#0f051d'],
-    'emerald-transit': ['#064e3b', '#022c22'],
-    'amber-sunset': ['#451a03', '#0c0a09'],
-    'crimson-dark': ['#4c0519', '#0f0508'],
-    'royal-gold': ['#3b2d07', '#140f02'],
-    'pure-dark': ['#262626', '#050505']
-  };
-  const pair = presets[key];
-  if (!pair) return;
-  state.iconBgGrad1 = pair[0];
-  state.iconBgGrad2 = pair[1];
-  const inp1 = document.getElementById('iconBgGrad1Input');
-  const inp2 = document.getElementById('iconBgGrad2Input');
-  const h1 = document.getElementById('iconBgGrad1Hex');
-  const h2 = document.getElementById('iconBgGrad2Hex');
-  if (inp1) inp1.value = pair[0];
-  if (inp2) inp2.value = pair[1];
-  if (h1) h1.textContent = pair[0];
-  if (h2) h2.textContent = pair[1];
-  renderIconMap();
-}
-
-export function onIconBgGradGridChange(checked) {
-  state.iconBgGradGrid = checked;
-  renderIconMap();
-}
-
-export function onIconBgSolidColorChange() {
-  const color = document.getElementById('iconBgColorInput')?.value || '#141e2e';
-  state.iconBgColor = color;
-  const h = document.getElementById('iconBgColorHex');
-  if (h) h.textContent = color;
-  renderIconMap();
-}
-
-export function applyIconBgSolidSwatch(colorHex) {
-  state.iconBgColor = colorHex;
-  const inp = document.getElementById('iconBgColorInput');
-  const h = document.getElementById('iconBgColorHex');
-  if (inp) inp.value = colorHex;
-  if (h) h.textContent = colorHex;
-  renderIconMap();
-}
-
-export function renderCustomIconBackground(ctx, size) {
-  const type = state.customIconBgType || 'image';
-
-  if (type === 'image') {
-    if (state.iconBgImg) {
-      ctx.save();
-      const blur = state.iconBgBlur || 0;
-      const brightness = state.iconBgBrightness !== undefined ? state.iconBgBrightness : 100;
-      if (blur > 0 || brightness !== 100) {
-        ctx.filter = `blur(${blur}px) brightness(${brightness}%)`;
-      }
-      const img = state.iconBgImg;
-      const fit = state.iconBgFit || 'cover';
-      const iw = img.naturalWidth || img.width || 512;
-      const ih = img.naturalHeight || img.height || 512;
-
-      if (fit === 'stretch') {
-        ctx.drawImage(img, 0, 0, size, size);
-      } else if (fit === 'contain') {
-        ctx.fillStyle = '#0a0f18';
-        ctx.fillRect(0, 0, size, size);
-        const scale = Math.min(size / iw, size / ih);
-        const nw = iw * scale;
-        const nh = ih * scale;
-        const ox = (size - nw) / 2;
-        const oy = (size - nh) / 2;
-        ctx.drawImage(img, ox, oy, nw, nh);
-      } else {
-        // cover
-        const scale = Math.max(size / iw, size / ih);
-        const nw = iw * scale;
-        const nh = ih * scale;
-        const ox = (size - nw) / 2;
-        const oy = (size - nh) / 2;
-        ctx.drawImage(img, ox, oy, nw, nh);
-      }
-      ctx.restore();
-
-      if (state.iconBgVignette) {
-        const vGrad = ctx.createRadialGradient(size / 2, size / 2, size * 0.35, size / 2, size / 2, size * 0.72);
-        vGrad.addColorStop(0, 'rgba(0,0,0,0)');
-        vGrad.addColorStop(1, 'rgba(0,0,0,0.65)');
-        ctx.fillStyle = vGrad;
-        ctx.fillRect(0, 0, size, size);
-      }
-    } else {
-      const pGrad = ctx.createRadialGradient(size / 2, size * 0.45, 20, size / 2, size * 0.5, size * 0.75);
-      pGrad.addColorStop(0, '#1c2838');
-      pGrad.addColorStop(1, '#0b111a');
-      ctx.fillStyle = pGrad;
-      ctx.fillRect(0, 0, size, size);
-
-      ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
-      ctx.lineWidth = 1.5;
-      ctx.setLineDash([6, 6]);
-      ctx.strokeRect(20, 20, size - 40, size - 40);
-      ctx.setLineDash([]);
-
-      ctx.fillStyle = 'rgba(56, 189, 248, 0.85)';
-      ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('Custom Backdrop Slot', size / 2, size * 0.86);
-      ctx.font = '11px sans-serif';
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
-      ctx.fillText('Upload image or pick a procedural preset', size / 2, size * 0.91);
-    }
-  } else if (type === 'gradient') {
-    const c1 = state.iconBgGrad1 || '#1a2638';
-    const c2 = state.iconBgGrad2 || '#080d16';
-    const dir = state.iconBgGradType || 'radial';
-    let grad;
-
-    if (dir === 'radial') {
-      grad = ctx.createRadialGradient(size / 2, size / 2, 10, size / 2, size / 2, size * 0.72);
-      grad.addColorStop(0, c1);
-      grad.addColorStop(1, c2);
-    } else if (dir === 'diagonal') {
-      grad = ctx.createLinearGradient(0, 0, size, size);
-      grad.addColorStop(0, c1);
-      grad.addColorStop(1, c2);
-    } else if (dir === 'vertical') {
-      grad = ctx.createLinearGradient(0, 0, 0, size);
-      grad.addColorStop(0, c1);
-      grad.addColorStop(1, c2);
-    } else {
-      grad = ctx.createLinearGradient(0, 0, size, 0);
-      grad.addColorStop(0, c1);
-      grad.addColorStop(1, c2);
-    }
-
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, size, size);
-
-    if (state.iconBgGradGrid) {
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
-      ctx.lineWidth = 1;
-      for (let p = 0; p <= size; p += 32) {
-        ctx.beginPath();
-        ctx.moveTo(p, 0);
-        ctx.lineTo(p, size);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(0, p);
-        ctx.lineTo(size, p);
-        ctx.stroke();
-      }
-    }
-  } else if (type === 'color') {
-    ctx.fillStyle = state.iconBgColor || '#141e2e';
-    ctx.fillRect(0, 0, size, size);
-  }
-}
-
-// Icon Canvas Composition & Overlay Hit Testing
-export let lastBadgeHitBoxes = [];
-
-export function renderIconMap(cleanOnly = false) {
-  const { canvasBase, canvasIcon, ctxIcon } = getCanvases();
-  if (!canvasIcon || !ctxIcon) return;
-
-  const cardBadge = document.getElementById('cardIconBadge');
-  const cardFooter = document.getElementById('cardIconFooter');
-
-  if (cardBadge) {
-    cardBadge.textContent = 'Ready';
-    cardBadge.style.background = 'rgba(16, 185, 129, 0.2)';
-    cardBadge.style.color = 'var(--accent-emerald)';
-  }
-  if (cardFooter) {
-    cardFooter.textContent = 'CS2 UI Thumbnail (Base + Dual Watermarks)';
-  }
-
-  const size = 512;
-  canvasIcon.width = size;
-  canvasIcon.height = size;
-  ctxIcon.clearRect(0, 0, size, size);
-
-  const bgStyle = document.getElementById('iconBgStyle')?.value || 'cs2-dark';
-
-  if (bgStyle === 'cs2-dark') {
-    const grad = ctxIcon.createRadialGradient(size / 2, size / 2, 20, size / 2, size / 2, size * 0.7);
-    grad.addColorStop(0, '#1a2638');
-    grad.addColorStop(0.7, '#0d1522');
-    grad.addColorStop(1, '#080d16');
-    ctxIcon.fillStyle = grad;
-    ctxIcon.fillRect(0, 0, size, size);
-
-    ctxIcon.fillStyle = '#212f42';
-    ctxIcon.beginPath();
-    ctxIcon.moveTo(size / 2, size * 0.58);
-    ctxIcon.lineTo(size * 0.88, size * 0.76);
-    ctxIcon.lineTo(size / 2, size * 0.94);
-    ctxIcon.lineTo(size * 0.12, size * 0.76);
-    ctxIcon.closePath();
-    ctxIcon.fill();
-
-    ctxIcon.strokeStyle = '#38bdf8';
-    ctxIcon.lineWidth = 1.5;
-    ctxIcon.stroke();
-  } else if (bgStyle === 'cs2-pedestal') {
-    const grad = ctxIcon.createRadialGradient(size / 2, size * 0.45, 10, size / 2, size * 0.5, size * 0.75);
-    grad.addColorStop(0, '#1c2838');
-    grad.addColorStop(0.6, '#0f1722');
-    grad.addColorStop(1, '#070b12');
-    ctxIcon.fillStyle = grad;
-    ctxIcon.fillRect(0, 0, size, size);
-
-    const cx = size / 2;
-    const cy = size * 0.74;
-    const rx = size * 0.40;
-    const ry = size * 0.16;
-
-    ctxIcon.fillStyle = '#0f1724';
-    ctxIcon.beginPath();
-    ctxIcon.ellipse(cx, cy + 24, rx, ry, 0, 0, Math.PI);
-    ctxIcon.lineTo(cx - rx, cy);
-    ctxIcon.ellipse(cx, cy, rx, ry, 0, Math.PI, 0, true);
-    ctxIcon.closePath();
-    ctxIcon.fill();
-    ctxIcon.strokeStyle = '#1e293b';
-    ctxIcon.lineWidth = 2;
-    ctxIcon.stroke();
-
-    const topGrad = ctxIcon.createLinearGradient(cx, cy - ry, cx, cy + ry);
-    topGrad.addColorStop(0, '#243447');
-    topGrad.addColorStop(1, '#162231');
-    ctxIcon.fillStyle = topGrad;
-    ctxIcon.beginPath();
-    ctxIcon.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
-    ctxIcon.fill();
-    ctxIcon.strokeStyle = '#38bdf8';
-    ctxIcon.lineWidth = 1.5;
-    ctxIcon.stroke();
-  } else if (bgStyle === 'asphalt') {
-    ctxIcon.fillStyle = '#14181f';
-    ctxIcon.fillRect(0, 0, size, size);
-    for (let i = 0; i < 600; i++) {
-      const rx = (Math.sin(i * 12.9898) * 43758.5453 % 1 + 1) % 1 * size;
-      const ry = (Math.cos(i * 78.233) * 43758.5453 % 1 + 1) % 1 * size;
-      const alpha = 0.05 + ((i % 10) / 100);
-      ctxIcon.fillStyle = i % 2 === 0 ? `rgba(255,255,255,${alpha})` : `rgba(0,0,0,${alpha * 1.5})`;
-      ctxIcon.fillRect(rx, ry, (i % 3) + 1, (i % 3) + 1);
-    }
-    ctxIcon.strokeStyle = '#232f3e';
-    ctxIcon.lineWidth = 3;
-    ctxIcon.strokeRect(1, 1, size - 2, size - 2);
-  } else if (bgStyle === 'blueprint') {
-    ctxIcon.fillStyle = '#0a1d33';
-    ctxIcon.fillRect(0, 0, size, size);
-    ctxIcon.strokeStyle = 'rgba(56, 189, 248, 0.15)';
-    ctxIcon.lineWidth = 1;
-    for (let p = 0; p <= size; p += 32) {
-      ctxIcon.beginPath();
-      ctxIcon.moveTo(p, 0);
-      ctxIcon.lineTo(p, size);
-      ctxIcon.stroke();
-      ctxIcon.beginPath();
-      ctxIcon.moveTo(0, p);
-      ctxIcon.lineTo(size, p);
-      ctxIcon.stroke();
-    }
-  } else if (bgStyle === 'custom') {
-    renderCustomIconBackground(ctxIcon, size);
-  }
-  // When bgStyle === 'none' or 'transparent', nothing is filled in the background (100% transparent cutout)
-
-  if (canvasBase && canvasBase.width > 0) {
-    if (state.appMode === 'decal') {
-      const isNone = (bgStyle === 'none');
-      const pad = isNone ? 24 : 36;
-      const targetW = size - pad * 2;
-      const targetH = size - pad * 2;
-
-      ctxIcon.save();
-      if (!isNone && bgStyle !== 'transparent') {
-        ctxIcon.shadowColor = 'rgba(0, 0, 0, 0.6)';
-        ctxIcon.shadowBlur = 12;
-        ctxIcon.shadowOffsetY = 6;
-      }
-      ctxIcon.drawImage(canvasBase, pad, pad, targetW, targetH);
-      ctxIcon.restore();
-    } else {
-      const isNone = (bgStyle === 'none' || bgStyle === 'transparent');
-      const swatchSize = isNone ? (size - 16) : (size - 36);
-      const ox = isNone ? 8 : 18;
-      const oy = isNone ? 8 : 18;
-      ctxIcon.save();
-      ctxIcon.beginPath();
-      ctxIcon.roundRect(ox, oy, swatchSize, swatchSize, isNone ? 0 : 8);
-      ctxIcon.clip();
-
-      ctxIcon.drawImage(canvasBase, ox, oy, swatchSize, swatchSize);
-      ctxIcon.restore();
-
-      if (!isNone) {
-        ctxIcon.strokeStyle = 'rgba(255, 255, 255, 0.25)';
-        ctxIcon.lineWidth = 2;
-        ctxIcon.strokeRect(ox, oy, swatchSize, swatchSize);
-      }
-    }
-  }
-
-  const b1ScalePct = parseInt(document.getElementById('badgeScale')?.value || '26', 10) / 100.0;
-  const b1Opacity = parseInt(document.getElementById('badgeOpacity')?.value || '95', 10) / 100.0;
-  const b1Pos = document.getElementById('logoPosition')?.value || 'bottom-right';
-  const b1Frame = document.getElementById('badge1Frame')?.value || 'circle';
-
-  const b2ScalePct = parseInt(document.getElementById('seriesScale')?.value || '24', 10) / 100.0;
-  const b2Opacity = parseInt(document.getElementById('seriesOpacity')?.value || '95', 10) / 100.0;
-  const b2Pos = document.getElementById('seriesPosition')?.value || 'top-center';
-  const b2Frame = document.getElementById('badge2Frame')?.value || 'pill';
-
-  const b3ScalePct = parseInt(document.getElementById('extra1Scale')?.value || '24', 10) / 100.0;
-  const b3Opacity = parseInt(document.getElementById('extra1Opacity')?.value || '95', 10) / 100.0;
-  const b3Pos = document.getElementById('extra1Position')?.value || 'bottom-left';
-  const b3Frame = document.getElementById('badge3Frame')?.value || 'pill';
-
-  const b4ScalePct = parseInt(document.getElementById('extra2Scale')?.value || '24', 10) / 100.0;
-  const b4Opacity = parseInt(document.getElementById('extra2Opacity')?.value || '95', 10) / 100.0;
-  const b4Pos = document.getElementById('extra2Position')?.value || 'top-right';
-  const b4Frame = document.getElementById('badge4Frame')?.value || 'pill';
-
-  const b1EdgePad = state.badge1EdgePadding;
-  const b1InnerPad = state.badge1InnerPadding;
-  const b2EdgePad = state.badge2EdgePadding;
-  const b2InnerPad = state.badge2InnerPadding;
-  const b3EdgePad = state.badge3EdgePadding;
-  const b3InnerPad = state.badge3InnerPadding;
-  const b4EdgePad = state.badge4EdgePadding;
-  const b4InnerPad = state.badge4InnerPadding;
-
-  const slotOffsets = {
-    'top-left': 0,
-    'top-right': 0,
-    'top-center': 0,
-    'bottom-left': 0,
-    'bottom-right': 0,
-    'bottom-center': 0,
-    'center': 0
-  };
-
-  function computeBadgeDim(scalePct, pos, frame, type, innerPad, edgePad, img) {
-    let w = Math.round(size * scalePct);
-    let h = w;
-
-    if (type === 'image' && img && (img.naturalWidth > 0 || img.width > 0)) {
-      const nw = img.naturalWidth || img.width;
-      const nh = img.naturalHeight || img.height;
-      const aspect = nw / nh;
-      if (frame === 'circle') {
-        return { w, h, aspect };
-      }
-      if (aspect >= 1) {
-        w = Math.min(size - (edgePad * 2), Math.max(16, Math.round(size * scalePct)));
-        h = Math.max(16, Math.round(w / aspect));
-      } else {
-        h = Math.min(size - (edgePad * 2), Math.max(16, Math.round(size * scalePct)));
-        w = Math.max(16, Math.round(h * aspect));
-      }
-      return { w, h, aspect };
-    }
-
-    if (pos === 'top-center' || pos === 'bottom-center') {
-      w = Math.min(size - (edgePad * 2), Math.max(100, Math.round(size * scalePct * 2.1) + (innerPad - 8) * 2));
-      h = Math.round(Math.max(18, w * 0.28 + (innerPad - 8)));
-    } else if (type === 'text' || frame === 'pill' || frame === 'rounded' || frame === 'raw') {
-      w = Math.round(w * 1.55) + (innerPad - 8) * 2;
-      h = Math.round(h * 0.72) + (innerPad - 8);
-    }
-    return { w, h };
-  }
-
-  function placeBadge(pos, w, h, edgePad) {
-    let x = edgePad;
-    let y = edgePad;
-    const offset = slotOffsets[pos] || 0;
-
-    switch (pos) {
-      case 'top-left':
-        x = edgePad;
-        y = edgePad + offset;
-        break;
-      case 'top-right':
-        x = size - w - edgePad;
-        y = edgePad + offset;
-        break;
-      case 'top-center':
-        x = (size - w) / 2;
-        y = edgePad + offset;
-        break;
-      case 'bottom-left':
-        x = edgePad;
-        y = size - edgePad - h - offset;
-        break;
-      case 'bottom-right':
-        x = size - w - edgePad;
-        y = size - edgePad - h - offset;
-        break;
-      case 'bottom-center':
-        x = (size - w) / 2;
-        y = size - edgePad - h - offset;
-        break;
-      case 'center':
-        x = (size - w) / 2;
-        y = (size - h) / 2 + offset;
-        break;
-    }
-    slotOffsets[pos] = offset + h + 6;
-    return { x: Math.round(x), y: Math.round(y) };
-  }
-
-  // Reset hit-boxes for current render pass
-  lastBadgeHitBoxes = [];
-
-  if (state.badge2Enabled) {
-    const d2 = computeBadgeDim(b2ScalePct, b2Pos, b2Frame, state.badge2Type, b2InnerPad, b2EdgePad, state.badge2Img);
-    const coords2 = (b2Pos === 'custom')
-      ? {
-          x: Math.max(0, Math.min(size - d2.w, Math.round((size - d2.w) * ((state.badge2PosX ?? 15) / 100)))),
-          y: Math.max(0, Math.min(size - d2.h, Math.round((size - d2.h) * ((state.badge2PosY ?? 15) / 100))))
-        }
-      : placeBadge(b2Pos, d2.w, d2.h, b2EdgePad);
-    renderSeriesWatermark(ctxIcon, coords2.x, coords2.y, d2.w, d2.h, b2Opacity, b2Frame);
-    lastBadgeHitBoxes.push({
-      id: 'series',
-      name: 'Overlay 2: Series / Pack Badge',
-      shortName: 'Overlay 2 (Series)',
-      x: coords2.x,
-      y: coords2.y,
-      w: d2.w,
-      h: d2.h
-    });
-  }
-
-  if (state.badge3Enabled) {
-    const d3 = computeBadgeDim(b3ScalePct, b3Pos, b3Frame, state.badge3Type, b3InnerPad, b3EdgePad, state.badge3Img);
-    const coords3 = (b3Pos === 'custom')
-      ? {
-          x: Math.max(0, Math.min(size - d3.w, Math.round((size - d3.w) * ((state.badge3PosX ?? 15) / 100)))),
-          y: Math.max(0, Math.min(size - d3.h, Math.round((size - d3.h) * ((state.badge3PosY ?? 85) / 100))))
-        }
-      : placeBadge(b3Pos, d3.w, d3.h, b3EdgePad);
-    renderExtraWatermark(ctxIcon, coords3.x, coords3.y, d3.w, d3.h, b3Opacity, b3Frame, 3);
-    lastBadgeHitBoxes.push({
-      id: 'extra1',
-      name: 'Overlay 3: Extra 1 Watermark Badge',
-      shortName: 'Overlay 3 (Extra 1)',
-      x: coords3.x,
-      y: coords3.y,
-      w: d3.w,
-      h: d3.h
-    });
-  }
-
-  if (state.badge4Enabled) {
-    const d4 = computeBadgeDim(b4ScalePct, b4Pos, b4Frame, state.badge4Type, b4InnerPad, b4EdgePad, state.badge4Img);
-    const coords4 = (b4Pos === 'custom')
-      ? {
-          x: Math.max(0, Math.min(size - d4.w, Math.round((size - d4.w) * ((state.badge4PosX ?? 85) / 100)))),
-          y: Math.max(0, Math.min(size - d4.h, Math.round((size - d4.h) * ((state.badge4PosY ?? 15) / 100))))
-        }
-      : placeBadge(b4Pos, d4.w, d4.h, b4EdgePad);
-    renderExtraWatermark(ctxIcon, coords4.x, coords4.y, d4.w, d4.h, b4Opacity, b4Frame, 4);
-    lastBadgeHitBoxes.push({
-      id: 'extra2',
-      name: 'Overlay 4: Extra 2 Custom Overlay',
-      shortName: 'Overlay 4 (Extra 2)',
-      x: coords4.x,
-      y: coords4.y,
-      w: d4.w,
-      h: d4.h
-    });
-  }
-
-  if (state.badge1Enabled) {
-    const d1 = computeBadgeDim(b1ScalePct, b1Pos, b1Frame, state.badge1Type, b1InnerPad, b1EdgePad, state.designerLogoImg);
-    const coords1 = (b1Pos === 'custom')
-      ? {
-          x: Math.max(0, Math.min(size - d1.w, Math.round((size - d1.w) * ((state.badge1PosX ?? 85) / 100)))),
-          y: Math.max(0, Math.min(size - d1.h, Math.round((size - d1.h) * ((state.badge1PosY ?? 85) / 100))))
-        }
-      : placeBadge(b1Pos, d1.w, d1.h, b1EdgePad);
-    renderCreatorWatermark(ctxIcon, coords1.x, coords1.y, d1.w, d1.h, b1Opacity, b1Frame);
-    lastBadgeHitBoxes.push({
-      id: 'creator',
-      name: 'Overlay 1: Creator Logo / Brand Watermark',
-      shortName: 'Overlay 1 (Creator)',
-      x: coords1.x,
-      y: coords1.y,
-      w: d1.w,
-      h: d1.h
-    });
-  }
-
-  // Draw interactive visual selection box around the currently active overlay layer
-  if (!cleanOnly && state.activeBadgeTab && state.activeBadgeTab !== 'defaults') {
-    const activeBox = lastBadgeHitBoxes.find(b => b.id === state.activeBadgeTab);
-    if (activeBox) {
-      drawOverlaySelection(ctxIcon, activeBox);
-    }
-  }
-
-  initBadgeCanvasInteractions();
-
-  if (state.activeTab === 'icon' && window.updateSingleView) {
-    window.updateSingleView();
-  }
-}
-
-export function drawOverlaySelection(ctx, box) {
-  ctx.save();
-  const { x, y, w, h } = box;
-  const pad = 4;
-  const rx = x - pad;
-  const ry = y - pad;
-  const rw = w + pad * 2;
-  const rh = h + pad * 2;
-
-  // Outer glow & animated dashed bounding box
-  ctx.shadowColor = '#38bdf8';
-  ctx.shadowBlur = 10;
-  ctx.strokeStyle = '#38bdf8';
-  ctx.lineWidth = 2;
-  ctx.setLineDash([6, 4]);
-
-  ctx.beginPath();
-  if (typeof ctx.roundRect === 'function') {
-    ctx.roundRect(rx, ry, rw, rh, 6);
-  } else {
-    ctx.rect(rx, ry, rw, rh);
-  }
-  ctx.stroke();
-
-  // Corner control handles
-  ctx.setLineDash([]);
-  ctx.shadowBlur = 0;
-  ctx.fillStyle = '#ffffff';
-  ctx.strokeStyle = '#0284c7';
-  ctx.lineWidth = 1.5;
-  const handleSize = 8;
-  const corners = [
-    [rx, ry],
-    [rx + rw, ry],
-    [rx, ry + rh],
-    [rx + rw, ry + rh]
-  ];
-  corners.forEach(([cx, cy]) => {
-    ctx.beginPath();
-    ctx.rect(cx - handleSize / 2, cy - handleSize / 2, handleSize, handleSize);
-    ctx.fill();
-    ctx.stroke();
-  });
-
-  // Selected Overlay tag with live position coordinates
-  const currentPos = (box.id === 'creator' ? `${state.badge1PosX ?? 85}%, ${state.badge1PosY ?? 85}%`
-    : box.id === 'series' ? `${state.badge2PosX ?? 15}%, ${state.badge2PosY ?? 15}%`
-    : box.id === 'extra1' ? `${state.badge3PosX ?? 20}%, ${state.badge3PosY ?? 80}%`
-    : `${state.badge4PosX ?? 80}%, ${state.badge4PosY ?? 20}%`);
-
-  const label = `${box.shortName || 'Selected Overlay'} (${currentPos})`;
-  ctx.font = 'bold 11px Montserrat, sans-serif';
-  const textWidth = ctx.measureText(label).width;
-  const tagW = textWidth + 14;
-  const tagH = 18;
-  const tagY = ry >= tagH + 4 ? ry - tagH - 4 : ry + rh + 4;
-  const tagX = Math.max(4, Math.min(512 - tagW - 4, rx));
-
-  ctx.fillStyle = '#0284c7';
-  ctx.beginPath();
-  if (typeof ctx.roundRect === 'function') {
-    ctx.roundRect(tagX, tagY, tagW, tagH, 4);
-  } else {
-    ctx.rect(tagX, tagY, tagW, tagH);
-  }
-  ctx.fill();
-
-  ctx.strokeStyle = '#e0f2fe';
-  ctx.lineWidth = 1;
-  ctx.stroke();
-
-  ctx.fillStyle = '#ffffff';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(label, tagX + tagW / 2, tagY + tagH / 2);
-
-  // Center move crosshair indicator
-  const midX = rx + rw / 2;
-  const midY = ry + rh / 2;
-  ctx.strokeStyle = 'rgba(56, 189, 248, 0.6)';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.moveTo(midX - 5, midY);
-  ctx.lineTo(midX + 5, midY);
-  ctx.moveTo(midX, midY - 5);
-  ctx.lineTo(midX, midY + 5);
-  ctx.stroke();
-
-  ctx.restore();
-}
-
-export function drawImageAspectCorrect(ctx, img, bx, by, bw, bh) {
-  if (!img) return;
-  const nw = img.naturalWidth || img.width || 1;
-  const nh = img.naturalHeight || img.height || 1;
-  const scale = Math.min(bw / nw, bh / nh);
-  const dw = nw * scale;
-  const dh = nh * scale;
-  const dx = bx + (bw - dw) / 2;
-  const dy = by + (bh - dh) / 2;
-  ctx.drawImage(img, dx, dy, dw, dh);
-}
-
-export function getHandleAtPoint(x, y, activeBox) {
-  if (!activeBox) return null;
-  const pad = 4;
-  const rx = activeBox.x - pad;
-  const ry = activeBox.y - pad;
-  const rw = activeBox.w + pad * 2;
-  const rh = activeBox.h + pad * 2;
-  const hitRadius = 12;
-  const corners = [
-    { handle: 'nw', x: rx, y: ry, cursor: 'nwse-resize' },
-    { handle: 'ne', x: rx + rw, y: ry, cursor: 'nesw-resize' },
-    { handle: 'sw', x: rx, y: ry + rh, cursor: 'nesw-resize' },
-    { handle: 'se', x: rx + rw, y: ry + rh, cursor: 'nwse-resize' }
-  ];
-  for (const c of corners) {
-    if (Math.hypot(x - c.x, y - c.y) <= hitRadius) {
-      return c;
-    }
-  }
-  return null;
-}
-
-export function getBadgeCurrentScale(badgeId) {
-  if (badgeId === 'creator') return parseInt(document.getElementById('badgeScale')?.value || '26', 10);
-  if (badgeId === 'series') return parseInt(document.getElementById('seriesScale')?.value || '24', 10);
-  if (badgeId === 'extra1') return parseInt(document.getElementById('extra1Scale')?.value || '24', 10);
-  if (badgeId === 'extra2') return parseInt(document.getElementById('extra2Scale')?.value || '24', 10);
-  return 24;
-}
-
-export function setBadgeScalePct(badgeId, newScale) {
-  const clamped = Math.max(5, Math.min(100, Math.round(newScale)));
-  if (badgeId === 'creator') {
-    const inp = document.getElementById('badgeScale');
-    if (inp) {
-      inp.value = clamped;
-      onIconBadgeScaleChange();
-    }
-  } else if (badgeId === 'series') {
-    const inp = document.getElementById('seriesScale');
-    if (inp) {
-      inp.value = clamped;
-      onSeriesBadgeScaleChange();
-    }
-  } else if (badgeId === 'extra1') {
-    const inp = document.getElementById('extra1Scale');
-    if (inp) {
-      inp.value = clamped;
-      onExtra1ScaleChange();
-    }
-  } else if (badgeId === 'extra2') {
-    const inp = document.getElementById('extra2Scale');
-    if (inp) {
-      inp.value = clamped;
-      onExtra2ScaleChange();
-    }
-  }
-}
-
-export function getBadgeAtPoint(x, y) {
-  const boxes = [...lastBadgeHitBoxes].reverse();
-  const pad = 6;
-  for (const box of boxes) {
-    if (x >= box.x - pad && x <= box.x + box.w + pad && y >= box.y - pad && y <= box.y + box.h + pad) {
-      return box;
-    }
-  }
-  return null;
-}
-
-export function updateBadgeLivePosition(badgeId, posX_pct, posY_pct) {
-  const clampX = Math.max(0, Math.min(100, Math.round(posX_pct)));
-  const clampY = Math.max(0, Math.min(100, Math.round(posY_pct)));
-
-  if (badgeId === 'creator') {
-    const posSel = document.getElementById('logoPosition');
-    if (posSel && posSel.value !== 'custom') posSel.value = 'custom';
-    const c = document.getElementById('creatorCustomPosContainer');
-    if (c) c.style.display = 'block';
-    state.badge1PosX = clampX;
-    state.badge1PosY = clampY;
-    const sx = document.getElementById('creatorPosX'); if (sx) sx.value = clampX;
-    const sy = document.getElementById('creatorPosY'); if (sy) sy.value = clampY;
-    const xVal = document.getElementById('creatorPosXVal'); if (xVal) xVal.textContent = `${clampX}%`;
-    const yVal = document.getElementById('creatorPosYVal'); if (yVal) yVal.textContent = `${clampY}%`;
-  } else if (badgeId === 'series') {
-    const posSel = document.getElementById('seriesPosition');
-    if (posSel && posSel.value !== 'custom') posSel.value = 'custom';
-    const c = document.getElementById('seriesCustomPosContainer');
-    if (c) c.style.display = 'block';
-    state.badge2PosX = clampX;
-    state.badge2PosY = clampY;
-    const sx = document.getElementById('seriesPosX'); if (sx) sx.value = clampX;
-    const sy = document.getElementById('seriesPosY'); if (sy) sy.value = clampY;
-    const xVal = document.getElementById('seriesPosXVal'); if (xVal) xVal.textContent = `${clampX}%`;
-    const yVal = document.getElementById('seriesPosYVal'); if (yVal) yVal.textContent = `${clampY}%`;
-  } else if (badgeId === 'extra1') {
-    const posSel = document.getElementById('extra1Position');
-    if (posSel && posSel.value !== 'custom') posSel.value = 'custom';
-    const c = document.getElementById('extra1CustomPosContainer');
-    if (c) c.style.display = 'block';
-    state.badge3PosX = clampX;
-    state.badge3PosY = clampY;
-    const sx = document.getElementById('extra1PosX'); if (sx) sx.value = clampX;
-    const sy = document.getElementById('extra1PosY'); if (sy) sy.value = clampY;
-    const xVal = document.getElementById('extra1PosXVal'); if (xVal) xVal.textContent = `${clampX}%`;
-    const yVal = document.getElementById('extra1PosYVal'); if (yVal) yVal.textContent = `${clampY}%`;
-  } else if (badgeId === 'extra2') {
-    const posSel = document.getElementById('extra2Position');
-    if (posSel && posSel.value !== 'custom') posSel.value = 'custom';
-    const c = document.getElementById('extra2CustomPosContainer');
-    if (c) c.style.display = 'block';
-    state.badge4PosX = clampX;
-    state.badge4PosY = clampY;
-    const sx = document.getElementById('extra2PosX'); if (sx) sx.value = clampX;
-    const sy = document.getElementById('extra2PosY'); if (sy) sy.value = clampY;
-    const xVal = document.getElementById('extra2PosXVal'); if (xVal) xVal.textContent = `${clampX}%`;
-    const yVal = document.getElementById('extra2PosYVal'); if (yVal) yVal.textContent = `${clampY}%`;
-  }
-
-  renderIconMap();
-}
-
-export function selectBadgeOverlay(id, name) {
-  switchBadgeSubtab(id);
-
-  const sec = document.getElementById('secToolsIcon');
-  if (sec && sec.classList.contains('collapsed')) {
-    if (window.toggleSection) {
-      window.toggleSection('secToolsIcon');
-    } else {
-      sec.classList.remove('collapsed');
-    }
-  }
-
-  const target = document.getElementById('badgeLayerSelect') || sec;
-  if (target) {
-    target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }
-
-  const dropdown = document.getElementById('badgeLayerSelect');
-  if (dropdown) {
-    dropdown.style.transition = 'box-shadow 0.2s ease, border-color 0.2s ease';
-    dropdown.style.borderColor = '#38bdf8';
-    dropdown.style.boxShadow = '0 0 12px rgba(56, 189, 248, 0.6)';
-    setTimeout(() => {
-      dropdown.style.borderColor = '';
-      dropdown.style.boxShadow = '';
-    }, 900);
-  }
-
-  showToast(`Selected ${name || id}`);
-}
-
-let badgeDragState = null;
-
-export function initBadgeCanvasInteractions() {
-  const { canvasIcon, canvasSingle } = getCanvases();
-
-  const attachCanvasDragEvents = (canvas, isSingle = false) => {
-    if (!canvas || canvas.__badgeDragAttached) return;
-    canvas.__badgeDragAttached = true;
-
-    // Prevent default touch scrolling when dragging badges on mobile/tablets
-    canvas.style.touchAction = 'none';
-
-    // Hook export methods so clean icon without selection box is exported
-    if (!isSingle) {
-      const origToBlob = canvas.toBlob.bind(canvas);
-      const origToDataURL = canvas.toDataURL.bind(canvas);
-      canvas.toBlob = function(cb, type, quality) {
-        renderIconMap(true);
-        origToBlob((blob) => {
-          renderIconMap(false);
-          cb(blob);
-        }, type, quality);
-      };
-      canvas.toDataURL = function(...args) {
-        renderIconMap(true);
-        const res = origToDataURL(...args);
-        renderIconMap(false);
-        return res;
-      };
-    }
-
-    const getCoords = (e) => {
-      const rect = canvas.getBoundingClientRect();
-      const scaleX = (canvas.width || 512) / (rect.width || 1);
-      const scaleY = (canvas.height || 512) / (rect.height || 1);
-      return {
-        x: (e.clientX - rect.left) * scaleX,
-        y: (e.clientY - rect.top) * scaleY
-      };
-    };
-
-    canvas.addEventListener('pointerdown', (e) => {
-      if (isSingle && state.activeSingleMap !== 'icon') return;
-      const { x, y } = getCoords(e);
-
-      // Check if clicking a corner resize handle of the active overlay selection
-      const activeBox = lastBadgeHitBoxes.find(b => b.id === state.activeBadgeTab);
-      const handleHit = getHandleAtPoint(x, y, activeBox);
-      if (handleHit && activeBox) {
-        try {
-          canvas.setPointerCapture(e.pointerId);
-        } catch (_) {}
-
-        const currentScale = getBadgeCurrentScale(activeBox.id);
-        const centerX = activeBox.x + activeBox.w / 2;
-        const centerY = activeBox.y + activeBox.h / 2;
-        badgeDragState = {
-          mode: 'resize',
-          pointerId: e.pointerId,
-          canvas: canvas,
-          badgeId: activeBox.id,
-          badgeName: activeBox.name,
-          centerX: centerX,
-          centerY: centerY,
-          startX: x,
-          startY: y,
-          startDist: Math.hypot(x - centerX, y - centerY),
-          initialScale: currentScale,
-          cursor: handleHit.cursor,
-          hasMoved: false
-        };
-        canvas.style.cursor = handleHit.cursor;
-        e.preventDefault();
-        return;
-      }
-
-      const hit = getBadgeAtPoint(x, y);
-      if (!hit) return;
-
-      if (state.activeBadgeTab !== hit.id) {
-        selectBadgeOverlay(hit.id, hit.name);
-      }
-
-      try {
-        canvas.setPointerCapture(e.pointerId);
-      } catch (_) {}
-
-      badgeDragState = {
-        mode: 'move',
-        pointerId: e.pointerId,
-        canvas: canvas,
-        badgeId: hit.id,
-        badgeName: hit.name,
-        badgeW: hit.w,
-        badgeH: hit.h,
-        offsetX: x - hit.x,
-        offsetY: y - hit.y,
-        hasMoved: false
-      };
-
-      canvas.style.cursor = 'grabbing';
-      e.preventDefault();
-    });
-
-    canvas.addEventListener('pointermove', (e) => {
-      if (isSingle && state.activeSingleMap !== 'icon') {
-        canvas.style.cursor = 'default';
-        return;
-      }
-
-      const { x, y } = getCoords(e);
-
-      if (badgeDragState && badgeDragState.canvas === canvas) {
-        badgeDragState.hasMoved = true;
-        if (badgeDragState.mode === 'resize') {
-          canvas.style.cursor = badgeDragState.cursor;
-          const currentDist = Math.hypot(x - badgeDragState.centerX, y - badgeDragState.centerY);
-          if (badgeDragState.startDist > 4) {
-            const ratio = currentDist / badgeDragState.startDist;
-            const newScale = Math.round(badgeDragState.initialScale * ratio);
-            setBadgeScalePct(badgeDragState.badgeId, newScale);
-          }
-          e.preventDefault();
-          return;
-        }
-
-        canvas.style.cursor = 'grabbing';
-
-        const targetX = x - badgeDragState.offsetX;
-        const targetY = y - badgeDragState.offsetY;
-
-        const maxSpanX = 512 - badgeDragState.badgeW;
-        const maxSpanY = 512 - badgeDragState.badgeH;
-
-        const clampedX = Math.max(0, Math.min(maxSpanX, targetX));
-        const clampedY = Math.max(0, Math.min(maxSpanY, targetY));
-
-        const pctX = maxSpanX > 0 ? (clampedX / maxSpanX) * 100 : 0;
-        const pctY = maxSpanY > 0 ? (clampedY / maxSpanY) * 100 : 0;
-
-        updateBadgeLivePosition(badgeDragState.badgeId, pctX, pctY);
-        e.preventDefault();
-        return;
-      }
-
-      // Hover cursor checks: corner resize handle vs overlay move
-      const activeBox = lastBadgeHitBoxes.find(b => b.id === state.activeBadgeTab);
-      const handleHit = getHandleAtPoint(x, y, activeBox);
-      if (handleHit) {
-        canvas.style.cursor = handleHit.cursor;
-        canvas.title = `Drag corner to resize ${activeBox.shortName || 'overlay'} (live)`;
-        return;
-      }
-
-      const hit = getBadgeAtPoint(x, y);
-      if (hit) {
-        canvas.style.cursor = 'grab';
-        canvas.title = `Drag to reposition ${hit.name} (live)`;
-      } else {
-        canvas.style.cursor = 'default';
-        canvas.title = isSingle ? 'In-Game Icon Thumbnail' : 'In-game CS2 Icon';
-      }
-    });
-
-    const finishDrag = (e) => {
-      if (badgeDragState && badgeDragState.canvas === canvas) {
-        try {
-          canvas.releasePointerCapture(e.pointerId);
-        } catch (_) {}
-
-        if (badgeDragState.hasMoved) {
-          if (badgeDragState.mode === 'resize') {
-            showToast(`${badgeDragState.badgeName} resized (${getBadgeCurrentScale(badgeDragState.badgeId)}%)`);
-          } else {
-            showToast(`${badgeDragState.badgeName} repositioned`);
-          }
-        }
-        badgeDragState = null;
-        canvas.style.cursor = 'grab';
-      }
-    };
-
-    canvas.addEventListener('pointerup', finishDrag);
-    canvas.addEventListener('pointercancel', finishDrag);
-
-    canvas.addEventListener('mouseleave', () => {
-      if (!badgeDragState) {
-        canvas.style.cursor = 'default';
-      }
-    });
-  };
-
-  attachCanvasDragEvents(canvasIcon, false);
-  attachCanvasDragEvents(canvasSingle, true);
-}
-
-export function computeBadgePlacement(pos, w, h, size, edgePad, isConflict, isSecond, otherW, otherH, otherEdgePad) {
-  let x = edgePad;
-  let y = edgePad;
-
-  switch (pos) {
-    case 'top-left':
-      x = edgePad;
-      y = isConflict && isSecond ? edgePad + otherH + 6 : edgePad;
-      break;
-    case 'top-right':
-      x = size - w - edgePad;
-      y = isConflict && isSecond ? edgePad + otherH + 6 : edgePad;
-      break;
-    case 'top-center':
-      x = (size - w) / 2;
-      y = isConflict && isSecond ? edgePad + otherH + 6 : edgePad;
-      break;
-    case 'bottom-left':
-      x = edgePad;
-      y = isConflict && isSecond ? size - edgePad - h - otherH - 6 : size - h - edgePad;
-      break;
-    case 'bottom-right':
-      x = size - w - edgePad;
-      y = isConflict && isSecond ? size - edgePad - h - otherH - 6 : size - h - edgePad;
-      break;
-    case 'bottom-center':
-      x = (size - w) / 2;
-      y = isConflict && isSecond ? size - edgePad - h - otherH - 6 : size - h - edgePad;
-      break;
-    case 'center':
-      x = (size - w) / 2;
-      y = isConflict && isSecond ? (size - h) / 2 + otherH * 0.6 : (size - h) / 2;
-      break;
-  }
-  return { x: Math.round(x), y: Math.round(y) };
-}
-
-export function renderCreatorWatermark(ctx, bx, by, bw, bh, opacity, frameStyle) {
-  ctx.save();
-  ctx.globalAlpha = opacity;
-
-  const cx = bx + bw / 2;
-  const cy = by + bh / 2;
-  const r = bw * 0.48;
-
-  if (state.badge1Type === 'text') {
-    drawCustomTextRibbon(ctx, bx, by, bw, bh, state.badge1Text || 'CREATOR', state.badge1Font, state.badge1Bold, state.badge1Italic, state.badge1PtSize, frameStyle, 'creator');
-    ctx.restore();
-    return;
-  }
-
-  if (frameStyle === 'circle') {
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
-    ctx.beginPath();
-    ctx.arc(cx, cy, r * 1.05, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-  } else if (frameStyle === 'rounded' || frameStyle === 'pill') {
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
-    ctx.beginPath();
-    ctx.roundRect(bx, by, bw, bh, frameStyle === 'pill' ? bh / 2 : bw * 0.22);
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-  }
-
-  if (state.badge1Type === 'image' && state.designerLogoImg) {
-    ctx.save();
-    if (frameStyle === 'circle') {
-      ctx.beginPath();
-      ctx.arc(cx, cy, r, 0, Math.PI * 2);
-      ctx.clip();
-    } else if (frameStyle === 'rounded' || frameStyle === 'pill') {
-      ctx.beginPath();
-      ctx.roundRect(bx + 2, by + 2, bw - 4, bh - 4, frameStyle === 'pill' ? bh / 2 - 2 : bw * 0.2);
-      ctx.clip();
-    }
-    drawImageAspectCorrect(ctx, state.designerLogoImg, bx, by, bw, bh);
-    ctx.restore();
-  } else {
-    const pt = state.presetLogoType || 'star';
-    const primary = '#38bdf8';
-    if (pt === 'star') drawStar(ctx, cx, cy, 5, r * 0.75, r * 0.35, primary);
-    else if (pt === 'crown') drawCrown(ctx, cx, cy, r * 0.8, '#fbbf24');
-    else if (pt === 'shield') drawShield(ctx, cx, cy, r * 0.8, primary);
-    else drawStar(ctx, cx, cy, 5, r * 0.75, r * 0.35, primary);
-  }
-
-  ctx.restore();
-}
-
-export function renderSeriesWatermark(ctx, bx, by, bw, bh, opacity, frameStyle) {
-  ctx.save();
-  ctx.globalAlpha = opacity;
-
-  if (state.badge2Type === 'text') {
-    drawCustomTextRibbon(ctx, bx, by, bw, bh, state.badge2Text || 'SERIES', state.badge2Font, state.badge2Bold, state.badge2Italic, state.badge2PtSize, frameStyle, 'series');
-    ctx.restore();
-    return;
-  }
-
-  if (state.badge2Type === 'image' && state.badge2Img) {
-    ctx.save();
-    if (frameStyle === 'circle') {
-      ctx.beginPath();
-      ctx.arc(bx + bw / 2, by + bh / 2, Math.min(bw, bh) / 2, 0, Math.PI * 2);
-      ctx.clip();
-    } else if (frameStyle === 'rounded' || frameStyle === 'pill') {
-      ctx.beginPath();
-      ctx.roundRect(bx, by, bw, bh, frameStyle === 'pill' ? bh / 2 : 6);
-      ctx.clip();
-    }
-    drawImageAspectCorrect(ctx, state.badge2Img, bx, by, bw, bh);
-    ctx.restore();
-    ctx.restore();
-    return;
-  }
-
-  const p = state.badge2Preset || 'graffiti';
-  if (p === 'graffiti') drawGraffitiBadge(ctx, bx, by, bw, bh, frameStyle);
-  else if (p === 'poster') drawPosterBadge(ctx, bx, by, bw, bh, frameStyle);
-  else if (p === 'transit') drawTransitBadge(ctx, bx, by, bw, bh, frameStyle);
-  else if (p === 'props') drawPropsBadge(ctx, bx, by, bw, bh, frameStyle);
-  else if (p === 'hazard') drawHazardBadge(ctx, bx, by, bw, bh, frameStyle);
-  else if (p === 'nature') drawNatureBadge(ctx, bx, by, bw, bh, frameStyle);
-  else drawGraffitiBadge(ctx, bx, by, bw, bh, frameStyle);
-
-  ctx.restore();
-}
-
-export function renderExtraWatermark(ctx, bx, by, bw, bh, opacity, frameStyle, badgeNum) {
-  const isB3 = (badgeNum === 3);
-  const type = isB3 ? state.badge3Type : state.badge4Type;
-  const text = isB3 ? (state.badge3Text || 'EXTRA 1') : (state.badge4Text || 'EXTRA 2');
-  const font = isB3 ? state.badge3Font : state.badge4Font;
-  const bold = isB3 ? state.badge3Bold : state.badge4Bold;
-  const italic = isB3 ? state.badge3Italic : state.badge4Italic;
-  const ptSize = isB3 ? state.badge3PtSize : state.badge4PtSize;
-  const role = isB3 ? 'extra1' : 'extra2';
-  const img = isB3 ? state.badge3Img : state.badge4Img;
-  const preset = isB3 ? state.badge3Preset : state.badge4Preset;
-
-  ctx.save();
-  ctx.globalAlpha = opacity;
-
-  if (type === 'text') {
-    drawCustomTextRibbon(ctx, bx, by, bw, bh, text, font, bold, italic, ptSize, frameStyle, role);
-    ctx.restore();
-    return;
-  }
-
-  if (type === 'image' && img) {
-    ctx.save();
-    if (frameStyle === 'circle') {
-      ctx.beginPath();
-      ctx.arc(bx + bw / 2, by + bh / 2, Math.min(bw, bh) / 2, 0, Math.PI * 2);
-      ctx.clip();
-    } else if (frameStyle === 'rounded' || frameStyle === 'pill') {
-      ctx.beginPath();
-      ctx.roundRect(bx, by, bw, bh, frameStyle === 'pill' ? bh / 2 : 6);
-      ctx.clip();
-    }
-    drawImageAspectCorrect(ctx, img, bx, by, bw, bh);
-    ctx.restore();
-    ctx.restore();
-    return;
-  }
-
-  const p = preset || (isB3 ? 'props' : 'hazard');
-  if (p === 'props') drawPropsBadge(ctx, bx, by, bw, bh, frameStyle);
-  else if (p === 'hazard') drawHazardBadge(ctx, bx, by, bw, bh, frameStyle);
-  else if (p === 'graffiti') drawGraffitiBadge(ctx, bx, by, bw, bh, frameStyle);
-  else if (p === 'poster') drawPosterBadge(ctx, bx, by, bw, bh, frameStyle);
-  else if (p === 'transit') drawTransitBadge(ctx, bx, by, bw, bh, frameStyle);
-  else if (p === 'nature') drawNatureBadge(ctx, bx, by, bw, bh, frameStyle);
-  else drawPropsBadge(ctx, bx, by, bw, bh, frameStyle);
-
-  ctx.restore();
-}
-
-export function getRibbonColorStyle(badgeRole) {
-  let mode, solidBg, solidStroke, solidText, cBg1, cBg2, cStroke, cText, cDir, themeKey;
-  if (badgeRole === 'creator') {
-    mode = state.badge1ColorMode;
-    solidBg = state.badge1SolidBg;
-    solidStroke = state.badge1SolidStroke;
-    solidText = state.badge1SolidText;
-    cBg1 = state.badge1CustomBg1;
-    cBg2 = state.badge1CustomBg2;
-    cStroke = state.badge1CustomStroke;
-    cText = state.badge1CustomText;
-    cDir = state.badge1GradDir;
-    themeKey = state.badge1ColorTheme || 'cyan';
-  } else if (badgeRole === 'series') {
-    mode = state.badge2ColorMode;
-    solidBg = state.badge2SolidBg;
-    solidStroke = state.badge2SolidStroke;
-    solidText = state.badge2SolidText;
-    cBg1 = state.badge2CustomBg1;
-    cBg2 = state.badge2CustomBg2;
-    cStroke = state.badge2CustomStroke;
-    cText = state.badge2CustomText;
-    cDir = state.badge2GradDir;
-    themeKey = state.badge2ColorTheme || 'purple';
-  } else if (badgeRole === 'extra1') {
-    mode = state.badge3ColorMode;
-    solidBg = state.badge3SolidBg;
-    solidStroke = state.badge3SolidStroke;
-    solidText = state.badge3SolidText;
-    cBg1 = state.badge3CustomBg1;
-    cBg2 = state.badge3CustomBg2;
-    cStroke = state.badge3CustomStroke;
-    cText = state.badge3CustomText;
-    cDir = state.badge3GradDir;
-    themeKey = state.badge3ColorTheme || 'emerald';
-  } else {
-    mode = state.badge4ColorMode;
-    solidBg = state.badge4SolidBg;
-    solidStroke = state.badge4SolidStroke;
-    solidText = state.badge4SolidText;
-    cBg1 = state.badge4CustomBg1;
-    cBg2 = state.badge4CustomBg2;
-    cStroke = state.badge4CustomStroke;
-    cText = state.badge4CustomText;
-    cDir = state.badge4GradDir;
-    themeKey = state.badge4ColorTheme || 'amber';
-  }
-
-  if (mode === 'solid') {
-    return {
-      type: 'solid',
-      bg: solidBg,
-      stroke: solidStroke,
-      textColor: solidText
-    };
-  } else if (mode === 'gradient') {
-    return {
-      type: 'gradient',
-      bgStart: cBg1,
-      bgEnd: cBg2,
-      stroke: cStroke,
-      textColor: cText,
-      direction: cDir
-    };
-  } else {
-    const theme = SERIES_COLOR_THEMES[themeKey] || (badgeRole === 'creator' ? SERIES_COLOR_THEMES.cyan : SERIES_COLOR_THEMES.purple);
-    return {
-      type: 'gradient',
-      bgStart: theme.bgStart,
-      bgEnd: theme.bgEnd,
-      stroke: theme.stroke,
-      textColor: theme.textColor || '#ffffff',
-      direction: 'diagonal'
-    };
-  }
-}
-
-export function drawCustomTextRibbon(ctx, bx, by, bw, bh, text, fontFamily, isBold, isItalic, ptSize, frameStyle, badgeRole) {
-  if (!text) return;
-  const radius = frameStyle === 'pill' ? bh / 2 : (frameStyle === 'circle' ? Math.min(bw, bh) / 2 : (frameStyle === 'rounded' ? 6 : 0));
-  const cx = bx + bw / 2;
-  const cy = by + bh / 2;
-  const styleInfo = getRibbonColorStyle(badgeRole);
-
-  if (frameStyle !== 'raw') {
-    ctx.save();
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.65)';
-    ctx.shadowBlur = 8;
-    ctx.shadowOffsetY = 3;
-
-    if (styleInfo.type === 'solid') {
-      ctx.fillStyle = styleInfo.bg;
-    } else {
-      let bgGrad;
-      if (styleInfo.direction === 'horizontal') {
-        bgGrad = ctx.createLinearGradient(bx, cy, bx + bw, cy);
-      } else if (styleInfo.direction === 'vertical') {
-        bgGrad = ctx.createLinearGradient(cx, by, cx, by + bh);
-      } else {
-        bgGrad = ctx.createLinearGradient(bx, by, bx + bw, by + bh);
-      }
-      bgGrad.addColorStop(0, styleInfo.bgStart);
-      bgGrad.addColorStop(1, styleInfo.bgEnd);
-      ctx.fillStyle = bgGrad;
-    }
-
-    ctx.beginPath();
-    if (frameStyle === 'circle') {
-      ctx.arc(cx, cy, Math.min(bw, bh) / 2, 0, Math.PI * 2);
-    } else {
-      ctx.roundRect(bx, by, bw, bh, radius);
-    }
-    ctx.fill();
-
-    ctx.strokeStyle = styleInfo.stroke;
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  ctx.save();
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
-  ctx.shadowBlur = 5;
-  ctx.shadowOffsetY = 1;
-
-  const weight = isBold ? '700' : '400';
-  const style = isItalic ? 'italic' : 'normal';
-  let targetPx = Math.round((ptSize || 13) * 1.333);
-  const fontStack = `"${fontFamily || 'Montserrat'}", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-  ctx.font = `${style} ${weight} ${targetPx}px ${fontStack}`;
-
-  const useLetterSpacing = badgeRole === 'creator' ? state.badge1LetterSpacing : (badgeRole === 'series' ? state.badge2LetterSpacing : (badgeRole === 'extra1' ? state.badge3LetterSpacing : state.badge4LetterSpacing));
-  if (useLetterSpacing && 'letterSpacing' in ctx) {
-    ctx.letterSpacing = '1.5px';
-  }
-
-  const innerPad = badgeRole === 'creator' ? (state.badge1InnerPadding ?? 8) : (badgeRole === 'series' ? (state.badge2InnerPadding ?? 8) : (badgeRole === 'extra1' ? (state.badge3InnerPadding ?? 8) : (state.badge4InnerPadding ?? 8)));
-  const horizontalPad = (frameStyle === 'pill' ? Math.max(innerPad * 1.6, bh * 0.5) : innerPad * 2);
-  const maxTextWidth = Math.max(10, bw - horizontalPad);
-  let textMetrics = ctx.measureText(text);
-  if (textMetrics.width > maxTextWidth && textMetrics.width > 0) {
-    const scale = Math.max(0.45, maxTextWidth / textMetrics.width);
-    targetPx = Math.max(7, Math.round(targetPx * scale));
-    ctx.font = `${style} ${weight} ${targetPx}px ${fontStack}`;
-  }
-
-  const textGradEnabled = badgeRole === 'creator'
-    ? state.badge1TextGradEnabled
-    : (badgeRole === 'series'
-      ? state.badge2TextGradEnabled
-      : (badgeRole === 'extra1'
-        ? state.badge3TextGradEnabled
-        : state.badge4TextGradEnabled));
-
-  if (textGradEnabled) {
-    const c1 = badgeRole === 'creator'
-      ? state.badge1TextGradColor1
-      : (badgeRole === 'series'
-        ? state.badge2TextGradColor1
-        : (badgeRole === 'extra1'
-          ? state.badge3TextGradColor1
-          : state.badge4TextGradColor1));
-    const c2 = badgeRole === 'creator'
-      ? state.badge1TextGradColor2
-      : (badgeRole === 'series'
-        ? state.badge2TextGradColor2
-        : (badgeRole === 'extra1'
-          ? state.badge3TextGradColor2
-          : state.badge4TextGradColor2));
-    const dir = badgeRole === 'creator'
-      ? state.badge1TextGradDir
-      : (badgeRole === 'series'
-        ? state.badge2TextGradDir
-        : (badgeRole === 'extra1'
-          ? state.badge3TextGradDir
-          : state.badge4TextGradDir));
-
-    let textGrad;
-    if (dir === 'horizontal') {
-      const halfW = (textMetrics?.width || bw * 0.4) / 2;
-      textGrad = ctx.createLinearGradient(cx - halfW, cy, cx + halfW, cy);
-    } else {
-      const halfH = targetPx * 0.55;
-      textGrad = ctx.createLinearGradient(cx, cy - halfH, cx, cy + halfH);
-    }
-    textGrad.addColorStop(0, c1 || '#ffffff');
-    textGrad.addColorStop(1, c2 || '#38bdf8');
-    ctx.fillStyle = textGrad;
-  } else {
-    ctx.fillStyle = styleInfo.textColor || '#ffffff';
-  }
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(text, cx, cy);
-  if ('letterSpacing' in ctx) {
-    ctx.letterSpacing = '0px';
-  }
-  ctx.restore();
-}
-
-export function drawCrown(ctx, cx, cy, r, color) {
-  ctx.save();
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.moveTo(cx - r * 0.5, cy + r * 0.35);
-  ctx.lineTo(cx - r * 0.65, cy - r * 0.25);
-  ctx.lineTo(cx - r * 0.25, cy - r * 0.05);
-  ctx.lineTo(cx, cy - r * 0.45);
-  ctx.lineTo(cx + r * 0.25, cy - r * 0.05);
-  ctx.lineTo(cx + r * 0.65, cy - r * 0.25);
-  ctx.lineTo(cx + r * 0.5, cy + r * 0.35);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-  ctx.restore();
-}
-
-export function drawShield(ctx, cx, cy, r, color) {
-  ctx.save();
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.moveTo(cx, cy - r * 0.55);
-  ctx.lineTo(cx + r * 0.45, cy - r * 0.35);
-  ctx.lineTo(cx + r * 0.4, cy + r * 0.15);
-  ctx.quadraticCurveTo(cx + r * 0.3, cy + r * 0.5, cx, cy + r * 0.65);
-  ctx.quadraticCurveTo(cx - r * 0.3, cy + r * 0.5, cx - r * 0.4, cy + r * 0.15);
-  ctx.lineTo(cx - r * 0.45, cy - r * 0.35);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-  ctx.restore();
-}
-
-export function drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius, color) {
-  let rot = Math.PI / 2 * 3;
-  let x = cx;
-  let y = cy;
-  const step = Math.PI / spikes;
-
-  ctx.beginPath();
-  ctx.moveTo(cx, cy - outerRadius);
-  for (let i = 0; i < spikes; i++) {
-    x = cx + Math.cos(rot) * outerRadius;
-    y = cy + Math.sin(rot) * outerRadius;
-    ctx.lineTo(x, y);
-    rot += step;
-
-    x = cx + Math.cos(rot) * innerRadius;
-    y = cy + Math.sin(rot) * innerRadius;
-    ctx.lineTo(x, y);
-    rot += step;
-  }
-  ctx.lineTo(cx, cy - outerRadius);
-  ctx.closePath();
-  ctx.fillStyle = color;
-  ctx.fill();
-}
-
-export function drawGraffitiBadge(ctx, bx, by, bw, bh, frameStyle) {
-  const radius = frameStyle === 'pill' ? bh / 2 : (frameStyle === 'circle' ? bw / 2 : 6);
-  const grad = ctx.createLinearGradient(bx, by, bx, by + bh);
-  grad.addColorStop(0, '#7e22ce');
-  grad.addColorStop(1, '#581c87');
-
-  ctx.fillStyle = grad;
-  ctx.beginPath();
-  ctx.roundRect(bx, by, bw, bh, radius);
-  ctx.fill();
-
-  ctx.strokeStyle = '#c084fc';
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-
-  const cx = bx + bw / 2;
-  const cy = by + bh / 2;
-
-  ctx.fillStyle = '#fdf4ff';
-  ctx.font = `800 ${Math.max(9, Math.round(bh * 0.44))}px -apple-system, sans-serif`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('GRAFFITI', cx, cy);
-}
-
-export function drawPosterBadge(ctx, bx, by, bw, bh, frameStyle) {
-  const radius = frameStyle === 'pill' ? bh / 2 : (frameStyle === 'circle' ? bw / 2 : 6);
-  const grad = ctx.createLinearGradient(bx, by, bx, by + bh);
-  grad.addColorStop(0, '#c2410c');
-  grad.addColorStop(1, '#9a3412');
-
-  ctx.fillStyle = grad;
-  ctx.beginPath();
-  ctx.roundRect(bx, by, bw, bh, radius);
-  ctx.fill();
-
-  ctx.strokeStyle = '#fb923c';
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-
-  const cx = bx + bw / 2;
-  const cy = by + bh / 2;
-
-  ctx.fillStyle = '#fff7ed';
-  ctx.font = `800 ${Math.max(9, Math.round(bh * 0.44))}px -apple-system, sans-serif`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('POSTER', cx, cy);
-}
-
-export function drawTransitBadge(ctx, bx, by, bw, bh, frameStyle) {
-  const radius = frameStyle === 'pill' ? bh / 2 : (frameStyle === 'circle' ? bw / 2 : 6);
-  const grad = ctx.createLinearGradient(bx, by, bx, by + bh);
-  grad.addColorStop(0, '#0284c7');
-  grad.addColorStop(1, '#0369a1');
-
-  ctx.fillStyle = grad;
-  ctx.beginPath();
-  ctx.roundRect(bx, by, bw, bh, radius);
-  ctx.fill();
-
-  ctx.strokeStyle = '#38bdf8';
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-
-  const cx = bx + bw / 2;
-  const cy = by + bh / 2;
-
-  ctx.fillStyle = '#f0f9ff';
-  ctx.font = `800 ${Math.max(9, Math.round(bh * 0.44))}px -apple-system, sans-serif`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('TRANSIT', cx, cy);
-}
-
-export function drawPropsBadge(ctx, bx, by, bw, bh, frameStyle) {
-  const radius = frameStyle === 'pill' ? bh / 2 : (frameStyle === 'circle' ? bw / 2 : 6);
-  const grad = ctx.createLinearGradient(bx, by, bx, by + bh);
-  grad.addColorStop(0, '#047857');
-  grad.addColorStop(1, '#065f46');
-
-  ctx.fillStyle = grad;
-  ctx.beginPath();
-  ctx.roundRect(bx, by, bw, bh, radius);
-  ctx.fill();
-
-  ctx.strokeStyle = '#34d399';
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-
-  const cx = bx + bw / 2;
-  const cy = by + bh / 2;
-
-  ctx.fillStyle = '#ecfdf5';
-  ctx.font = `800 ${Math.max(9, Math.round(bh * 0.44))}px -apple-system, sans-serif`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('PROPS', cx, cy);
-}
-
-export function drawHazardBadge(ctx, bx, by, bw, bh, frameStyle) {
-  const radius = frameStyle === 'pill' ? bh / 2 : (frameStyle === 'circle' ? bw / 2 : 6);
-  ctx.save();
-  ctx.beginPath();
-  ctx.roundRect(bx, by, bw, bh, radius);
-  ctx.clip();
-
-  ctx.fillStyle = '#eab308';
-  ctx.fillRect(bx, by, bw, bh);
-
-  ctx.fillStyle = '#1e1b18';
-  for (let sx = -bh * 2; sx < bw + bh * 2; sx += 14) {
-    ctx.beginPath();
-    ctx.moveTo(bx + sx, by);
-    ctx.lineTo(bx + sx + 7, by);
-    ctx.lineTo(bx + sx - 5, by + bh);
-    ctx.lineTo(bx + sx - 12, by + bh);
-    ctx.closePath();
-    ctx.fill();
-  }
-
-  ctx.strokeStyle = '#ca8a04';
-  ctx.lineWidth = 2;
-  ctx.strokeRect(bx, by, bw, bh);
-  ctx.restore();
-}
-
-export function drawNatureBadge(ctx, bx, by, bw, bh, frameStyle) {
-  const radius = frameStyle === 'pill' ? bh / 2 : (frameStyle === 'circle' ? bw / 2 : 6);
-  const grad = ctx.createLinearGradient(bx, by, bx, by + bh);
-  grad.addColorStop(0, '#15803d');
-  grad.addColorStop(1, '#166534');
-
-  ctx.fillStyle = grad;
-  ctx.beginPath();
-  ctx.roundRect(bx, by, bw, bh, radius);
-  ctx.fill();
-
-  ctx.strokeStyle = '#4ade80';
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-
-  const cx = bx + bw / 2;
-  const cy = by + bh / 2;
-
-  ctx.fillStyle = '#f0fdf4';
-  ctx.font = `800 ${Math.max(9, Math.round(bh * 0.44))}px -apple-system, sans-serif`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('NATURE', cx, cy);
-}
-
+};
+export const handleExtra2LogoSelect = (e) => handleBadgeLayerLogoSelect(4, e);
+export const clearExtra2Logo = () => clearBadgeLayerLogo(4);
+export const onExtra2PositionChange = () => onBadgeLayerPositionChange(4);
+export const onExtra2CoordChange = () => onBadgeLayerCoordChange(4);
+export const snapExtra2Coord = (x, y) => snapBadgeLayerCoord(4, x, y);
+export const onExtra2ScaleChange = () => onBadgeLayerSliderChange(4, 'scaleId', 'scaleValId', '%');
+export const onExtra2PaddingChange = () => onBadgeLayerSliderChange(4, 'paddingId', 'paddingValId', ' px');
+export const onExtra2OpacityChange = () => onBadgeLayerSliderChange(4, 'opacityId', 'opacityValId', '%');
+
+// Attach all Badge 1–4 and navigation handlers to window for HTML inline listeners
 if (typeof window !== 'undefined') {
   Object.assign(window, {
-    switchBadgeSubtab,
     switchBadgeTab,
-    syncBadgeCheckboxes,
+    switchBadgeSubtab,
     syncAllBadgeCheckboxes,
-    drawImageAspectCorrect,
-    setBadgeScalePct,
-    getBadgeCurrentScale,
+    copyBadgeStyle,
+    runBadgeStyleCopyAction,
     toggleBadge1Enable,
-    toggleBadge2Enable,
-    toggleBadge3Enable,
-    toggleBadge4Enable,
+    setCreatorBadgeMode,
+    onBadge1TextChange,
+    clearCreatorText,
+    setBadge1TextPreset,
+    onBadge1FontChange,
+    toggleBadge1Bold,
+    toggleBadge1Italic,
+    toggleBadge1LetterSpacing,
+    onBadge1PtSizeChange,
     toggleBadge1TextGrad,
     onBadge1TextGradInput,
     setBadge1TextGradDir,
-    applyBadge1TextGradPreset,
-    toggleBadge2TextGrad,
-    onBadge2TextGradInput,
-    setBadge2TextGradDir,
-    applyBadge2TextGradPreset,
-    toggleBadge3TextGrad,
-    onBadge3TextGradInput,
-    setBadge3TextGradDir,
-    applyBadge3TextGradPreset,
-    toggleBadge4TextGrad,
-    onBadge4TextGradInput,
-    setBadge4TextGradDir,
-    applyBadge4TextGradPreset,
+    applyBadge1TextGradPresetByName,
+    updateCreatorGradPreview,
+    setCreatorColorMode,
+    setCreatorColorTheme,
+    setCreatorGradDirection,
+    onCreatorCustomColorInput,
+    onCreatorSolidColorInput,
+    applyCreatorGradPreset,
+    applyCreatorGradPresetByName,
+    handleDesignerLogoSelect,
+    clearDesignerLogo,
+    applyPresetLogo,
     onCreatorPositionChange,
     onCreatorCoordChange,
     snapCreatorCoord,
+    onBadge1PaddingChange,
+    onBadge1InnerPaddingChange,
+    onIconBadgeScaleChange,
+    onIconBadgeOpacityChange,
+    toggleBadge2Enable,
+    setSeriesBadgeMode,
+    onSeriesTextChange,
+    clearSeriesText,
+    setSeriesTextPreset,
+    onSeriesFontChange,
+    toggleSeriesBold,
+    toggleSeriesItalic,
+    toggleSeriesLetterSpacing,
+    onSeriesPtSizeChange,
+    toggleBadge2TextGrad,
+    onBadge2TextGradInput,
+    setBadge2TextGradDir,
+    applyBadge2TextGradPresetByName,
+    updateSeriesGradPreview,
+    setSeriesColorMode,
+    setSeriesColorTheme,
+    setSeriesGradDirection,
+    onSeriesCustomColorInput,
+    onSeriesSolidColorInput,
+    applySeriesGradPreset,
+    applySeriesGradPresetByName,
+    applySeriesPreset,
+    handleSeriesLogoSelect,
+    clearSeriesLogo,
     onSeriesPositionChange,
     onSeriesCoordChange,
     snapSeriesCoord,
-    onSeriesBadgeScaleChange,
-    onSeriesBadgeOpacityChange,
+    onBadge2PaddingChange,
     onSeriesPaddingChange,
+    onBadge2InnerPaddingChange,
     onSeriesInnerPaddingChange,
+    onSeriesScaleChange,
+    onSeriesBadgeScaleChange,
+    onSeriesOpacityChange,
+    onSeriesBadgeOpacityChange,
+    onSeriesFrameChange,
+    toggleBadge3Enable,
     setExtra1BadgeMode,
     onExtra1TextChange,
     clearExtra1Text,
@@ -4531,8 +1011,13 @@ if (typeof window !== 'undefined') {
     toggleExtra1Italic,
     toggleExtra1LetterSpacing,
     onExtra1PtSizeChange,
+    toggleBadge3TextGrad,
+    onBadge3TextGradInput,
+    setBadge3TextGradDir,
+    applyBadge3TextGradPresetByName,
     setExtra1ColorMode,
     setExtra1ColorTheme,
+    applyExtra1GradPresetByName,
     onExtra1CustomColorInput,
     onExtra1SolidColorInput,
     applyExtra1Preset,
@@ -4544,6 +1029,7 @@ if (typeof window !== 'undefined') {
     onExtra1ScaleChange,
     onExtra1PaddingChange,
     onExtra1OpacityChange,
+    toggleBadge4Enable,
     setExtra2BadgeMode,
     onExtra2TextChange,
     clearExtra2Text,
@@ -4553,8 +1039,13 @@ if (typeof window !== 'undefined') {
     toggleExtra2Italic,
     toggleExtra2LetterSpacing,
     onExtra2PtSizeChange,
+    toggleBadge4TextGrad,
+    onBadge4TextGradInput,
+    setBadge4TextGradDir,
+    applyBadge4TextGradPresetByName,
     setExtra2ColorMode,
     setExtra2ColorTheme,
+    applyExtra2GradPresetByName,
     onExtra2CustomColorInput,
     onExtra2SolidColorInput,
     applyExtra2Preset,
@@ -4565,20 +1056,612 @@ if (typeof window !== 'undefined') {
     snapExtra2Coord,
     onExtra2ScaleChange,
     onExtra2PaddingChange,
-    onExtra2OpacityChange,
-    copyBadgeStyle,
-    runBadgeStyleCopyAction,
-    applyCreatorGradPresetByName,
-    applySeriesGradPresetByName,
-    applyExtra1GradPresetByName,
-    applyExtra2GradPresetByName,
-    applyBadge1TextGradPresetByName,
-    applyBadge2TextGradPresetByName,
-    applyBadge3TextGradPresetByName,
-    applyBadge4TextGradPresetByName,
-    selectBadgeOverlay,
-    getBadgeAtPoint,
-    initBadgeCanvasInteractions,
-    updateBadgeLivePosition
+    onExtra2OpacityChange
   });
+}
+
+// ==========================================
+// Icon Background Studio Controls
+// ==========================================
+
+export function onIconBgStyleChange() {
+  const style = getEl('iconBgStyle')?.value || 'transparent';
+  setElDisplay('customIconBgSection', style === 'custom' ? 'block' : 'none');
+  renderIconMap();
+}
+
+export function setCustomIconBgType(type) {
+  setElValue('customIconBgTypeSelect', type);
+  setElDisplay('customBgPanelImage', type === 'image' ? 'block' : 'none');
+  setElDisplay('customBgPanelGradient', type === 'gradient' ? 'block' : 'none');
+  setElDisplay('customBgPanelSolid', type === 'solid' ? 'block' : 'none');
+  renderIconMap();
+}
+
+export function handleIconBgImageSelect(event) {
+  const file = event?.target?.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      state.customIconBgImg = img;
+      state.customIconBgFileName = file.name;
+      setElText('iconBgUploadBtnText', file.name);
+      setElDisplay('btnClearIconBgImg', 'inline-block');
+      setElDisplay('iconBgImageAdjustments', 'block');
+      renderIconMap();
+      showToast(`Loaded icon backdrop: ${file.name}`);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+export function clearIconBgImage() {
+  state.customIconBgImg = null;
+  state.customIconBgFileName = '';
+  setElText('iconBgUploadBtnText', 'Upload Background Image...');
+  setElDisplay('btnClearIconBgImg', 'none');
+  renderIconMap();
+}
+
+export function applyProceduralBackdrop(preset) {
+  if (!preset) return;
+  const size = 256;
+  const c = document.createElement('canvas');
+  c.width = size;
+  c.height = size;
+  const ctx = c.getContext('2d');
+  const palettes = {
+    asphalt: ['#1e293b', '#0f172a', '#334155'],
+    concrete: ['#475569', '#334155', '#64748b'],
+    blueprint: ['#0c2d48', '#07192b', '#00e5ff'],
+    carbon: ['#18181b', '#09090b', '#27272a'],
+    grass: ['#14532d', '#052e16', '#22c55e'],
+    brick: ['#451a03', '#270e02', '#b45309'],
+    wood: ['#3f2305', '#261402', '#78350f'],
+    plaza: ['#334155', '#1e293b', '#94a3b8']
+  };
+  const pal = palettes[preset] || palettes.asphalt;
+  const grad = ctx.createLinearGradient(0, 0, size, size);
+  grad.addColorStop(0, pal[0]);
+  grad.addColorStop(1, pal[1]);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, size, size);
+
+  ctx.strokeStyle = pal[2];
+  ctx.globalAlpha = 0.22;
+  ctx.lineWidth = 1;
+  const step = 32;
+  for (let i = 0; i <= size; i += step) {
+    ctx.beginPath();
+    ctx.moveTo(i, 0);
+    ctx.lineTo(i, size);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(0, i);
+    ctx.lineTo(size, i);
+    ctx.stroke();
+  }
+
+  const img = new Image();
+  img.onload = () => {
+    state.customIconBgImg = img;
+    state.customIconBgFileName = `Preset_${preset}`;
+    setElDisplay('iconBgImageAdjustments', 'block');
+    setElDisplay('btnClearIconBgImg', 'inline-block');
+    renderIconMap();
+  };
+  img.src = c.toDataURL('image/png');
+}
+
+export const onIconBgFitChange = () => renderIconMap();
+export const onIconBgBlurChange = () => {
+  setElText('iconBgBlurVal', `${getEl('iconBgBlur')?.value || 0} px`);
+  renderIconMap();
+};
+export const onIconBgBrightnessChange = () => {
+  setElText('iconBgBrightVal', `${getEl('iconBgBrightness')?.value || 100}%`);
+  renderIconMap();
+};
+export const onIconBgVignetteChange = () => {
+  setElText('iconBgVignetteVal', `${getEl('iconBgVignette')?.value || 0}%`);
+  renderIconMap();
+};
+export const onIconBgGradDirChange = () => renderIconMap();
+export const onIconBgGradColorsChange = () => {
+  const c1 = getEl('iconBgGradColor1')?.value || '#0c1626';
+  const c2 = getEl('iconBgGradColor2')?.value || '#1e3a5f';
+  setElText('iconBgGradColor1Hex', c1);
+  setElText('iconBgGradColor2Hex', c2);
+  const bar = getEl('iconBgGradPreviewBar');
+  if (bar) bar.style.background = `linear-gradient(135deg, ${c1}, ${c2})`;
+  renderIconMap();
+};
+export function applyIconBgGradPreset(c1, c2, dir) {
+  setElValue('iconBgGradColor1', c1);
+  setElValue('iconBgGradColor2', c2);
+  if (dir) setElValue('iconBgGradDirection', dir);
+  onIconBgGradColorsChange();
+}
+export const onIconBgGradGridChange = () => renderIconMap();
+export const onIconBgSolidColorChange = () => {
+  setElText('iconBgSolidColorHex', getEl('iconBgSolidColor')?.value || '#141e30');
+  renderIconMap();
+};
+export function applyIconBgSolidSwatch(hex) {
+  setElValue('iconBgSolidColor', hex);
+  onIconBgSolidColorChange();
+}
+
+// ==========================================
+// Default Badges Persistence
+// ==========================================
+
+export function saveIconBadgeDefaults() {
+  try {
+    const payload = {
+      badge1Enabled: state.badge1Enabled,
+      badge2Enabled: state.badge2Enabled,
+      badge3Enabled: state.badge3Enabled,
+      badge4Enabled: state.badge4Enabled,
+      badge1Text: getEl('badge1TextInput')?.value || '',
+      seriesText: getEl('seriesTextInput')?.value || '',
+      extra1Text: getEl('extra1TextInput')?.value || '',
+      extra2Text: getEl('extra2TextInput')?.value || '',
+      creatorTheme: getEl('creatorThemeSelect')?.value || 'cyan',
+      seriesTheme: getEl('seriesThemeSelect')?.value || 'purple',
+      iconBgStyle: getEl('iconBgStyle')?.value || 'transparent'
+    };
+    localStorage.setItem(BADGE_DEFAULTS_KEY, JSON.stringify(payload));
+    updateBadgeDefaultsUI();
+    showToast('Saved current badge settings as default');
+  } catch (_) {}
+}
+
+export function loadIconBadgeDefaults(silent = false) {
+  try {
+    const raw = localStorage.getItem(BADGE_DEFAULTS_KEY);
+    if (!raw) {
+      if (!silent) showToast('No saved badge defaults found');
+      return false;
+    }
+    const d = JSON.parse(raw);
+    state.badge1Enabled = Boolean(d.badge1Enabled);
+    state.badge2Enabled = Boolean(d.badge2Enabled);
+    state.badge3Enabled = Boolean(d.badge3Enabled);
+    state.badge4Enabled = Boolean(d.badge4Enabled);
+    if (d.badge1Text !== undefined) setElValue('badge1TextInput', d.badge1Text);
+    if (d.seriesText !== undefined) setElValue('seriesTextInput', d.seriesText);
+    if (d.extra1Text !== undefined) setElValue('extra1TextInput', d.extra1Text);
+    if (d.extra2Text !== undefined) setElValue('extra2TextInput', d.extra2Text);
+    if (d.creatorTheme) setElValue('creatorThemeSelect', d.creatorTheme);
+    if (d.seriesTheme) setElValue('seriesThemeSelect', d.seriesTheme);
+    if (d.iconBgStyle) setElValue('iconBgStyle', d.iconBgStyle);
+    syncAllBadgeCheckboxes();
+    renderIconMap();
+    if (!silent) showToast('Applied default badge configuration');
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+export function resetIconBadgeDefaults() {
+  try {
+    localStorage.removeItem(BADGE_DEFAULTS_KEY);
+  } catch (_) {}
+  updateBadgeDefaultsUI();
+  showToast('Cleared stored badge defaults');
+}
+export const clearIconBadgeDefaults = resetIconBadgeDefaults;
+
+export function toggleAutoApplyDefaults(checked) {
+  try {
+    localStorage.setItem('cs2_auto_apply_badge_defaults', String(Boolean(checked)));
+  } catch (_) {}
+}
+
+export function updateBadgeDefaultsUI() {
+  const hasSaved = Boolean(localStorage.getItem(BADGE_DEFAULTS_KEY));
+  const badge = getEl('badgeDefaultsStatusBadge');
+  if (badge) {
+    badge.textContent = hasSaved ? '✓ Stored' : 'Not Stored';
+  }
+}
+
+export function initBadgeDefaults() {
+  populateFontDropdowns();
+  updateBadgeDefaultsUI();
+  if (getEl('autoApplyBadgeDefaults')?.checked !== false) {
+    loadIconBadgeDefaults(true);
+  }
+}
+
+export function applySavedBadgeDefaultsToState() {
+  loadIconBadgeDefaults(true);
+}
+
+if (typeof window !== 'undefined') {
+  Object.assign(window, {
+    clearIconBadgeDefaults,
+    toggleAutoApplyDefaults,
+    initBadgeCanvasInteractions
+  });
+}
+
+// ==========================================
+// Interactive Drag-to-Position on Icon Canvas
+// ==========================================
+
+// Stores rendered bounding boxes in 256x256 icon coordinate space for hit-testing
+const badgeHitBoxes = {};
+let activeDragState = null;
+let windowDragListenersBound = false;
+
+export function initBadgeCanvasInteractions() {
+  const { canvasIcon, canvasSingle } = getCanvases();
+
+  const ICON_SIZE = 256;
+
+  // Convert pointer event into 256x256 icon space & 0-100% coordinate space
+  const getPointerCoords = (canvas, e) => {
+    const rect = canvas.getBoundingClientRect();
+    const touch = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]);
+    const clientX = touch ? touch.clientX : e.clientX;
+    const clientY = touch ? touch.clientY : e.clientY;
+    const width = rect.width || 1;
+    const height = rect.height || 1;
+    const normX = Math.max(0, Math.min(1, (clientX - rect.left) / width));
+    const normY = Math.max(0, Math.min(1, (clientY - rect.top) / height));
+    return {
+      px: normX * ICON_SIZE,
+      py: normY * ICON_SIZE,
+      xPct: Math.round(normX * 100),
+      yPct: Math.round(normY * 100)
+    };
+  };
+
+  // Hit-test rendered badge overlays from top layer (4) to bottom layer (1)
+  const hitTestBadge = (px, py) => {
+    const hitPad = 6;
+    for (let i = 4; i >= 1; i--) {
+      if (!state[`badge${i}Enabled`]) continue;
+      const box = badgeHitBoxes[i];
+      if (!box) continue;
+      if (
+        px >= box.x - hitPad &&
+        px <= box.x + box.w + hitPad &&
+        py >= box.y - hitPad &&
+        py <= box.y + box.h + hitPad
+      ) {
+        return i;
+      }
+    }
+    return null;
+  };
+
+  // Determine whether a given canvas is currently acting as an interactive icon preview
+  const isIconInteractiveCanvas = (canvas) => {
+    if (!canvas) return false;
+    if (canvas.id === 'canvasIcon') return true;
+    if (canvas.id === 'canvasSingle') {
+      return state.activeTab === 'icon' || state.activeSingleMap === 'icon';
+    }
+    return false;
+  };
+
+  const applyDragPosition = (idx, canvas, e, offsetXPct = 0, offsetYPct = 0) => {
+    const { xPct, yPct } = getPointerCoords(canvas, e);
+    const clampedX = Math.max(0, Math.min(100, Math.round(xPct + offsetXPct)));
+    const clampedY = Math.max(0, Math.min(100, Math.round(yPct + offsetYPct)));
+    const cfg = BADGE_CONFIG[idx];
+    setElValue(cfg.positionSelectId, 'custom');
+    setElDisplay(cfg.customPosContainerId, 'block');
+    snapBadgeLayerCoord(idx, clampedX, clampedY);
+  };
+
+  const bindCanvas = (canvas) => {
+    if (!canvas || canvas.dataset.dragBound === 'true') return;
+    canvas.dataset.dragBound = 'true';
+
+    const onPointerDown = (e) => {
+      if (!isIconInteractiveCanvas(canvas)) return;
+      if (e.button !== undefined && e.button !== 0) return;
+
+      const { px, py, xPct, yPct } = getPointerCoords(canvas, e);
+      let targetIdx = hitTestBadge(px, py);
+      let offsetXPct = 0;
+      let offsetYPct = 0;
+
+      if (targetIdx) {
+        const box = badgeHitBoxes[targetIdx];
+        if (box) {
+          offsetXPct = (box.cx / ICON_SIZE) * 100 - xPct;
+          offsetYPct = (box.cy / ICON_SIZE) * 100 - yPct;
+        }
+      } else {
+        // Fallback: if user clicked empty space, prefer active subtab layer if enabled, else topmost enabled layer
+        const activeLayerKey = getEl('badgeLayerSelect')?.value;
+        const activeCfg = activeLayerKey ? getCfgByKeyOrIndex(activeLayerKey) : null;
+        if (activeCfg && state[`badge${activeCfg.index}Enabled`]) {
+          targetIdx = activeCfg.index;
+        } else {
+          for (let i = 4; i >= 1; i--) {
+            if (state[`badge${i}Enabled`]) {
+              targetIdx = i;
+              break;
+            }
+          }
+        }
+      }
+
+      if (!targetIdx) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      activeDragState = {
+        idx: targetIdx,
+        canvas,
+        offsetXPct,
+        offsetYPct
+      };
+
+      const cfg = BADGE_CONFIG[targetIdx];
+      switchBadgeSubtab(cfg.key);
+      canvas.style.cursor = 'grabbing';
+      applyDragPosition(targetIdx, canvas, e, offsetXPct, offsetYPct);
+    };
+
+    const onPointerHover = (e) => {
+      if (!isIconInteractiveCanvas(canvas)) return;
+      if (activeDragState) {
+        canvas.style.cursor = 'grabbing';
+        return;
+      }
+      const { px, py } = getPointerCoords(canvas, e);
+      const hitIdx = hitTestBadge(px, py);
+      canvas.style.cursor = hitIdx ? 'grab' : 'default';
+    };
+
+    canvas.addEventListener('mousedown', onPointerDown);
+    canvas.addEventListener('mousemove', onPointerHover);
+    canvas.addEventListener('touchstart', onPointerDown, { passive: false });
+  };
+
+  bindCanvas(canvasIcon);
+  bindCanvas(canvasSingle);
+
+  if (!windowDragListenersBound && typeof window !== 'undefined') {
+    windowDragListenersBound = true;
+
+    const onWindowMove = (e) => {
+      if (!activeDragState) return;
+      if (e.cancelable) e.preventDefault();
+      const { idx, canvas, offsetXPct, offsetYPct } = activeDragState;
+      applyDragPosition(idx, canvas, e, offsetXPct, offsetYPct);
+    };
+
+    const onWindowUp = () => {
+      if (!activeDragState) return;
+      const { canvas } = activeDragState;
+      activeDragState = null;
+      if (canvas) canvas.style.cursor = 'grab';
+    };
+
+    window.addEventListener('mousemove', onWindowMove, { passive: false });
+    window.addEventListener('mouseup', onWindowUp);
+    window.addEventListener('touchmove', onWindowMove, { passive: false });
+    window.addEventListener('touchend', onWindowUp);
+  }
+}
+
+// ==========================================
+// Icon & 4-Badge Layer Canvas Renderer
+// ==========================================
+
+function drawSingleBadgeOverlay(ctx, size, idx) {
+  delete badgeHitBoxes[idx];
+  if (!state[`badge${idx}Enabled`]) return;
+  const cfg = BADGE_CONFIG[idx];
+
+  const mode = getEl(cfg.modeSelectId)?.value || (idx === 2 ? 'preset' : 'text');
+  const scalePct = Number(getEl(cfg.scaleId)?.value || 25) / 100;
+  const opacity = Number(getEl(cfg.opacityId)?.value || 95) / 100;
+  const edgePad = Number(getEl(cfg.paddingId)?.value || 12);
+  const innerPad = Number(getEl(cfg.innerPaddingId)?.value || 8);
+  const frameStyle = getEl(cfg.frameSelectId)?.value || 'pill';
+
+  const posMode = getEl(cfg.positionSelectId)?.value || 'custom';
+  let cx = size * (Number(getEl(cfg.posXId)?.value || 50) / 100);
+  let cy = size * (Number(getEl(cfg.posYId)?.value || 50) / 100);
+
+  if (posMode !== 'custom') {
+    const minCoord = edgePad + 24;
+    const maxCoord = size - edgePad - 24;
+    if (posMode.includes('left')) cx = minCoord + 20;
+    else if (posMode.includes('right')) cx = maxCoord - 20;
+    else cx = size / 2;
+
+    if (posMode.includes('top')) cy = minCoord;
+    else if (posMode.includes('bottom')) cy = maxCoord;
+    else cy = size / 2;
+  }
+
+  ctx.save();
+  ctx.globalAlpha = opacity;
+
+  // Image mode
+  const logoImg = state[cfg.imgStateKey];
+  if (mode === 'image' && logoImg) {
+    const boxSize = Math.max(20, size * scalePct);
+    const rx = cx - boxSize / 2;
+    const ry = cy - boxSize / 2;
+    ctx.drawImage(logoImg, rx, ry, boxSize, boxSize);
+    badgeHitBoxes[idx] = { x: rx, y: ry, w: boxSize, h: boxSize, cx, cy };
+    ctx.restore();
+    return;
+  }
+
+  // Text / Preset mode
+  let text = (getEl(cfg.textInputId)?.value || '').trim();
+  if (mode === 'preset' && !text) {
+    text = idx === 2 ? 'GRAFFITI' : `BADGE ${idx}`;
+  }
+  if (!text) {
+    ctx.restore();
+    return;
+  }
+
+  const ptSize = Math.max(8, Math.round(Number(getEl(cfg.ptSizeId)?.value || 14) * (scalePct / 0.25)));
+  const fontFam = getEl(cfg.fontSelectId)?.value || DEFAULT_FONT_OPTIONS[0].value;
+  const isBold = getEl(cfg.boldBtnId)?.classList.contains('active') !== false;
+  const isItalic = getEl(cfg.italicBtnId)?.classList.contains('active') === true;
+  ctx.font = `${isItalic ? 'italic ' : ''}${isBold ? '700 ' : '500 '}${ptSize}px ${fontFam}`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  const metrics = ctx.measureText(text);
+  const pillW = Math.min(size - 8, metrics.width + innerPad * 2.6 + 12);
+  const pillH = Math.max(20, ptSize + innerPad * 1.5);
+  const rx = cx - pillW / 2;
+  const ry = cy - pillH / 2;
+
+  badgeHitBoxes[idx] = { x: rx, y: ry, w: pillW, h: pillH, cx, cy };
+
+  // Resolve colors
+  const colorMode = getEl(cfg.colorModeSelectId)?.value || 'theme';
+  const themeKey = getEl(cfg.themeSelectId)?.value || 'cyan';
+  const themeObj = BADGE_COLOR_THEMES[themeKey] || BADGE_COLOR_THEMES.cyan;
+
+  let fillStyle = themeObj.bg1;
+  let strokeColor = themeObj.stroke;
+  let textColor = themeObj.text;
+
+  if (colorMode === 'gradient') {
+    const c1 = getEl(cfg.color1Id)?.value || themeObj.bg1;
+    const c2 = getEl(cfg.color2Id)?.value || themeObj.bg2;
+    strokeColor = getEl(cfg.strokeColorId)?.value || themeObj.stroke;
+    textColor = getEl(cfg.textColorId)?.value || '#ffffff';
+    const g = ctx.createLinearGradient(rx, ry, rx + pillW, ry + pillH);
+    g.addColorStop(0, c1);
+    g.addColorStop(1, c2);
+    fillStyle = g;
+  } else if (colorMode === 'solid') {
+    fillStyle = getEl(cfg.solidBgId)?.value || themeObj.bg1;
+    strokeColor = getEl(cfg.solidStrokeId)?.value || themeObj.stroke;
+    textColor = getEl(cfg.solidTextId)?.value || '#ffffff';
+  } else {
+    const g = ctx.createLinearGradient(rx, ry, rx + pillW, ry + pillH);
+    g.addColorStop(0, themeObj.bg1);
+    g.addColorStop(1, themeObj.bg2);
+    fillStyle = g;
+  }
+
+  if (frameStyle !== 'raw') {
+    const radius = frameStyle === 'pill' ? pillH / 2 : frameStyle === 'circle' ? Math.max(pillW, pillH) / 2 : 6;
+    ctx.beginPath();
+    if (typeof ctx.roundRect === 'function') {
+      ctx.roundRect(rx, ry, pillW, pillH, radius);
+    } else {
+      ctx.rect(rx, ry, pillW, pillH);
+    }
+    ctx.fillStyle = fillStyle;
+    ctx.fill();
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = strokeColor;
+    ctx.stroke();
+  }
+
+  if (getEl(cfg.textGradEnableId)?.checked) {
+    const tc1 = getEl(cfg.textGrad1Id)?.value || '#ffffff';
+    const tc2 = getEl(cfg.textGrad2Id)?.value || strokeColor;
+    const tg = ctx.createLinearGradient(rx, ry, rx, ry + pillH);
+    tg.addColorStop(0, tc1);
+    tg.addColorStop(1, tc2);
+    ctx.fillStyle = tg;
+  } else {
+    ctx.fillStyle = textColor;
+  }
+
+  ctx.fillText(text, cx, cy + 1);
+  ctx.restore();
+}
+
+export function renderIconMap() {
+  const { canvasIcon, ctxIcon } = getCanvases();
+  if (!canvasIcon || !ctxIcon) return;
+
+  const size = 256;
+  if (canvasIcon.width !== size) canvasIcon.width = size;
+  if (canvasIcon.height !== size) canvasIcon.height = size;
+  ctxIcon.clearRect(0, 0, size, size);
+
+  // 1. Render icon background
+  const bgStyle = getEl('iconBgStyle')?.value || 'transparent';
+  if (bgStyle === 'dark' || bgStyle === 'cs2-dark') {
+    const g = ctxIcon.createRadialGradient(size / 2, size / 2, 16, size / 2, size / 2, size * 0.72);
+    g.addColorStop(0, '#1e293b');
+    g.addColorStop(1, '#090d16');
+    ctxIcon.fillStyle = g;
+    ctxIcon.fillRect(0, 0, size, size);
+  } else if (bgStyle === 'blue' || bgStyle === 'blueprint') {
+    const g = ctxIcon.createLinearGradient(0, 0, size, size);
+    g.addColorStop(0, '#0c2d48');
+    g.addColorStop(1, '#051329');
+    ctxIcon.fillStyle = g;
+    ctxIcon.fillRect(0, 0, size, size);
+  } else if (bgStyle === 'light') {
+    ctxIcon.fillStyle = '#cbd5e1';
+    ctxIcon.fillRect(0, 0, size, size);
+  } else if (bgStyle === 'asphalt' || bgStyle === 'cs2-pedestal') {
+    const g = ctxIcon.createLinearGradient(0, 0, 0, size);
+    g.addColorStop(0, '#1e293b');
+    g.addColorStop(1, '#0f172a');
+    ctxIcon.fillStyle = g;
+    ctxIcon.fillRect(0, 0, size, size);
+  } else if (bgStyle === 'custom') {
+    const customType = getEl('customIconBgTypeSelect')?.value || getEl('customIconBgType')?.value || 'image';
+    if (customType === 'image' && state.customIconBgImg) {
+      drawImageSquare(
+        ctxIcon,
+        state.customIconBgImg,
+        size,
+        getEl('iconBgFit')?.value || getEl('iconBgFitSelect')?.value || 'cover'
+      );
+    } else if (customType === 'gradient') {
+      const c1 = getEl('iconBgGradColor1')?.value || getEl('iconBgGrad1Input')?.value || '#0c1626';
+      const c2 = getEl('iconBgGradColor2')?.value || getEl('iconBgGrad2Input')?.value || '#1e3a5f';
+      const g = ctxIcon.createLinearGradient(0, 0, size, size);
+      g.addColorStop(0, c1);
+      g.addColorStop(1, c2);
+      ctxIcon.fillStyle = g;
+      ctxIcon.fillRect(0, 0, size, size);
+    } else if (customType === 'solid' || customType === 'color') {
+      ctxIcon.fillStyle = getEl('iconBgSolidColor')?.value || getEl('iconBgColorInput')?.value || '#141e30';
+      ctxIcon.fillRect(0, 0, size, size);
+    }
+  }
+
+  // 2. Render main asset graphic
+  if (state.currentImage) {
+    const fitMode = getEl('fitStrategy')?.value || getEl('aspectHandling')?.value || 'contain';
+    drawImageSquare(ctxIcon, state.currentImage, size, fitMode);
+  }
+
+  // 3. Render 4 badge layers in order
+  [1, 2, 3, 4].forEach((idx) => drawSingleBadgeOverlay(ctxIcon, size, idx));
+
+  // Ensure drag interactions are initialized on icon canvases
+  initBadgeCanvasInteractions();
+
+  // Synchronize single view canvas whenever the icon tab is active
+  if (
+    (state.activeTab === 'icon' || (state.activeTab === 'single' && state.activeSingleMap === 'icon')) &&
+    typeof window.updateSingleView === 'function'
+  ) {
+    window.updateSingleView();
+  }
 }

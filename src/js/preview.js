@@ -71,7 +71,7 @@ export function updateSingleView() {
   const { canvasBase, canvasNormal, canvasMask, canvasIcon, canvasSingle, ctxSingle } = getCanvases();
   if (!canvasSingle || !ctxSingle) return;
 
-  if (!state.currentImage) {
+  if (!state.currentImage && state.activeSingleMap !== 'icon') {
     ctxSingle.clearRect(0, 0, canvasSingle.width, canvasSingle.height);
     const aspectBar = document.getElementById('singleAspectOverlayBar');
     if (aspectBar) aspectBar.style.display = 'none';

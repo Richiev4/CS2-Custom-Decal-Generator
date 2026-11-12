@@ -5,6 +5,7 @@
 // ==========================================
 
 import { showToast, escapeHtml, state, getCanvases, hasActiveWork, openUnsavedModal } from './state.js';
+import { captureCanvasThumbnail, createModalController } from './domUtils.js';
 
 export const SETS_REGISTRY_STORAGE_KEY = 'cs2_asset_sets_registry';
 
@@ -241,18 +242,8 @@ window.recallSetProfile = recallSetProfile;
  * Helper to capture a clean 96x96 PNG thumbnail from current canvas
  */
 export function captureCurrentCanvasThumbnail() {
-  try {
-    const { canvasBase } = getCanvases();
-    if (canvasBase && canvasBase.width > 0) {
-      const tc = document.createElement('canvas');
-      tc.width = 96;
-      tc.height = 96;
-      const tctx = tc.getContext('2d');
-      tctx.drawImage(canvasBase, 0, 0, 96, 96);
-      return tc.toDataURL('image/png');
-    }
-  } catch (e) {}
-  return '';
+  const { canvasBase } = getCanvases();
+  return captureCanvasThumbnail(canvasBase, 96) || '';
 }
 
 /**
@@ -460,20 +451,26 @@ window.checkLiveOverlapAndAlert = checkLiveOverlapAndAlert;
  */
 export function updateSetRegistryUI(selectedSetId) {
   const registry = getSetsRegistry();
-  const currentSet = getCurrentActiveSet();
-  const activeId = selectedSetId || (currentSet ? currentSet.id : (registry[0] ? registry[0].id : ''));
+  const currentSet = selectedSetId
+    ? (registry.find(s => s.id === selectedSetId || s.setName.toLowerCase() === String(selectedSetId).toLowerCase()) || getCurrentActiveSet())
+    : getCurrentActiveSet();
+  const activeId = currentSet ? currentSet.id : '';
 
   // 1. Update Primary Pack Active Selector in Section 3
   const packSelector = document.getElementById('packActiveSelector');
   if (packSelector) {
     let packHtml = '';
-    registry.forEach(set => {
-      const isSelected = activeId && (set.id === activeId || set.setName.toLowerCase() === activeId.toLowerCase());
-      const assetCount = set.assets ? set.assets.length : (set.lastIndex || 0);
-      packHtml += `<option value="${escapeHtml(set.id)}" ${isSelected ? 'selected' : ''}>
-        📁 ${escapeHtml(set.setName)} (${assetCount} ${assetCount === 1 ? 'item' : 'items'})
-      </option>`;
-    });
+    if (registry.length === 0) {
+      packHtml += `<option value="" selected disabled>-- No Packs Created Yet --</option>`;
+    } else {
+      registry.forEach(set => {
+        const isSelected = activeId && (set.id === activeId || set.setName.toLowerCase() === activeId.toLowerCase());
+        const assetCount = set.assets ? set.assets.length : (set.lastIndex || 0);
+        packHtml += `<option value="${escapeHtml(set.id)}" ${isSelected ? 'selected' : ''}>
+          📁 ${escapeHtml(set.setName)} (${assetCount} ${assetCount === 1 ? 'item' : 'items'})
+        </option>`;
+      });
+    }
     packHtml += `<option value="__new__">＋ Create Brand New Pack...</option>`;
     packSelector.innerHTML = packHtml;
   }
@@ -494,12 +491,14 @@ export function updateSetRegistryUI(selectedSetId) {
   }
 
   // 3. Update count label and category tag
+  const countBadge = document.getElementById('packManageCountLabel');
+  const catTag = document.getElementById('packCategoryTag');
   if (currentSet) {
-    const countBadge = document.getElementById('packManageCountLabel');
     if (countBadge) countBadge.textContent = String(currentSet.assets ? currentSet.assets.length : 0);
-
-    const catTag = document.getElementById('packCategoryTag');
     if (catTag) catTag.textContent = currentSet.category || 'RoadMarkings';
+  } else {
+    if (countBadge) countBadge.textContent = '0';
+    if (catTag) catTag.textContent = 'None';
   }
 
   checkLiveOverlapAndAlert();
@@ -599,21 +598,53 @@ export function deleteSetProfileFromUI(setId) {
   registry = registry.filter(s => s.id !== setId);
   saveSetsRegistry(registry);
 
-  // If the deleted set was the one currently in workspace inputs:
+  // Clear pack association from any workspace slots that belonged to the deleted pack
+  if (state.setSlots) {
+    ['decal', 'surface', 'netlane'].forEach(mode => {
+      const slot = state.setSlots[mode];
+      if (!slot) return;
+      const stillInAnyPack = slot.assetName && registry.some(s =>
+        (s.assets || []).some(a => a.name.toLowerCase() === slot.assetName.toLowerCase())
+      );
+      if (!stillInAnyPack) {
+        slot.seriesName = '';
+        slot.assetSeries = '';
+      }
+    });
+  }
+
   const seriesInp = document.getElementById('assetSeries');
   const metaInp = document.getElementById('metaSetName');
   const currentSeries = (seriesInp?.value || metaInp?.value || '').trim().toLowerCase();
-  const wasActive = (set.id === setId || set.setName.toLowerCase() === currentSeries);
+  const wasActive = (set.setName.toLowerCase() === currentSeries || registry.length === 0);
 
   if (wasActive) {
-    const nextSet = registry[0] || null;
-    if (nextSet) {
-      if (seriesInp) seriesInp.value = nextSet.setName;
-      if (metaInp) metaInp.value = nextSet.setName;
-      recallSetProfile(nextSet.id);
+    // Check if the currently loaded asset belongs to any remaining pack
+    const currentAssetName = (state.currentLoadedAssetName || document.getElementById('assetName')?.value?.trim() || '').toLowerCase();
+    const memberPack = currentAssetName
+      ? registry.find(s => (s.assets || []).some(a => a.name.toLowerCase() === currentAssetName))
+      : null;
+
+    if (memberPack) {
+      if (typeof window.setAssetSeriesName === 'function') {
+        window.setAssetSeriesName(memberPack.setName);
+      } else {
+        if (seriesInp) seriesInp.value = memberPack.setName;
+        if (metaInp) metaInp.value = memberPack.setName;
+      }
+      updateSetRegistryUI(memberPack.id);
     } else {
-      if (seriesInp) seriesInp.value = '';
-      if (metaInp) metaInp.value = '';
+      // Do not assign the asset to another pack unless specifically added to one
+      if (typeof window.setAssetSeriesName === 'function') {
+        window.setAssetSeriesName('');
+      } else {
+        if (seriesInp) seriesInp.value = '';
+        if (metaInp) metaInp.value = '';
+        const actBadge = document.getElementById('activeSeriesBadge');
+        if (actBadge) actBadge.textContent = 'None';
+        const topBadge = document.getElementById('topMenuSeriesBadge');
+        if (topBadge) topBadge.textContent = 'None';
+      }
       updateSetRegistryUI('');
     }
   } else {
@@ -623,6 +654,10 @@ export function deleteSetProfileFromUI(setId) {
 
   renderSetsTable();
   renderSetThumbnailsStrip();
+  updateActiveDecalPackStatus();
+  if (typeof window.updateSetSlotsUI === 'function') {
+    window.updateSetSlotsUI();
+  }
   showToast(`Deleted pack profile "${set.setName}"`);
 }
 window.deleteSetProfileFromUI = deleteSetProfileFromUI;
@@ -630,31 +665,20 @@ window.deleteSetProfileFromUI = deleteSetProfileFromUI;
 /**
  * Modal handlers
  */
-export function openSetRegistryModal() {
-  const modal = document.getElementById('setRegistryModal');
-  if (modal) {
-    modal.style.display = 'flex';
+const setRegistryModalCtrl = createModalController('setRegistryModal', {
+  onOpen: () => {
     renderSetsTable();
     const nextSafe = suggestNextAvailableRange(1000);
     const suggEl = document.getElementById('modalNextSafeRangeLabel');
     if (suggEl) suggEl.textContent = `${nextSafe.toLocaleString()} – ${(nextSafe + 990).toLocaleString()}`;
   }
-}
+});
+
+export const openSetRegistryModal = setRegistryModalCtrl.open;
+export const closeSetRegistryModal = setRegistryModalCtrl.close;
+export const closeSetRegistryModalOnBackdrop = setRegistryModalCtrl.closeOnBackdrop;
 window.openSetRegistryModal = openSetRegistryModal;
-
-export function closeSetRegistryModal() {
-  const modal = document.getElementById('setRegistryModal');
-  if (modal) {
-    modal.style.display = 'none';
-  }
-}
 window.closeSetRegistryModal = closeSetRegistryModal;
-
-export function closeSetRegistryModalOnBackdrop(e) {
-  if (e.target && e.target.id === 'setRegistryModal') {
-    closeSetRegistryModal();
-  }
-}
 window.closeSetRegistryModalOnBackdrop = closeSetRegistryModalOnBackdrop;
 
 // ==========================================
@@ -711,19 +735,32 @@ export function renderSetThumbnailsStrip() {
   if (!container) return;
 
   const set = getCurrentActiveSet();
-  if (!set) return;
+  const titleEl = document.getElementById('setAssetsActiveTitle');
+  const countEl = document.getElementById('setAssetsCountBadge');
+  const rangeEl = document.getElementById('setAssetsRangeFootnote');
+
+  if (!set) {
+    if (titleEl) titleEl.textContent = 'No Active Pack';
+    if (countEl) countEl.textContent = '0 assets';
+    if (rangeEl) rangeEl.textContent = 'Create a new pack to bundle & sequence assets';
+    container.innerHTML = `
+      <div class="set-thumb-card-add" onclick="initiateCreateNewSetFlow()" title="Create a new pack collection">
+        <span class="set-thumb-add-icon">＋</span>
+        <span class="set-thumb-add-label">Create New<br>Pack</span>
+      </div>
+    `;
+    updateActiveDecalPackStatus();
+    return;
+  }
 
   const currentAssetName = (state.currentLoadedAssetName || document.getElementById('assetName')?.value?.trim() || '').toLowerCase();
 
   // Update header titles & footnotes
-  const titleEl = document.getElementById('setAssetsActiveTitle');
   if (titleEl) titleEl.textContent = set.setName;
 
-  const countEl = document.getElementById('setAssetsCountBadge');
   const count = set.assets ? set.assets.length : 0;
   if (countEl) countEl.textContent = `${count} ${count === 1 ? 'asset' : 'assets'}`;
 
-  const rangeEl = document.getElementById('setAssetsRangeFootnote');
   if (rangeEl) {
     const start = set.rangeStart !== undefined ? set.rangeStart : set.basePriority;
     const end = set.rangeEnd !== undefined ? set.rangeEnd : (start + 990);
@@ -1217,6 +1254,31 @@ export function removeAssetFromSet(setId, assetName, askConfirm = false, reseque
   targetSet.nextPriority = targetSet.basePriority + (targetSet.assets.length + 1) * step;
 
   saveSetsRegistry(registry);
+
+  // If removed asset is loaded in any workspace slot, clear its pack assignment unless it exists in another pack
+  if (state.setSlots) {
+    ['decal', 'surface', 'netlane'].forEach(mode => {
+      const slot = state.setSlots[mode];
+      if (slot && slot.assetName && slot.assetName.toLowerCase() === assetName.toLowerCase()) {
+        const otherPack = registry.find(s =>
+          (s.assets || []).some(a => a.name.toLowerCase() === assetName.toLowerCase())
+        );
+        slot.seriesName = otherPack ? otherPack.setName : '';
+        slot.assetSeries = otherPack ? otherPack.setName : '';
+      }
+    });
+  }
+
+  const currentAssetName = (state.currentLoadedAssetName || document.getElementById('assetName')?.value?.trim() || '').trim();
+  if (currentAssetName.toLowerCase() === assetName.toLowerCase()) {
+    const otherPack = registry.find(s =>
+      (s.assets || []).some(a => a.name.toLowerCase() === assetName.toLowerCase())
+    );
+    if (typeof window.setAssetSeriesName === 'function') {
+      window.setAssetSeriesName(otherPack ? otherPack.setName : '');
+    }
+  }
+
   updateSetRegistryUI(targetSet.id);
   renderSetThumbnailsStrip();
   updateActiveDecalPackStatus();
@@ -1305,6 +1367,15 @@ export function addCurrentWorkspaceToSet() {
     registry.push(set);
   }
   saveSetsRegistry(registry);
+
+  // Explicitly assign the pack name to the workspace & current slot now that it is added to the pack
+  if (typeof window.setAssetSeriesName === 'function') {
+    window.setAssetSeriesName(set.setName);
+  }
+  if (state.setSlots && state.setSlots[state.appMode]) {
+    state.setSlots[state.appMode].seriesName = set.setName;
+    state.setSlots[state.appMode].assetSeries = set.setName;
+  }
 
   // Cache in IndexedDB if serialize helper exists
   if (typeof window.serializeCurrentProject === 'function' && typeof window.saveAssetToIndexedDB === 'function') {
@@ -1399,12 +1470,38 @@ export function updateActiveDecalPackStatus() {
   const descEl = document.getElementById('activeDecalPackStatusDesc');
   const actionsEl = document.getElementById('activeDecalPackActions');
   const iconEl = document.getElementById('activeDecalPackStatusIcon');
-  const set = getCurrentActiveSet();
-  if (set && state.setSlots && state.setSlots[state.appMode]) {
-    const currentAssetName = (state.currentLoadedAssetName || document.getElementById('assetName')?.value?.trim() || '').trim();
-    const member = (set.assets || []).find(a => a.name.toLowerCase() === currentAssetName.toLowerCase());
-    if (member) {
-      state.setSlots[state.appMode].seriesName = set.setName;
+  const registry = getSetsRegistry();
+  const currentAssetName = (state.currentLoadedAssetName || document.getElementById('assetName')?.value?.trim() || '').trim();
+
+  // Check if current asset is actually a member of ANY registered pack
+  const actualMemberSet = currentAssetName
+    ? registry.find(s => (s.assets || []).some(a => a.name.toLowerCase() === currentAssetName.toLowerCase()))
+    : null;
+
+  // Sync active slot & series badges strictly to actual pack membership
+  if (state.setSlots && state.setSlots[state.appMode]) {
+    state.setSlots[state.appMode].seriesName = actualMemberSet ? actualMemberSet.setName : '';
+    state.setSlots[state.appMode].assetSeries = actualMemberSet ? actualMemberSet.setName : '';
+  }
+
+  const activeBadge = document.getElementById('activeSeriesBadge');
+  const topBadge = document.getElementById('topMenuSeriesBadge');
+  const seriesInp = document.getElementById('assetSeries');
+  const metaInp = document.getElementById('metaSetName');
+  if (actualMemberSet) {
+    if (activeBadge) activeBadge.textContent = actualMemberSet.setName;
+    if (topBadge) topBadge.textContent = actualMemberSet.setName;
+    if (seriesInp && document.activeElement !== seriesInp) seriesInp.value = actualMemberSet.setName;
+    if (metaInp) metaInp.value = actualMemberSet.setName;
+  } else {
+    // Only clear if the input still points to a deleted pack or if the asset isn't in the pack shown
+    const inpVal = (seriesInp?.value || '').trim();
+    const matchesExistingPack = inpVal && registry.some(s => s.setName.toLowerCase() === inpVal.toLowerCase());
+    if (!inpVal || !matchesExistingPack || document.activeElement !== seriesInp) {
+      if (seriesInp && document.activeElement !== seriesInp) seriesInp.value = '';
+      if (metaInp) metaInp.value = '';
+      if (activeBadge) activeBadge.textContent = 'None';
+      if (topBadge) topBadge.textContent = 'None';
     }
   }
 
@@ -1413,10 +1510,20 @@ export function updateActiveDecalPackStatus() {
   }
 
   if (!bar || !titleEl || !descEl || !actionsEl) return;
-  if (!set) return;
-
-  const currentAssetName = (state.currentLoadedAssetName || document.getElementById('assetName')?.value?.trim() || '').trim();
   titleEl.textContent = currentAssetName || 'Untitled Decal';
+
+  const set = actualMemberSet || getCurrentActiveSet();
+  if (!set) {
+    bar.className = 'active-decal-pack-bar not-in-pack';
+    if (iconEl) iconEl.textContent = '📌';
+    descEl.innerHTML = `Standalone asset • <em>Not part of any pack</em>`;
+    actionsEl.innerHTML = `
+      <button type="button" class="btn-primary" style="font-size: 10.5px; padding: 4px 10px; font-weight: 700; background: linear-gradient(135deg, #0284c7 0%, #06b6d4 100%);" onclick="initiateCreateNewSetFlow()" title="Create a new pack collection">
+        ＋ Create New Pack
+      </button>
+    `;
+    return;
+  }
 
   const member = (set.assets || []).find(a => a.name.toLowerCase() === currentAssetName.toLowerCase());
 
@@ -1436,7 +1543,7 @@ export function updateActiveDecalPackStatus() {
     bar.className = 'active-decal-pack-bar not-in-pack';
     if (iconEl) iconEl.textContent = '📌';
     const nextPrio = set.nextPriority || (set.basePriority + ((set.assets?.length || 0) + 1) * (set.stepInterval || 10));
-    descEl.innerHTML = `This decal is <em>not yet in "${escapeHtml(set.setName)}"</em> (Next Priority: <strong>${nextPrio.toLocaleString()}</strong>)`;
+    descEl.innerHTML = `Standalone asset (not in a pack) • Selected pack: "${escapeHtml(set.setName)}" (Next Priority: <strong>${nextPrio.toLocaleString()}</strong>)`;
     actionsEl.innerHTML = `
       <button type="button" class="btn-primary" style="font-size: 10.5px; padding: 4px 10px; font-weight: 700; background: linear-gradient(135deg, #0284c7 0%, #06b6d4 100%);" onclick="addCurrentWorkspaceToSet()" title="Add this decal into ${escapeHtml(set.setName)}">
         ＋ Add Current Decal to Pack
@@ -1452,28 +1559,21 @@ window.updateActiveDecalPackStatus = updateActiveDecalPackStatus;
 
 let currentManagingSetId = null;
 
-export function openManageSetItemsModal(setId) {
-  const modal = document.getElementById('manageSetItemsModal');
-  if (modal) {
+const manageSetItemsModalCtrl = createModalController('manageSetItemsModal', {
+  onOpen: (_modal, setId) => {
     currentManagingSetId = setId || null;
-    modal.style.display = 'flex';
     renderManageSetItemsTable(currentManagingSetId);
+  },
+  onClose: () => {
+    currentManagingSetId = null;
   }
-}
+});
+
+export const openManageSetItemsModal = manageSetItemsModalCtrl.open;
+export const closeManageSetItemsModal = manageSetItemsModalCtrl.close;
+export const closeManageSetItemsModalOnBackdrop = manageSetItemsModalCtrl.closeOnBackdrop;
 window.openManageSetItemsModal = openManageSetItemsModal;
-
-export function closeManageSetItemsModal() {
-  const modal = document.getElementById('manageSetItemsModal');
-  if (modal) modal.style.display = 'none';
-  currentManagingSetId = null;
-}
 window.closeManageSetItemsModal = closeManageSetItemsModal;
-
-export function closeManageSetItemsModalOnBackdrop(e) {
-  if (e.target && e.target.id === 'manageSetItemsModal') {
-    closeManageSetItemsModal();
-  }
-}
 window.closeManageSetItemsModalOnBackdrop = closeManageSetItemsModalOnBackdrop;
 
 export function renderManageSetItemsTable(targetSetId) {

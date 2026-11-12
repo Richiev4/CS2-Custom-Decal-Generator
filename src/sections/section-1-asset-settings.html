@@ -62,9 +62,10 @@
               <span class="form-val-badge" id="categorySubfolderBadge">RoadMarkings</span>
             </div>
             <div style="display: flex; gap: 6px;">
-              <input type="text" id="assetCategory" value="RoadMarkings" placeholder="Category folder name..." spellcheck="false" oninput="updateConfigJson()" style="flex: 1;">
+              <input type="text" id="assetCategory" value="RoadMarkings" placeholder="Category folder name (or None)..." spellcheck="false" oninput="updateConfigJson()" style="flex: 1;">
               <input type="hidden" id="surfaceCategory" value="RoadMarkings">
-              <select id="categoryQuickPicker" onchange="applyCategoryQuickPick()" style="width: 130px;">
+              <select id="categoryQuickPicker" onchange="applyCategoryQuickPick(this.value)" style="width: 130px;">
+                <option value="None">None (No Subfolder)</option>
                 <option value="RoadMarkings" selected>RoadMarkings</option>
                 <option value="Posters">Posters / Adverts</option>
                 <option value="Billboards">Billboards</option>
