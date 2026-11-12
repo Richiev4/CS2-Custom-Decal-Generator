@@ -1349,6 +1349,17 @@ export function renderAllMaps() {
     const cardIconFooter = document.getElementById('cardIconFooter');
     if (cardIconFooter) cardIconFooter.textContent = 'No icon generated';
 
+    // Still render icon map if any badge overlay or custom icon backdrop is enabled
+    if (
+      state.badge1Enabled ||
+      state.badge2Enabled ||
+      state.badge3Enabled ||
+      state.badge4Enabled ||
+      state.customIconBgImg
+    ) {
+      renderIconMap();
+    }
+
     if (['single', 'base', 'normal', 'mask', 'icon'].includes(state.activeTab)) {
       updateSingleView();
     } else if (state.activeTab === 'tiled') {
@@ -1657,10 +1668,16 @@ export function clearAllWorkspace(force = false) {
   const sourceBadge = document.getElementById('sourceImageStatusBadge');
   if (sourceBadge) sourceBadge.textContent = 'No Image Loaded';
 
-  // 6. Reset overlay text inputs & disable all overlays
-  ['badge1TextInput', 'seriesTextInput', 'extra1TextInput', 'extra2TextInput'].forEach(id => {
+  // 6. Reset overlay text inputs to defaults & disable all overlays
+  const defaultBadgeTexts = {
+    badge1TextInput: 'CREATOR',
+    seriesTextInput: 'GRAFFITI',
+    extra1TextInput: 'EXTRA 1',
+    extra2TextInput: 'EXTRA 2'
+  };
+  Object.entries(defaultBadgeTexts).forEach(([id, val]) => {
     const el = document.getElementById(id);
-    if (el) el.value = '';
+    if (el) el.value = val;
   });
   state.badge1Enabled = false;
   state.badge2Enabled = false;
@@ -1835,10 +1852,10 @@ export function updateClearModalStatus() {
   const statusBadges = document.getElementById('clearStatusBadges');
   if (statusBadges) {
     let badgeCount = 0;
-    if (state.badge1Enabled || document.getElementById('badge1TextInput')?.value?.trim() || state.designerLogoImg) badgeCount++;
-    if (state.badge2Enabled || document.getElementById('seriesTextInput')?.value?.trim() || state.badge2Img) badgeCount++;
-    if (state.badge3Enabled || document.getElementById('extra1TextInput')?.value?.trim() || state.badge3Img) badgeCount++;
-    if (state.badge4Enabled || document.getElementById('extra2TextInput')?.value?.trim() || state.badge4Img) badgeCount++;
+    if (state.badge1Enabled || state.designerLogoImg) badgeCount++;
+    if (state.badge2Enabled || state.badge2Img) badgeCount++;
+    if (state.badge3Enabled || state.badge3Img) badgeCount++;
+    if (state.badge4Enabled || state.badge4Img) badgeCount++;
     if (badgeCount > 0) {
       statusBadges.textContent = `${badgeCount} badge${badgeCount > 1 ? 's' : ''} active`;
       statusBadges.className = 'clear-badge-pill active';
@@ -2101,9 +2118,15 @@ export function executeClearSelected() {
 
   // 4. Clear Badges & Overlays
   if (chkBadges) {
-    ['badge1TextInput', 'seriesTextInput', 'extra1TextInput', 'extra2TextInput'].forEach(id => {
+    const defaultBadgeTexts = {
+      badge1TextInput: 'CREATOR',
+      seriesTextInput: 'GRAFFITI',
+      extra1TextInput: 'EXTRA 1',
+      extra2TextInput: 'EXTRA 2'
+    };
+    Object.entries(defaultBadgeTexts).forEach(([id, val]) => {
       const el = document.getElementById(id);
-      if (el) el.value = '';
+      if (el) el.value = val;
     });
     ['designerLogoInput', 'seriesLogoInput', 'extra1LogoInput', 'extra2LogoInput'].forEach(id => {
       const el = document.getElementById(id);
@@ -2843,6 +2866,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  initBadgeDefaults();
   setMode('decal', true, true);
   if (!hidePresets && state.setSlots.decal.image) {
     state.currentImage = state.setSlots.decal.image;
@@ -2858,7 +2882,6 @@ window.addEventListener('DOMContentLoaded', async () => {
   applySamplePresetsVisibilityUI();
   updateDecalAspectUI();
   updateUiPrioritySequenceUI();
-  initBadgeDefaults();
   initBadgeCanvasInteractions();
   restoreSidebarSectionsState();
   updateRibbonSeriesDropdown();

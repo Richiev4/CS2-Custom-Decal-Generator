@@ -1020,8 +1020,9 @@ export async function confirmNewStandaloneAsset() {
   // Icon Badge
   const enableBadge = document.getElementById('standEnableBadge')?.checked ?? true;
   state.badge1Enabled = enableBadge;
-  const chkBadge = document.getElementById('badge1Enabled');
-  if (chkBadge) chkBadge.checked = enableBadge;
+  if (typeof window.syncAllBadgeCheckboxes === 'function') {
+    window.syncAllBadgeCheckboxes();
+  }
 
   // 4. Load Graphic into Canvas
   if (standWizardLoadedImage) {

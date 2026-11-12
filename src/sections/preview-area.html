@@ -144,12 +144,18 @@
           <!-- In-Game Icon Card -->
           <div class="texture-card" id="cardIcon">
             <div class="texture-card-header">
-              <span class="texture-name" id="nameCardIcon">icon.png</span>
+              <div style="display: flex; align-items: center; gap: 6px; min-width: 0;">
+                <span class="texture-name" id="nameCardIcon">icon.png</span>
+                <button type="button" id="btnGridIdentifyOverlays" class="overlay-callout-mini-btn" onclick="toggleOverlayCanvasCallouts()" title="Toggle #1–#4 overlay identification badges on icon preview">
+                  #1–4
+                </button>
+              </div>
               <button class="btn-secondary" style="padding: 2px 8px; font-size: 11px;" onclick="downloadTexture('icon')">Save</button>
             </div>
             <div class="texture-card-body">
-              <div class="texture-canvas-box checkerboard">
+              <div class="texture-canvas-box checkerboard" style="position: relative;">
                 <canvas id="canvasIcon" width="256" height="256"></canvas>
+                <div id="iconCanvasIndicatorLayer" class="icon-canvas-indicator-layer" aria-hidden="true"></div>
               </div>
             </div>
             <div class="texture-footer" style="flex-direction: column; gap: 6px; align-items: stretch;">
@@ -158,20 +164,24 @@
                 <span class="resolution-badge">256×256</span>
               </div>
               <div id="gridIconOverlayToggles" class="grid-icon-toggles">
-                <label style="display: flex; align-items: center; gap: 3px; cursor: pointer;" title="Toggle Creator Overlay">
+                <label class="grid-ov-toggle-item" id="gridOvLabel1" onmouseenter="highlightOverlayOnCanvas(1)" onmouseleave="highlightOverlayOnCanvas(null)" title="Overlay #1: Creator Logo / Watermark">
                   <input type="checkbox" id="toggleGridOverlay1" onchange="window.toggleBadge1Enable(this.checked)">
+                  <span class="ov-mini-tag ov-tag-1">#1</span>
                   <span>Creator</span>
                 </label>
-                <label style="display: flex; align-items: center; gap: 3px; cursor: pointer;" title="Toggle Series Overlay">
+                <label class="grid-ov-toggle-item" id="gridOvLabel2" onmouseenter="highlightOverlayOnCanvas(2)" onmouseleave="highlightOverlayOnCanvas(null)" title="Overlay #2: Series / Pack Badge">
                   <input type="checkbox" id="toggleGridOverlay2" onchange="window.toggleBadge2Enable(this.checked)">
+                  <span class="ov-mini-tag ov-tag-2">#2</span>
                   <span>Series</span>
                 </label>
-                <label style="display: flex; align-items: center; gap: 3px; cursor: pointer;" title="Toggle Extra 1 Overlay">
+                <label class="grid-ov-toggle-item" id="gridOvLabel3" onmouseenter="highlightOverlayOnCanvas(3)" onmouseleave="highlightOverlayOnCanvas(null)" title="Overlay #3: Extra 1 Watermark Badge">
                   <input type="checkbox" id="toggleGridOverlay3" onchange="window.toggleBadge3Enable(this.checked)">
+                  <span class="ov-mini-tag ov-tag-3">#3</span>
                   <span>Ex 1</span>
                 </label>
-                <label style="display: flex; align-items: center; gap: 3px; cursor: pointer;" title="Toggle Extra 2 Overlay">
+                <label class="grid-ov-toggle-item" id="gridOvLabel4" onmouseenter="highlightOverlayOnCanvas(4)" onmouseleave="highlightOverlayOnCanvas(null)" title="Overlay #4: Extra 2 Custom Overlay">
                   <input type="checkbox" id="toggleGridOverlay4" onchange="window.toggleBadge4Enable(this.checked)">
+                  <span class="ov-mini-tag ov-tag-4">#4</span>
                   <span>Ex 2</span>
                 </label>
               </div>
@@ -473,22 +483,33 @@
               </span>
             </div>
             <div class="icon-overlay-options">
-              <label class="checkbox-row" style="margin: 0; font-size: 11px; cursor: pointer; color: var(--text-main); font-weight: 600; gap: 5px; white-space: nowrap;">
+              <label class="checkbox-row main-ov-toggle-pill" id="mainOvLabel1" onmouseenter="highlightOverlayOnCanvas(1)" onmouseleave="highlightOverlayOnCanvas(null)" style="margin: 0; font-size: 11px; cursor: pointer; color: var(--text-main); font-weight: 600; gap: 5px; white-space: nowrap;">
                 <input type="checkbox" id="toggleMainOverlay1" onchange="window.toggleBadge1Enable(this.checked)">
+                <span class="ov-mini-tag ov-tag-1">#1</span>
                 <span>⭐ Creator</span>
+                <span class="main-ov-subtext" id="mainOvSub1"></span>
               </label>
-              <label class="checkbox-row" style="margin: 0; font-size: 11px; cursor: pointer; color: var(--text-main); font-weight: 600; gap: 5px; white-space: nowrap;">
+              <label class="checkbox-row main-ov-toggle-pill" id="mainOvLabel2" onmouseenter="highlightOverlayOnCanvas(2)" onmouseleave="highlightOverlayOnCanvas(null)" style="margin: 0; font-size: 11px; cursor: pointer; color: var(--text-main); font-weight: 600; gap: 5px; white-space: nowrap;">
                 <input type="checkbox" id="toggleMainOverlay2" onchange="window.toggleBadge2Enable(this.checked)">
+                <span class="ov-mini-tag ov-tag-2">#2</span>
                 <span>🎨 Series</span>
+                <span class="main-ov-subtext" id="mainOvSub2"></span>
               </label>
-              <label class="checkbox-row" style="margin: 0; font-size: 11px; cursor: pointer; color: var(--text-main); font-weight: 600; gap: 5px; white-space: nowrap;">
+              <label class="checkbox-row main-ov-toggle-pill" id="mainOvLabel3" onmouseenter="highlightOverlayOnCanvas(3)" onmouseleave="highlightOverlayOnCanvas(null)" style="margin: 0; font-size: 11px; cursor: pointer; color: var(--text-main); font-weight: 600; gap: 5px; white-space: nowrap;">
                 <input type="checkbox" id="toggleMainOverlay3" onchange="window.toggleBadge3Enable(this.checked)">
+                <span class="ov-mini-tag ov-tag-3">#3</span>
                 <span>🏷️ Extra 1</span>
+                <span class="main-ov-subtext" id="mainOvSub3"></span>
               </label>
-              <label class="checkbox-row" style="margin: 0; font-size: 11px; cursor: pointer; color: var(--text-main); font-weight: 600; gap: 5px; white-space: nowrap;">
+              <label class="checkbox-row main-ov-toggle-pill" id="mainOvLabel4" onmouseenter="highlightOverlayOnCanvas(4)" onmouseleave="highlightOverlayOnCanvas(null)" style="margin: 0; font-size: 11px; cursor: pointer; color: var(--text-main); font-weight: 600; gap: 5px; white-space: nowrap;">
                 <input type="checkbox" id="toggleMainOverlay4" onchange="window.toggleBadge4Enable(this.checked)">
+                <span class="ov-mini-tag ov-tag-4">#4</span>
                 <span>✨ Extra 2</span>
+                <span class="main-ov-subtext" id="mainOvSub4"></span>
               </label>
+              <button type="button" id="btnSingleIdentifyOverlays" class="overlay-callout-toggle-btn" onclick="toggleOverlayCanvasCallouts()" title="Show numbered #1–#4 indicator callouts on the icon preview canvas">
+                <span>🔍 Identify</span>
+              </button>
             </div>
           </div>
 
@@ -507,8 +528,9 @@
             </div>
           </div>
 
-          <div class="canvas-wrapper checkerboard single-canvas-wrapper">
+          <div class="canvas-wrapper checkerboard single-canvas-wrapper" style="position: relative;">
             <canvas id="canvasSingle"></canvas>
+            <div id="singleCanvasIndicatorLayer" class="icon-canvas-indicator-layer" aria-hidden="true"></div>
           </div>
           <div class="single-name-tag" id="singleName">
             _BaseColorMap.png

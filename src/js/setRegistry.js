@@ -2442,8 +2442,12 @@ export async function confirmCreateNewSet() {
   const enableSeriesBadge = document.getElementById('wizardEnableSeriesBadge')?.checked !== false;
   if (enableSeriesBadge) {
     state.badge2Enabled = true;
-    const chk = document.getElementById('enableBadge2');
-    if (chk) chk.checked = true;
+    if (typeof window.syncAllBadgeCheckboxes === 'function') {
+      window.syncAllBadgeCheckboxes();
+    } else {
+      const chk = document.getElementById('enableBadge2');
+      if (chk) chk.checked = true;
+    }
 
     const sInp = document.getElementById('seriesTextInput');
     if (sInp) sInp.value = setName.toUpperCase();

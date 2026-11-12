@@ -13,7 +13,7 @@
         </div>
         <div class="collapsible-content">
           <div class="panel-box">
-          <div class="form-group">
+          <div class="form-group" id="iconBgStyleGroup">
             <div class="form-label-row">
               <div class="form-label-left">
                 <span>Icon Background Style</span>
@@ -204,15 +204,72 @@
             </div>
           </div>
 
-          <!-- Overlay Layer Dropdown Selector -->
+          <!-- Overlay Layer Dropdown Selector & Visual Indicator Strip -->
           <div class="badge-layer-select-box">
             <div class="form-label-row" style="margin-bottom: 6px;">
               <div class="form-label-left">
                 <span style="font-weight: 700; color: #38bdf8; font-size: 13px;">Icon Overlay Layer (4 Badges)</span>
                 <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'iconSettings', event)" onmouseenter="showFieldHelp(this, 'iconSettings', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Overlay Layer" title="Help for Overlay Layer">?</button>
               </div>
-              <span class="form-val-badge" id="activeOverlayLayerBadge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3);">Overlay 1/4</span>
+              <div style="display: flex; align-items: center; gap: 5px;">
+                <button type="button" id="btnToggleOverlayCallouts" class="overlay-callout-toggle-btn" onclick="toggleOverlayCanvasCallouts()" title="Show numbered #1–#4 indicator callouts on the icon preview canvas (not exported in icon.png)">
+                  <span>🔍 Identify on Icon</span>
+                </button>
+                <span class="form-val-badge" id="activeOverlayLayerBadge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3);">Overlay 1/4</span>
+              </div>
             </div>
+
+            <!-- 4-Overlay At-a-Glance Visual Indicator Strip -->
+            <div class="overlay-indicator-strip" id="overlayIndicatorStrip" role="tablist" aria-label="Icon Overlays Quick Indicator">
+              <button type="button" class="overlay-indicator-card ov-theme-1 active" id="ovIndicatorCard1" onclick="switchBadgeSubtab('creator')" onmouseenter="highlightOverlayOnCanvas(1)" onmouseleave="highlightOverlayOnCanvas(null)" title="Overlay #1: Creator Logo / Brand Watermark (Click to edit, hover to locate on icon)">
+                <div class="ov-ind-top">
+                  <span class="ov-ind-num">#1</span>
+                  <span class="ov-ind-title">⭐ Creator</span>
+                  <span class="ov-ind-status-dot on" id="ovIndDot1" title="Enabled"></span>
+                </div>
+                <div class="ov-ind-meta">
+                  <span class="ov-ind-preview" id="ovIndPreview1">★ CS2 MOD</span>
+                  <span class="ov-ind-pos" id="ovIndPos1">BR</span>
+                </div>
+              </button>
+
+              <button type="button" class="overlay-indicator-card ov-theme-2" id="ovIndicatorCard2" onclick="switchBadgeSubtab('series')" onmouseenter="highlightOverlayOnCanvas(2)" onmouseleave="highlightOverlayOnCanvas(null)" title="Overlay #2: Series / Pack Badge (Click to edit, hover to locate on icon)">
+                <div class="ov-ind-top">
+                  <span class="ov-ind-num">#2</span>
+                  <span class="ov-ind-title">🎨 Series</span>
+                  <span class="ov-ind-status-dot on" id="ovIndDot2" title="Enabled"></span>
+                </div>
+                <div class="ov-ind-meta">
+                  <span class="ov-ind-preview" id="ovIndPreview2">GRAFFITI</span>
+                  <span class="ov-ind-pos" id="ovIndPos2">TL</span>
+                </div>
+              </button>
+
+              <button type="button" class="overlay-indicator-card ov-theme-3" id="ovIndicatorCard3" onclick="switchBadgeSubtab('extra1')" onmouseenter="highlightOverlayOnCanvas(3)" onmouseleave="highlightOverlayOnCanvas(null)" title="Overlay #3: Extra 1 Watermark Badge (Click to edit, hover to locate on icon)">
+                <div class="ov-ind-top">
+                  <span class="ov-ind-num">#3</span>
+                  <span class="ov-ind-title">🏷️ Extra 1</span>
+                  <span class="ov-ind-status-dot" id="ovIndDot3" title="Disabled"></span>
+                </div>
+                <div class="ov-ind-meta">
+                  <span class="ov-ind-preview" id="ovIndPreview3">Off</span>
+                  <span class="ov-ind-pos" id="ovIndPos3">BL</span>
+                </div>
+              </button>
+
+              <button type="button" class="overlay-indicator-card ov-theme-4" id="ovIndicatorCard4" onclick="switchBadgeSubtab('extra2')" onmouseenter="highlightOverlayOnCanvas(4)" onmouseleave="highlightOverlayOnCanvas(null)" title="Overlay #4: Extra 2 Custom Overlay (Click to edit, hover to locate on icon)">
+                <div class="ov-ind-top">
+                  <span class="ov-ind-num">#4</span>
+                  <span class="ov-ind-title">✨ Extra 2</span>
+                  <span class="ov-ind-status-dot" id="ovIndDot4" title="Disabled"></span>
+                </div>
+                <div class="ov-ind-meta">
+                  <span class="ov-ind-preview" id="ovIndPreview4">Off</span>
+                  <span class="ov-ind-pos" id="ovIndPos4">TR</span>
+                </div>
+              </button>
+            </div>
+
             <select id="badgeLayerSelect" class="badge-layer-dropdown" onchange="switchBadgeSubtab(this.value)">
               <option value="creator" selected>⭐ Overlay 1: Creator Logo / Brand Watermark</option>
               <option value="series">🎨 Overlay 2: Series / Pack Badge</option>
@@ -239,6 +296,15 @@
 
           <!-- SUBPANEL 1: CREATOR BADGE (OVERLAY 1) -->
           <div class="badge-subpanel active" id="panelBadgeCreator">
+            <div class="subpanel-overlay-banner ov-banner-1" onmouseenter="highlightOverlayOnCanvas(1)" onmouseleave="highlightOverlayOnCanvas(null)">
+              <div class="ov-banner-left">
+                <span class="ov-banner-chip">#1 OVERLAY</span>
+                <span class="ov-banner-name">⭐ Creator Watermark</span>
+              </div>
+              <div class="ov-banner-right">
+                <span class="ov-banner-live" id="ovBannerSummary1">★ CS2 MOD • Bottom-Right</span>
+              </div>
+            </div>
             <label class="checkbox-row" style="margin-top: 0; margin-bottom: 10px;">
               <input type="checkbox" id="enableBadge1" checked onchange="toggleBadge1Enable(this.checked)">
               <span style="font-weight: 600; color: var(--text-main);">Enable Creator Logo / Brand Watermark</span>
@@ -683,6 +749,15 @@
 
           <!-- SUBPANEL 2: SERIES BADGE (OVERLAY 2) -->
           <div class="badge-subpanel" id="panelBadgeSeries">
+            <div class="subpanel-overlay-banner ov-banner-2" onmouseenter="highlightOverlayOnCanvas(2)" onmouseleave="highlightOverlayOnCanvas(null)">
+              <div class="ov-banner-left">
+                <span class="ov-banner-chip">#2 OVERLAY</span>
+                <span class="ov-banner-name">🎨 Series / Pack Badge</span>
+              </div>
+              <div class="ov-banner-right">
+                <span class="ov-banner-live" id="ovBannerSummary2">GRAFFITI • Top-Left</span>
+              </div>
+            </div>
             <label class="checkbox-row" style="margin-top: 0; margin-bottom: 10px;">
               <input type="checkbox" id="enableBadge2" checked onchange="toggleBadge2Enable(this.checked)">
               <span style="font-weight: 600; color: var(--text-main);">Enable Series / Pack Badge (e.g. Graffiti, Posters)</span>
@@ -1123,6 +1198,15 @@
 
           <!-- SUBPANEL 3: EXTRA 1 BADGE (OVERLAY 3) -->
           <div class="badge-subpanel" id="panelBadgeExtra1">
+            <div class="subpanel-overlay-banner ov-banner-3" onmouseenter="highlightOverlayOnCanvas(3)" onmouseleave="highlightOverlayOnCanvas(null)">
+              <div class="ov-banner-left">
+                <span class="ov-banner-chip">#3 OVERLAY</span>
+                <span class="ov-banner-name">🏷️ Extra 1 Watermark</span>
+              </div>
+              <div class="ov-banner-right">
+                <span class="ov-banner-live" id="ovBannerSummary3">EXTRA 1 • Bottom-Left</span>
+              </div>
+            </div>
             <label class="checkbox-row" style="margin-top: 0; margin-bottom: 10px;">
               <input type="checkbox" id="enableBadge3" onchange="toggleBadge3Enable(this.checked)">
               <span style="font-weight: 600; color: var(--text-main);">Enable Extra 1 Watermark Badge</span>
@@ -1533,6 +1617,15 @@
 
           <!-- SUBPANEL 4: EXTRA 2 BADGE (OVERLAY 4) -->
           <div class="badge-subpanel" id="panelBadgeExtra2">
+            <div class="subpanel-overlay-banner ov-banner-4" onmouseenter="highlightOverlayOnCanvas(4)" onmouseleave="highlightOverlayOnCanvas(null)">
+              <div class="ov-banner-left">
+                <span class="ov-banner-chip">#4 OVERLAY</span>
+                <span class="ov-banner-name">✨ Extra 2 Custom</span>
+              </div>
+              <div class="ov-banner-right">
+                <span class="ov-banner-live" id="ovBannerSummary4">EXTRA 2 • Top-Right</span>
+              </div>
+            </div>
             <label class="checkbox-row" style="margin-top: 0; margin-bottom: 10px;">
               <input type="checkbox" id="enableBadge4" onchange="toggleBadge4Enable(this.checked)">
               <span style="font-weight: 600; color: var(--text-main);">Enable Extra 2 Watermark Badge</span>

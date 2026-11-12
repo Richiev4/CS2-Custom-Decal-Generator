@@ -3,7 +3,7 @@
 // Icon Backdrop & 4-Layer Badge Overlays Engine
 // ==========================================
 
-import { state, showToast, getCanvases, drawImageSquare } from './state.js';
+import { state, showToast, getCanvases, drawImageSquare, toggleSection } from './state.js';
 import { getEl, setElText, setElValue, setElChecked, setElDisplay, syncActiveClass } from './domUtils.js';
 
 export const BADGE_DEFAULTS_KEY = 'cs2_icon_badge_defaults';
@@ -56,6 +56,17 @@ export const TEXT_GRAD_PRESETS = {
   neon: { c1: '#f472b6', c2: '#38bdf8' }
 };
 
+export const CREATOR_PRESET_MAP = {
+  star: { text: '★ CS2 MOD', theme: 'cyan' },
+  verified: { text: '✓ VERIFIED', theme: 'emerald' },
+  mod: { text: '⚡ CS2 MOD', theme: 'cyan' },
+  crown: { text: '👑 VIP CREATOR', theme: 'gold' },
+  shield: { text: '🛡️ VERIFIED', theme: 'purple' },
+  bolt: { text: '⚡ TURBO ASSET', theme: 'amber' },
+  cube: { text: '🧊 3D DECAL', theme: 'cyan' },
+  sparkle: { text: '✨ HD PACK', theme: 'gold' }
+};
+
 export const SERIES_PRESET_MAP = {
   graffiti: { text: 'GRAFFITI', theme: 'purple' },
   poster: { text: 'POSTERS', theme: 'cyan' },
@@ -70,11 +81,13 @@ export const BADGE_CONFIG = {
   1: {
     index: 1,
     key: 'creator',
+    defaultText: 'CREATOR',
     enableCheckboxId: 'enableBadge1',
     gridCheckboxId: 'toggleGridOverlay1',
     mainCheckboxId: 'toggleMainOverlay1',
     wizardCheckboxId: 'wizEnableBadge1',
     modeSelectId: 'creatorModeSelect',
+    presetSelectId: 'creatorPresetSelect',
     textSectionId: 'creatorTextSection',
     imageSectionId: 'creatorImageSection',
     presetSectionId: 'creatorPresetSection',
@@ -138,11 +151,13 @@ export const BADGE_CONFIG = {
   2: {
     index: 2,
     key: 'series',
+    defaultText: 'GRAFFITI',
     enableCheckboxId: 'enableBadge2',
     gridCheckboxId: 'toggleGridOverlay2',
     mainCheckboxId: 'toggleMainOverlay2',
     wizardCheckboxId: 'wizEnableBadge2',
     modeSelectId: 'seriesModeSelect',
+    presetSelectId: 'seriesPresetSelect',
     textSectionId: 'seriesTextSection',
     imageSectionId: 'seriesImageSection',
     presetSectionId: 'seriesPresetSection',
@@ -206,11 +221,13 @@ export const BADGE_CONFIG = {
   3: {
     index: 3,
     key: 'extra1',
+    defaultText: 'EXTRA 1',
     enableCheckboxId: 'enableBadge3',
     gridCheckboxId: 'toggleGridOverlay3',
     mainCheckboxId: 'toggleMainOverlay3',
     wizardCheckboxId: null,
     modeSelectId: 'extra1ModeSelect',
+    presetSelectId: 'extra1PresetSelect',
     textSectionId: 'extra1TextSection',
     imageSectionId: 'extra1ImageSection',
     presetSectionId: 'extra1PresetSection',
@@ -274,11 +291,13 @@ export const BADGE_CONFIG = {
   4: {
     index: 4,
     key: 'extra2',
+    defaultText: 'EXTRA 2',
     enableCheckboxId: 'enableBadge4',
     gridCheckboxId: 'toggleGridOverlay4',
     mainCheckboxId: 'toggleMainOverlay4',
     wizardCheckboxId: null,
     modeSelectId: 'extra2ModeSelect',
+    presetSelectId: 'extra2PresetSelect',
     textSectionId: 'extra2TextSection',
     imageSectionId: 'extra2ImageSection',
     presetSectionId: 'extra2PresetSection',
@@ -442,15 +461,18 @@ export function switchBadgeTab(tab) {
 
 export function switchBadgeSubtab(sub) {
   const map = {
-    creator: { btn: 'subtabCreator', panel: 'panelBadgeCreator', badgeLabel: 'Overlay 1/4' },
-    series: { btn: 'subtabSeries', panel: 'panelBadgeSeries', badgeLabel: 'Overlay 2/4' },
-    extra1: { btn: 'subtabExtra1', panel: 'panelBadgeExtra1', badgeLabel: 'Overlay 3/4' },
-    extra2: { btn: 'subtabExtra2', panel: 'panelBadgeExtra2', badgeLabel: 'Overlay 4/4' },
-    defaults: { btn: 'subtabDefaults', panel: 'panelBadgeDefaults', badgeLabel: 'Defaults' }
+    creator: { btn: 'subtabCreator', cardId: 'ovIndicatorCard1', panel: 'panelBadgeCreator', badgeLabel: 'Overlay 1/4' },
+    series: { btn: 'subtabSeries', cardId: 'ovIndicatorCard2', panel: 'panelBadgeSeries', badgeLabel: 'Overlay 2/4' },
+    extra1: { btn: 'subtabExtra1', cardId: 'ovIndicatorCard3', panel: 'panelBadgeExtra1', badgeLabel: 'Overlay 3/4' },
+    extra2: { btn: 'subtabExtra2', cardId: 'ovIndicatorCard4', panel: 'panelBadgeExtra2', badgeLabel: 'Overlay 4/4' },
+    defaults: { btn: 'subtabDefaults', cardId: null, panel: 'panelBadgeDefaults', badgeLabel: 'Defaults' }
   };
   Object.entries(map).forEach(([k, info]) => {
     const active = k === sub;
     syncActiveClass(info.btn, active);
+    if (info.cardId) {
+      syncActiveClass(info.cardId, active);
+    }
     const panel = getEl(info.panel);
     if (panel) {
       panel.classList.toggle('active', active);
@@ -461,6 +483,25 @@ export function switchBadgeSubtab(sub) {
     }
   });
   setElValue('badgeLayerSelect', sub);
+  updateOverlayIndicators();
+  renderOverlayCanvasCallouts();
+}
+
+/**
+ * Expands the Icon & Watermark Overlays section (#secToolsIcon) and scrolls
+ * the Icon Background Style form-group to the top of the sidebar viewport.
+ */
+export function scrollToIconBgStyleSection() {
+  toggleSection('secToolsIcon', true);
+  setTimeout(() => {
+    const targetEl =
+      getEl('iconBgStyleGroup') ||
+      getEl('iconBgStyle')?.closest('.form-group') ||
+      getEl('secToolsIcon');
+    if (targetEl && typeof targetEl.scrollIntoView === 'function') {
+      targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, 60);
 }
 
 export function syncAllBadgeCheckboxes() {
@@ -472,18 +513,63 @@ export function syncAllBadgeCheckboxes() {
     setElChecked(cfg.mainCheckboxId, enabled);
     if (cfg.wizardCheckboxId) setElChecked(cfg.wizardCheckboxId, enabled);
   });
+  updateOverlayIndicators();
 }
 
 // ==========================================
 // Parameterized Badge Layer Controllers
 // ==========================================
 
+function resolveBadgeFallbackText(idx) {
+  const cfg = BADGE_CONFIG[idx];
+  const presetVal = getEl(cfg.presetSelectId)?.value || '';
+  if (idx === 1) {
+    if (presetVal && presetVal !== 'none' && CREATOR_PRESET_MAP[presetVal]) {
+      return CREATOR_PRESET_MAP[presetVal].text;
+    }
+    return cfg.defaultText || 'CREATOR';
+  }
+  if (idx === 2) {
+    const activeSeries = (getEl('assetSeries')?.value || '').trim().toUpperCase().slice(0, 20);
+    if (activeSeries) return activeSeries;
+    if (presetVal && SERIES_PRESET_MAP[presetVal]) {
+      return SERIES_PRESET_MAP[presetVal].text;
+    }
+    return cfg.defaultText || 'GRAFFITI';
+  }
+  if (presetVal && SERIES_PRESET_MAP[presetVal]) {
+    return SERIES_PRESET_MAP[presetVal].text;
+  }
+  return cfg.defaultText || `BADGE ${idx}`;
+}
+
 function toggleBadgeLayerEnable(idx, checked) {
   const cfg = BADGE_CONFIG[idx];
   const val = typeof checked === 'boolean' ? checked : Boolean(getEl(cfg.enableCheckboxId)?.checked);
   state[`badge${idx}Enabled`] = val;
+
+  // If enabling a badge whose text input was previously cleared, restore a visible fallback
+  if (val) {
+    const currentText = (getEl(cfg.textInputId)?.value || '').trim();
+    if (!currentText) {
+      const fallback = resolveBadgeFallbackText(idx);
+      setElValue(cfg.textInputId, fallback);
+      setElText(cfg.textLengthBadgeId, `${fallback.length} / ${idx === 1 ? 18 : 20}`);
+    }
+    if (idx === 1 && getEl(cfg.presetSelectId)?.value === 'none') {
+      setElValue(cfg.presetSelectId, 'star');
+    }
+  }
+
   syncAllBadgeCheckboxes();
   renderIconMap();
+
+  // When a badge is enabled via preview area overlay toggles, open its subtab and scroll Icon Background Style to top
+  const activeId = typeof document !== 'undefined' ? document.activeElement?.id : '';
+  if (val && (activeId === cfg.gridCheckboxId || activeId === cfg.mainCheckboxId)) {
+    switchBadgeSubtab(cfg.key);
+    scrollToIconBgStyleSection();
+  }
 }
 
 function setBadgeLayerMode(idx, mode) {
@@ -492,6 +578,14 @@ function setBadgeLayerMode(idx, mode) {
   if (cfg.textSectionId) setElDisplay(cfg.textSectionId, mode === 'text' ? 'block' : 'none');
   if (cfg.imageSectionId) setElDisplay(cfg.imageSectionId, mode === 'image' ? 'block' : 'none');
   if (cfg.presetSectionId) setElDisplay(cfg.presetSectionId, mode === 'preset' ? 'block' : 'none');
+  if (mode === 'text') {
+    const currentText = (getEl(cfg.textInputId)?.value || '').trim();
+    if (!currentText) {
+      const fallback = resolveBadgeFallbackText(idx);
+      setElValue(cfg.textInputId, fallback);
+      setElText(cfg.textLengthBadgeId, `${fallback.length} / ${idx === 1 ? 18 : 20}`);
+    }
+  }
   renderIconMap();
 }
 
@@ -788,16 +882,23 @@ export const onIconBadgeOpacityChange = () => onBadgeLayerSliderChange(1, 'opaci
 
 export function applyPresetLogo(preset) {
   if (!preset) return;
-  const labels = {
-    star: '★ CS2 MOD',
-    shield: '🛡️ VERIFIED',
-    crown: '👑 VIP CREATOR',
-    bolt: '⚡ TURBO ASSET',
-    cube: '🧊 3D DECAL',
-    sparkle: '✨ HD PACK'
-  };
-  setCreatorBadgeMode('text');
-  setBadge1TextPreset(labels[preset] || preset.toUpperCase());
+  if (preset === 'none') {
+    state.badge1Enabled = false;
+    syncAllBadgeCheckboxes();
+    renderIconMap();
+    return;
+  }
+  const p = CREATOR_PRESET_MAP[preset];
+  const label = p ? p.text : preset.toUpperCase();
+  if (p?.theme) {
+    setElValue('creatorThemeSelect', p.theme);
+  }
+  setElValue('creatorPresetSelect', preset);
+  setElValue('badge1TextInput', label);
+  setElText('badge1TextLengthBadge', `${label.length} / 18`);
+  state.badge1Enabled = true;
+  syncAllBadgeCheckboxes();
+  renderIconMap();
 }
 
 // ==========================================
@@ -843,8 +944,12 @@ export const onSeriesFrameChange = () => renderIconMap();
 export function applySeriesPreset(preset) {
   const p = SERIES_PRESET_MAP[preset];
   if (p) {
+    setElValue('seriesPresetSelect', preset);
     setElValue('seriesTextInput', p.text);
+    setElText('seriesTextLengthBadge', `${p.text.length} / 20`);
     setElValue('seriesThemeSelect', p.theme);
+    state.badge2Enabled = true;
+    syncAllBadgeCheckboxes();
   }
   renderIconMap();
 }
@@ -874,8 +979,12 @@ export const onExtra1SolidColorInput = () => onBadgeLayerSolidColorInput(3);
 export const applyExtra1Preset = (preset) => {
   const p = SERIES_PRESET_MAP[preset];
   if (p) {
+    setElValue('extra1PresetSelect', preset);
     setElValue('extra1TextInput', p.text);
+    setElText('extra1TextLengthBadge', `${p.text.length} / 20`);
     setElValue('extra1ThemeSelect', p.theme);
+    state.badge3Enabled = true;
+    syncAllBadgeCheckboxes();
   }
   renderIconMap();
 };
@@ -910,8 +1019,12 @@ export const onExtra2SolidColorInput = () => onBadgeLayerSolidColorInput(4);
 export const applyExtra2Preset = (preset) => {
   const p = SERIES_PRESET_MAP[preset];
   if (p) {
+    setElValue('extra2PresetSelect', preset);
     setElValue('extra2TextInput', p.text);
+    setElText('extra2TextLengthBadge', `${p.text.length} / 20`);
     setElValue('extra2ThemeSelect', p.theme);
+    state.badge4Enabled = true;
+    syncAllBadgeCheckboxes();
   }
   renderIconMap();
 };
@@ -1274,8 +1387,14 @@ export function updateBadgeDefaultsUI() {
 export function initBadgeDefaults() {
   populateFontDropdowns();
   updateBadgeDefaultsUI();
+  let loadedSaved = false;
   if (getEl('autoApplyBadgeDefaults')?.checked !== false) {
-    loadIconBadgeDefaults(true);
+    loadedSaved = loadIconBadgeDefaults(true);
+  }
+  if (!loadedSaved) {
+    // Synchronize all badge checkboxes with state so sidebar & preview toggles match
+    syncAllBadgeCheckboxes();
+    renderIconMap();
   }
 }
 
@@ -1287,7 +1406,288 @@ if (typeof window !== 'undefined') {
   Object.assign(window, {
     clearIconBadgeDefaults,
     toggleAutoApplyDefaults,
-    initBadgeCanvasInteractions
+    initBadgeCanvasInteractions,
+    highlightOverlayOnCanvas,
+    toggleOverlayCanvasCallouts,
+    updateOverlayIndicators
+  });
+}
+
+// ==========================================
+// Overlay Identification & Indicator Sync
+// ==========================================
+
+const OVERLAY_META = {
+  1: { num: '#1', icon: '⭐', shortName: 'Creator', fullName: 'Creator Logo / Brand Watermark' },
+  2: { num: '#2', icon: '🎨', shortName: 'Series', fullName: 'Series / Pack Badge' },
+  3: { num: '#3', icon: '🏷️', shortName: 'Extra 1', fullName: 'Extra 1 Watermark Badge' },
+  4: { num: '#4', icon: '✨', shortName: 'Extra 2', fullName: 'Extra 2 Custom Overlay' }
+};
+
+let hoveredOverlayIdx = null;
+let showOverlayCanvasCallouts = false;
+
+/**
+ * Resolves a human-readable short position code (e.g. "BR", "TL", "50%,50%")
+ * and full position description for a given badge layer index (1..4).
+ */
+function resolveOverlayPositionSummary(idx) {
+  const cfg = BADGE_CONFIG[idx];
+  const posMode = getEl(cfg.positionSelectId)?.value || 'custom';
+  const xPct = Number(getEl(cfg.posXId)?.value ?? 50);
+  const yPct = Number(getEl(cfg.posYId)?.value ?? 50);
+
+  const presetLabels = {
+    'bottom-right': { code: 'BR', full: 'Bottom-Right' },
+    'bottom-left': { code: 'BL', full: 'Bottom-Left' },
+    'bottom-center': { code: 'BC', full: 'Bottom-Center' },
+    'top-right': { code: 'TR', full: 'Top-Right' },
+    'top-left': { code: 'TL', full: 'Top-Left' },
+    'top-center': { code: 'TC', full: 'Top-Center' },
+    center: { code: 'CTR', full: 'Center' }
+  };
+
+  if (posMode !== 'custom' && presetLabels[posMode]) {
+    return presetLabels[posMode];
+  }
+
+  // Classify custom coordinates into intuitive quadrant/corner labels when near standard snap points
+  if (xPct >= 70 && yPct >= 70) return { code: 'BR', full: `Bottom-Right (${xPct}%, ${yPct}%)` };
+  if (xPct <= 30 && yPct >= 70) return { code: 'BL', full: `Bottom-Left (${xPct}%, ${yPct}%)` };
+  if (xPct >= 70 && yPct <= 30) return { code: 'TR', full: `Top-Right (${xPct}%, ${yPct}%)` };
+  if (xPct <= 30 && yPct <= 30) return { code: 'TL', full: `Top-Left (${xPct}%, ${yPct}%)` };
+  if (xPct >= 40 && xPct <= 60 && yPct >= 40 && yPct <= 60) {
+    return { code: 'CTR', full: `Center (${xPct}%, ${yPct}%)` };
+  }
+  return { code: `${xPct},${yPct}%`, full: `Custom (${xPct}%, ${yPct}%)` };
+}
+
+/**
+ * Resolves the active display content summary (text, preset label, or uploaded image filename)
+ * for a given badge layer index (1..4).
+ */
+function resolveOverlayContentSummary(idx) {
+  const cfg = BADGE_CONFIG[idx];
+  const mode = getEl(cfg.modeSelectId)?.value || (idx <= 2 ? 'preset' : 'text');
+
+  if (mode === 'image') {
+    const fileName = state[cfg.fileNameStateKey];
+    return fileName ? `🖼 ${fileName}` : '🖼 Custom Image';
+  }
+
+  if (mode === 'preset') {
+    const presetVal = getEl(cfg.presetSelectId)?.value || '';
+    if (idx === 1) {
+      if (presetVal === 'none') return 'None';
+      const cp = CREATOR_PRESET_MAP[presetVal];
+      if (cp) return cp.text;
+    } else {
+      const sp = SERIES_PRESET_MAP[presetVal];
+      if (sp) return sp.text;
+    }
+  }
+
+  const rawText = (getEl(cfg.textInputId)?.value || '').trim();
+  return rawText || resolveBadgeFallbackText(idx);
+}
+
+/**
+ * Synchronizes the 4-overlay indicator strip, subpanel identity banners,
+ * dropdown selector option text, and preview bar tooltips.
+ */
+export function updateOverlayIndicators() {
+  const activeSub = getEl('badgeLayerSelect')?.value || 'creator';
+  const selectEl = getEl('badgeLayerSelect');
+
+  [1, 2, 3, 4].forEach((idx) => {
+    const cfg = BADGE_CONFIG[idx];
+    const meta = OVERLAY_META[idx];
+    const enabled = Boolean(state[`badge${idx}Enabled`]);
+    const contentText = resolveOverlayContentSummary(idx);
+    const posInfo = resolveOverlayPositionSummary(idx);
+
+    // 1. Update 4-Overlay Indicator Card in Sidebar
+    const card = getEl(`ovIndicatorCard${idx}`);
+    if (card) {
+      card.classList.toggle('active', activeSub === cfg.key);
+      card.classList.toggle('is-enabled', enabled);
+      card.classList.toggle('is-disabled', !enabled);
+      card.title = `Overlay ${meta.num} (${meta.shortName}): ${enabled ? `"${contentText}" at ${posInfo.full}` : 'Currently OFF'} — Click to edit, hover to locate on icon`;
+    }
+
+    const dot = getEl(`ovIndDot${idx}`);
+    if (dot) {
+      dot.classList.toggle('on', enabled);
+      dot.title = enabled ? 'Overlay Enabled' : 'Overlay Disabled';
+    }
+
+    setElText(`ovIndPreview${idx}`, enabled ? contentText : `Off (${contentText})`);
+    setElText(`ovIndPos${idx}`, posInfo.code);
+
+    // 2. Update Subpanel Identity Banner
+    const bannerSummary = getEl(`ovBannerSummary${idx}`);
+    if (bannerSummary) {
+      bannerSummary.textContent = enabled
+        ? `${contentText} • ${posInfo.full}`
+        : `OFF (${contentText} • ${posInfo.full})`;
+      const bannerEl = bannerSummary.closest('.subpanel-overlay-banner');
+      if (bannerEl) {
+        bannerEl.classList.toggle('is-disabled', !enabled);
+      }
+    }
+
+    // 3. Update <select id="badgeLayerSelect"> option label
+    if (selectEl) {
+      const opt = Array.from(selectEl.options).find((o) => o.value === cfg.key);
+      if (opt) {
+        const statusTag = enabled ? `🟢 ON: ${contentText}` : '⚪ OFF';
+        opt.textContent = `${meta.icon} Overlay ${idx} (${meta.shortName}) — [${statusTag} • ${posInfo.code}]`;
+      }
+    }
+
+    // 4. Update Preview Area Toggle Labels & Tooltips
+    const gridLabel = getEl(`gridOvLabel${idx}`);
+    if (gridLabel) {
+      gridLabel.classList.toggle('is-enabled', enabled);
+      gridLabel.title = `Overlay ${meta.num} (${meta.shortName}): ${enabled ? `"${contentText}" (${posInfo.full})` : 'Disabled'}`;
+    }
+
+    const mainLabel = getEl(`mainOvLabel${idx}`);
+    if (mainLabel) {
+      mainLabel.classList.toggle('is-enabled', enabled);
+      mainLabel.title = `Overlay ${meta.num} (${meta.shortName}): ${enabled ? `"${contentText}" (${posInfo.full})` : 'Disabled'}`;
+    }
+
+    const mainSub = getEl(`mainOvSub${idx}`);
+    if (mainSub) {
+      mainSub.textContent = enabled ? `(${posInfo.code})` : '';
+    }
+  });
+}
+
+/**
+ * Toggles persistent #1–#4 identification callouts on the icon preview canvas.
+ */
+export function toggleOverlayCanvasCallouts(forceState) {
+  showOverlayCanvasCallouts =
+    typeof forceState === 'boolean' ? forceState : !showOverlayCanvasCallouts;
+
+  ['btnToggleOverlayCallouts', 'btnGridIdentifyOverlays', 'btnSingleIdentifyOverlays'].forEach(
+    (btnId) => {
+      const btn = getEl(btnId);
+      if (btn) btn.classList.toggle('active', showOverlayCanvasCallouts);
+    }
+  );
+
+  renderOverlayCanvasCallouts();
+}
+
+/**
+ * Highlights a specific overlay (1..4) on the icon preview canvas when hovering
+ * an indicator card, banner, or toggle checkbox.
+ */
+export function highlightOverlayOnCanvas(idx) {
+  hoveredOverlayIdx = idx || null;
+  [1, 2, 3, 4].forEach((i) => {
+    const card = getEl(`ovIndicatorCard${i}`);
+    if (card) card.classList.toggle('is-hovered', i === hoveredOverlayIdx);
+  });
+  renderOverlayCanvasCallouts();
+}
+
+/**
+ * Computes a fallback bounding box in 256x256 icon space for a badge layer
+ * (used when hovering an indicator for a badge that is currently disabled).
+ */
+function getFallbackOverlayBox(idx) {
+  const size = 256;
+  const cfg = BADGE_CONFIG[idx];
+  const edgePad = Number(getEl(cfg.paddingId)?.value || 12);
+  const posMode = getEl(cfg.positionSelectId)?.value || 'custom';
+  let cx = size * (Number(getEl(cfg.posXId)?.value || 50) / 100);
+  let cy = size * (Number(getEl(cfg.posYId)?.value || 50) / 100);
+
+  if (posMode !== 'custom') {
+    const minCoord = edgePad + 24;
+    const maxCoord = size - edgePad - 24;
+    if (posMode.includes('left')) cx = minCoord + 20;
+    else if (posMode.includes('right')) cx = maxCoord - 20;
+    else cx = size / 2;
+
+    if (posMode.includes('top')) cy = minCoord;
+    else if (posMode.includes('bottom')) cy = maxCoord;
+    else cy = size / 2;
+  }
+
+  const w = 78;
+  const h = 26;
+  return {
+    x: Math.max(4, Math.min(size - w - 4, cx - w / 2)),
+    y: Math.max(4, Math.min(size - h - 4, cy - h / 2)),
+    w,
+    h,
+    cx,
+    cy
+  };
+}
+
+/**
+ * Renders non-destructive DOM callout boxes and #1–#4 labels above #canvasIcon
+ * and #canvasSingle without modifying the exported canvas bitmap.
+ */
+export function renderOverlayCanvasCallouts() {
+  const containers = [
+    getEl('iconCanvasIndicatorLayer'),
+    getEl('singleCanvasIndicatorLayer')
+  ].filter(Boolean);
+
+  if (!containers.length) return;
+
+  const activeDragIdx = activeDragState?.idx || null;
+  const shouldShowAny =
+    showOverlayCanvasCallouts || Boolean(hoveredOverlayIdx) || Boolean(activeDragIdx);
+
+  if (!shouldShowAny) {
+    containers.forEach((c) => {
+      c.innerHTML = '';
+      c.classList.remove('visible');
+    });
+    return;
+  }
+
+  const ICON_SIZE = 256;
+  const itemsHtml = [];
+
+  [1, 2, 3, 4].forEach((idx) => {
+    const enabled = Boolean(state[`badge${idx}Enabled`]);
+    const isFocused = idx === hoveredOverlayIdx || idx === activeDragIdx;
+
+    // Show if persistent callouts are ON (and badge is enabled) OR if this specific badge is hovered/dragged
+    if (!isFocused && !(showOverlayCanvasCallouts && enabled)) return;
+
+    const box = badgeHitBoxes[idx] || getFallbackOverlayBox(idx);
+    const meta = OVERLAY_META[idx];
+    const leftPct = Math.max(0, Math.min(96, (box.x / ICON_SIZE) * 100));
+    const topPct = Math.max(0, Math.min(96, (box.y / ICON_SIZE) * 100));
+    const widthPct = Math.max(8, Math.min(100 - leftPct, (box.w / ICON_SIZE) * 100));
+    const heightPct = Math.max(8, Math.min(100 - topPct, (box.h / ICON_SIZE) * 100));
+
+    // Place callout pill below the box if badge is near top edge, otherwise above
+    const labelPosClass = topPct < 18 ? 'label-below' : 'label-above';
+    const stateClass = `${isFocused ? 'is-focused' : ''} ${!enabled ? 'is-ghost' : ''}`.trim();
+    const statusSuffix = !enabled ? ' (Off)' : '';
+
+    itemsHtml.push(
+      `<div class="ov-canvas-callout ov-callout-${idx} ${labelPosClass} ${stateClass}" style="left:${leftPct.toFixed(1)}%;top:${topPct.toFixed(1)}%;width:${widthPct.toFixed(1)}%;height:${heightPct.toFixed(1)}%;">` +
+        `<span class="ov-canvas-callout-tag">${meta.num} ${meta.shortName}${statusSuffix}</span>` +
+      `</div>`
+    );
+  });
+
+  const html = itemsHtml.join('');
+  containers.forEach((c) => {
+    c.innerHTML = html;
+    c.classList.toggle('visible', itemsHtml.length > 0);
   });
 }
 
@@ -1411,6 +1811,7 @@ export function initBadgeCanvasInteractions() {
 
       const cfg = BADGE_CONFIG[targetIdx];
       switchBadgeSubtab(cfg.key);
+      scrollToIconBgStyleSection();
       canvas.style.cursor = 'grabbing';
       applyDragPosition(targetIdx, canvas, e, offsetXPct, offsetYPct);
     };
@@ -1424,10 +1825,20 @@ export function initBadgeCanvasInteractions() {
       const { px, py } = getPointerCoords(canvas, e);
       const hitIdx = hitTestBadge(px, py);
       canvas.style.cursor = hitIdx ? 'grab' : 'default';
+      if (hoveredOverlayIdx !== hitIdx) {
+        highlightOverlayOnCanvas(hitIdx);
+      }
+    };
+
+    const onPointerLeave = () => {
+      if (!activeDragState && hoveredOverlayIdx !== null) {
+        highlightOverlayOnCanvas(null);
+      }
     };
 
     canvas.addEventListener('mousedown', onPointerDown);
     canvas.addEventListener('mousemove', onPointerHover);
+    canvas.addEventListener('mouseleave', onPointerLeave);
     canvas.addEventListener('touchstart', onPointerDown, { passive: false });
   };
 
@@ -1441,14 +1852,17 @@ export function initBadgeCanvasInteractions() {
       if (!activeDragState) return;
       if (e.cancelable) e.preventDefault();
       const { idx, canvas, offsetXPct, offsetYPct } = activeDragState;
-      applyDragPosition(idx, canvas, e, offsetXPct, offsetYPct);
+      applyDragPosition(targetIdxOrIdx(idx), canvas, e, offsetXPct, offsetYPct);
     };
+
+    const targetIdxOrIdx = (idx) => idx;
 
     const onWindowUp = () => {
       if (!activeDragState) return;
       const { canvas } = activeDragState;
       activeDragState = null;
       if (canvas) canvas.style.cursor = 'grab';
+      renderOverlayCanvasCallouts();
     };
 
     window.addEventListener('mousemove', onWindowMove, { passive: false });
@@ -1505,14 +1919,34 @@ function drawSingleBadgeOverlay(ctx, size, idx) {
     return;
   }
 
-  // Text / Preset mode
+  // Text / Preset / Fallback mode
   let text = (getEl(cfg.textInputId)?.value || '').trim();
-  if (mode === 'preset' && !text) {
-    text = idx === 2 ? 'GRAFFITI' : `BADGE ${idx}`;
+  let presetThemeOverride = null;
+
+  if (mode === 'preset') {
+    const presetVal = getEl(cfg.presetSelectId)?.value || '';
+    if (idx === 1) {
+      if (presetVal === 'none') {
+        ctx.restore();
+        return;
+      }
+      const cp = CREATOR_PRESET_MAP[presetVal];
+      if (cp) {
+        text = cp.text;
+        presetThemeOverride = cp.theme;
+      }
+    } else {
+      const sp = SERIES_PRESET_MAP[presetVal];
+      if (sp) {
+        text = sp.text;
+        presetThemeOverride = sp.theme;
+      }
+    }
   }
+
+  // Ensure enabled badges always have visible content to display
   if (!text) {
-    ctx.restore();
-    return;
+    text = resolveBadgeFallbackText(idx);
   }
 
   const ptSize = Math.max(8, Math.round(Number(getEl(cfg.ptSizeId)?.value || 14) * (scalePct / 0.25)));
@@ -1533,7 +1967,7 @@ function drawSingleBadgeOverlay(ctx, size, idx) {
 
   // Resolve colors
   const colorMode = getEl(cfg.colorModeSelectId)?.value || 'theme';
-  const themeKey = getEl(cfg.themeSelectId)?.value || 'cyan';
+  const themeKey = presetThemeOverride || getEl(cfg.themeSelectId)?.value || 'cyan';
   const themeObj = BADGE_COLOR_THEMES[themeKey] || BADGE_COLOR_THEMES.cyan;
 
   let fillStyle = themeObj.bg1;
@@ -1654,8 +2088,29 @@ export function renderIconMap() {
   // 3. Render 4 badge layers in order
   [1, 2, 3, 4].forEach((idx) => drawSingleBadgeOverlay(ctxIcon, size, idx));
 
-  // Ensure drag interactions are initialized on icon canvases
+  // 4. Update Icon card status badge & footer if present
+  const activeBadgeCount = [1, 2, 3, 4].filter((idx) => Boolean(state[`badge${idx}Enabled`])).length;
+  const cardIconBadge = getEl('cardIconBadge');
+  if (cardIconBadge) {
+    if (activeBadgeCount > 0) {
+      cardIconBadge.textContent = `${activeBadgeCount} Badge${activeBadgeCount > 1 ? 's' : ''}`;
+      cardIconBadge.style.background = 'rgba(56, 189, 248, 0.15)';
+      cardIconBadge.style.color = '#38bdf8';
+    } else if (state.currentImage) {
+      cardIconBadge.textContent = 'Ready';
+      cardIconBadge.style.background = 'rgba(52, 211, 153, 0.15)';
+      cardIconBadge.style.color = '#34d399';
+    } else {
+      cardIconBadge.textContent = 'None';
+      cardIconBadge.style.background = 'rgba(148, 163, 184, 0.15)';
+      cardIconBadge.style.color = 'var(--text-muted)';
+    }
+  }
+
+  // Ensure drag interactions and overlay indicators are synchronized
   initBadgeCanvasInteractions();
+  updateOverlayIndicators();
+  renderOverlayCanvasCallouts();
 
   // Synchronize single view canvas whenever the icon tab is active
   if (
