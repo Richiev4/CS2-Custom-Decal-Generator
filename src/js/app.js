@@ -922,16 +922,7 @@ export function updateSetSlotsUI() {
   if (dropZoneTargetSlotLabel) {
     dropZoneTargetSlotLabel.textContent = state.appMode.toUpperCase();
   }
-  const dropZoneTargetSlotSub = document.getElementById('dropZoneTargetSlotSub');
-  if (dropZoneTargetSlotSub) {
-    if (state.appMode === 'surface') {
-      dropZoneTargetSlotSub.textContent = 'Uploads will replace Surface texture only';
-    } else if (state.appMode === 'netlane') {
-      dropZoneTargetSlotSub.textContent = 'Uploads will replace Net Lane texture only';
-    } else {
-      dropZoneTargetSlotSub.textContent = 'Uploads will replace Decal graphic only';
-    }
-  }
+  updateSourceDropZoneUI();
 
   // Section 6 Export Count Badge & Subtext
   const expCountBadge = document.getElementById('setExportOverallCount') || document.getElementById('setExportCountBadge');
@@ -951,7 +942,77 @@ export function updateSetSlotsUI() {
     }
   }
 }
+
+/**
+ * Updates the Section 1 drop zone copy and icon to indicate whether uploading
+ * will import a fresh graphic or replace an already-loaded graphic file.
+ */
+export function updateSourceDropZoneUI() {
+  const mode = state.appMode || 'decal';
+  const slot = state.setSlots ? state.setSlots[mode] : null;
+  const hasGraphic = Boolean(state.currentImage);
+  const currentFile = (state.sourceFileName || slot?.fileName || '').trim();
+
+  const dropZone = document.getElementById('dropZone');
+  const dropIcon = document.getElementById('dropIcon');
+  const dropTitleText = document.getElementById('dropTitleText');
+  const dropHintText = document.getElementById('dropHintText');
+  const dropZoneTargetSlotSub = document.getElementById('dropZoneTargetSlotSub');
+
+  if (dropZone) {
+    dropZone.classList.toggle('has-graphic', hasGraphic);
+  }
+  if (dropIcon) {
+    dropIcon.textContent = hasGraphic ? '↻' : '⤓';
+  }
+
+  const modeLabels = {
+    decal: {
+      slotName: 'Decal',
+      noun: 'Decal graphic',
+      emptyTitle: 'Drop Source Graphic for Decal (PNG or JPG)',
+      emptyHint: 'All ratios supported: 2:3 / 3:4 Posters, 16:9 Billboards, or 1:1 Road Marks'
+    },
+    surface: {
+      slotName: 'Surface',
+      noun: 'Surface texture',
+      emptyTitle: 'Drop Seamless Tiling Surface Texture (PNG or JPG)',
+      emptyHint: 'Full tileable pavement, asphalt, gravel, or terrain'
+    },
+    netlane: {
+      slotName: 'Net Lane',
+      noun: 'Net Lane texture',
+      emptyTitle: 'Drop Net Lane Texture (Line/Curb/Marking)',
+      emptyHint: 'Wrapping road line or curb strip'
+    }
+  };
+  const cfg = modeLabels[mode] || modeLabels.decal;
+
+  if (hasGraphic) {
+    if (dropTitleText) {
+      dropTitleText.textContent = `Replace current ${cfg.noun} file (Drop or Browse PNG/JPG)`;
+    }
+    if (dropHintText) {
+      dropHintText.textContent = currentFile
+        ? `Current file: ${currentFile} • Dropping or selecting a new file will replace it`
+        : 'A graphic is currently loaded • Dropping or selecting a new file will replace it';
+    }
+    if (dropZoneTargetSlotSub) {
+      dropZoneTargetSlotSub.textContent = currentFile
+        ? `Uploads will replace "${currentFile}" in ${cfg.slotName} slot`
+        : `Uploads will replace current ${cfg.noun} only`;
+    }
+  } else {
+    if (dropTitleText) dropTitleText.textContent = cfg.emptyTitle;
+    if (dropHintText) dropHintText.textContent = cfg.emptyHint;
+    if (dropZoneTargetSlotSub) {
+      dropZoneTargetSlotSub.textContent = `Uploads will load into ${cfg.slotName} slot only`;
+    }
+  }
+}
+
 window.updateSetSlotsUI = updateSetSlotsUI;
+window.updateSourceDropZoneUI = updateSourceDropZoneUI;
 
 export function clearCurrentSlot() {
   const mode = state.appMode;
@@ -1025,8 +1086,6 @@ export function setMode(mode, force = false, silent = false) {
   const exportZipLabel = document.getElementById('exportZipLabel');
   const maskAlphaLabel = document.getElementById('maskAlphaLabel');
   const presetButtonsGroup = document.getElementById('presetButtonsGroup');
-  const dropTitleText = document.getElementById('dropTitleText');
-  const dropHintText = document.getElementById('dropHintText');
   const folderTitleText = document.getElementById('folderTitleText');
   const drawSlider = document.getElementById('drawOrderSlider');
 
@@ -1074,8 +1133,6 @@ export function setMode(mode, force = false, silent = false) {
     if (exportZipLabel) exportZipLabel.textContent = 'Export Decal Package (.zip)';
     if (maskAlphaLabel) maskAlphaLabel.textContent = 'Modulate Mask with Decal Alpha (Recommended for decals)';
 
-    if (dropTitleText) dropTitleText.textContent = 'Drop Source Graphic for Decal (PNG or JPG)';
-    if (dropHintText) dropHintText.textContent = 'All ratios supported: 2:3 / 3:4 Posters, 16:9 Billboards, or 1:1 Road Marks';
     if (folderTitleText) folderTitleText.textContent = 'Cities: Skylines 2 Custom Decal Destination Folder';
 
     if (presetButtonsGroup) {
@@ -1146,8 +1203,6 @@ export function setMode(mode, force = false, silent = false) {
     if (exportZipLabel) exportZipLabel.textContent = 'Export Surface Package (.zip)';
     if (maskAlphaLabel) maskAlphaLabel.textContent = 'Modulate Mask with Texture Alpha (Usually disabled for surfaces)';
 
-    if (dropTitleText) dropTitleText.textContent = 'Drop Seamless Tiling Surface Texture (PNG or JPG)';
-    if (dropHintText) dropHintText.textContent = 'Full tileable pavement, asphalt, gravel, or terrain';
     if (folderTitleText) folderTitleText.textContent = 'Cities: Skylines 2 Custom Surface Destination Folder';
 
     if (presetButtonsGroup) {
@@ -1214,8 +1269,6 @@ export function setMode(mode, force = false, silent = false) {
     if (exportZipLabel) exportZipLabel.textContent = 'Export Net Lane Package (.zip)';
     if (maskAlphaLabel) maskAlphaLabel.textContent = 'Modulate Mask with Base Alpha (Recommended for lines/stripes)';
 
-    if (dropTitleText) dropTitleText.textContent = 'Drop Net Lane Texture (Line/Curb/Marking)';
-    if (dropHintText) dropHintText.textContent = 'Wrapping road line or curb strip';
     if (folderTitleText) folderTitleText.textContent = 'Cities: Skylines 2 Custom Net Lane Destination Folder';
 
     if (presetButtonsGroup) {
@@ -1394,6 +1447,7 @@ window.clearCanvases = clearCanvases;
 export function renderAllMaps() {
   updateEmptyPreviewIndicator();
   updateSourceCropUI();
+  updateSourceDropZoneUI();
   if (!state.currentImage) {
     clearCanvases();
 
@@ -1753,11 +1807,7 @@ export function clearAllWorkspace(force = false) {
   const activeSeriesBadge = document.getElementById('activeSeriesBadge');
   if (activeSeriesBadge) activeSeriesBadge.textContent = 'None';
 
-  const dropTitle = document.getElementById('dropTitleText');
-  if (dropTitle) dropTitle.textContent = 'Drop PNG or JPG decal texture';
-
-  const dropHint = document.getElementById('dropHintText');
-  if (dropHint) dropHint.textContent = 'Square 1:1 ratio • Transparent or solid';
+  updateSourceDropZoneUI();
 
   const sourceBadge = document.getElementById('sourceImageStatusBadge');
   if (sourceBadge) sourceBadge.textContent = 'No Image Loaded';
@@ -2107,10 +2157,7 @@ export function executeClearSelected() {
     const fileInput = document.getElementById('fileInput');
     if (fileInput) fileInput.value = '';
 
-    const dropTitle = document.getElementById('dropTitleText');
-    if (dropTitle) dropTitle.textContent = 'Drop PNG or JPG decal texture';
-    const dropHint = document.getElementById('dropHintText');
-    if (dropHint) dropHint.textContent = 'Square 1:1 ratio • Transparent or solid';
+    updateSourceDropZoneUI();
     const sourceBadge = document.getElementById('sourceImageStatusBadge');
     if (sourceBadge) sourceBadge.textContent = 'No Image Loaded';
 
@@ -2140,10 +2187,7 @@ export function executeClearSelected() {
     const fileInput = document.getElementById('fileInput');
     if (fileInput) fileInput.value = '';
 
-    const dropTitle = document.getElementById('dropTitleText');
-    if (dropTitle) dropTitle.textContent = 'Drop PNG or JPG decal texture';
-    const dropHint = document.getElementById('dropHintText');
-    if (dropHint) dropHint.textContent = 'Square 1:1 ratio • Transparent or solid';
+    updateSourceDropZoneUI();
     const sourceBadge = document.getElementById('sourceImageStatusBadge');
     if (sourceBadge) sourceBadge.textContent = 'No Image Loaded';
 
@@ -2779,6 +2823,7 @@ Object.assign(window, {
   updateCustomMetadataEntry,
   removeCustomMetadataEntry,
   updateSourceCropUI,
+  updateSourceDropZoneUI,
   autoTrimSourceGraphic,
   resetSourceCrop,
   openSourceCropModal,

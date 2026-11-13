@@ -857,6 +857,20 @@
       background: rgba(0, 168, 255, 0.05);
     }
 
+    .drop-zone.has-graphic {
+      border-color: rgba(56, 189, 248, 0.45);
+      background: rgba(56, 189, 248, 0.04);
+    }
+
+    .drop-zone.has-graphic:hover, .drop-zone.has-graphic.dragover {
+      border-color: var(--accent-cyan);
+      background: rgba(56, 189, 248, 0.09);
+    }
+
+    .drop-zone.has-graphic .drop-icon {
+      color: var(--accent-cyan);
+    }
+
     .drop-zone input[type="file"] {
       position: absolute;
       top: 0;
