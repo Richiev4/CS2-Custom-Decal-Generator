@@ -38,7 +38,8 @@ import {
   getSlot,
   isSlotLoaded,
   getLoadedSlotsCount,
-  getLoadedSlots
+  getLoadedSlots,
+  formatFileTypeLabel
 } from './state.js';
 import { createModalController, bindDragAndDropZone } from './domUtils.js';
 
@@ -216,6 +217,9 @@ import {
   applyCategoryQuickPick,
   updateCategoryQuickPickerForMode,
   onNormalOpacityChange,
+  onBaseOpacityChange,
+  onMetallicOpacityChange,
+  getLayerMaskValue,
   onLayerMaskChange,
   onDrawOrderChange,
   onGlobalMaterialChange,
@@ -231,6 +235,9 @@ import {
   toggleAssetMetadataFields,
   autoFillSequenceNotes,
   syncMetaSetNameFromSeries,
+  getJsonSchemaMode,
+  setJsonSchemaMode,
+  setNetlaneJsonPreviewTab,
   updateConfigJson,
   copyConfigJson,
   copyDecalPath,
@@ -439,6 +446,21 @@ import {
   confirmNewStandaloneAsset
 } from './assetWizard.js';
 
+import {
+  openAssetChecklistModal,
+  closeAssetChecklistModal,
+  closeAssetChecklistModalOnBackdrop,
+  refreshAssetChecklistModal,
+  jumpToChecklistTarget,
+  switchChecklistSlot,
+  setChecklistJsonSchema,
+  toggleChecklistMetadata,
+  onChecklistMetadataInput,
+  addCustomMetadataEntry,
+  updateCustomMetadataEntry,
+  removeCustomMetadataEntry
+} from './assetChecklist.js';
+
 // ==========================================
 // 3-in-1 Set Slots State Preservation
 // ==========================================
@@ -454,10 +476,15 @@ export function saveCurrentSlotState(mode = state.appMode) {
   slot.textureRotation = state.textureRotation || 0;
   slot.flipH = !!state.flipH;
   slot.flipV = !!state.flipV;
+  slot.fileName = state.sourceFileName || slot.fileName || '';
+  slot.sourceFileType = state.sourceFileType || slot.sourceFileType || '';
+  slot.sourceKind = state.sourceKind || slot.sourceKind || (state.currentImage ? 'custom' : 'none');
   slot.customNormalImg = state.customNormalImg;
   slot.customNormalFileName = state.customNormalFileName || '';
+  slot.customNormalFileType = state.customNormalFileType || '';
   slot.customMaskImg = state.customMaskImg;
   slot.customMaskFileName = state.customMaskFileName || '';
+  slot.customMaskFileType = state.customMaskFileType || '';
   slot.targetResolution = state.currentResolution || 1024;
 
   const assetNameEl = document.getElementById('assetName');
@@ -567,10 +594,15 @@ export function restoreSlotState(mode) {
   state.textureRotation = slot.textureRotation || 0;
   state.flipH = !!slot.flipH;
   state.flipV = !!slot.flipV;
+  state.sourceFileName = slot.fileName || '';
+  state.sourceFileType = slot.sourceFileType || '';
+  state.sourceKind = slot.sourceKind || (slot.image ? 'custom' : 'none');
   state.customNormalImg = slot.customNormalImg || null;
   state.customNormalFileName = slot.customNormalFileName || '';
+  state.customNormalFileType = slot.customNormalFileType || '';
   state.customMaskImg = slot.customMaskImg || null;
   state.customMaskFileName = slot.customMaskFileName || '';
+  state.customMaskFileType = slot.customMaskFileType || '';
 
   const assetNameEl = document.getElementById('assetName');
   if (assetNameEl) assetNameEl.value = slot.assetName || '';
@@ -905,10 +937,15 @@ export function clearCurrentSlot() {
   slot.image = null;
   slot.imageSrc = '';
   slot.fileName = '';
+  slot.sourceFileType = '';
+  slot.sourceKind = 'none';
   slot.thumbnail = '';
   slot.isCustomImageLoaded = false;
   slot.hasUnsavedChanges = false;
   state.currentImage = null;
+  state.sourceFileName = '';
+  state.sourceFileType = '';
+  state.sourceKind = 'none';
   state.isCustomImageLoaded = false;
   state.hasUnsavedChanges = false;
 
@@ -1408,6 +1445,8 @@ export function renderAllMaps() {
   } else if (state.activeTab === 'scale') {
     renderScaleView();
   }
+
+  refreshAssetChecklistModal();
 }
 
 export function updateGridSimulationCanvas() {
@@ -1495,7 +1534,11 @@ export function processUploadedFile(file, force = false) {
   reader.onload = (event) => {
     const img = new Image();
     img.onload = () => {
+      const detectedFileType = formatFileTypeLabel(file, file.type, 'Image Upload');
       state.currentImage = img;
+      state.sourceFileName = file.name;
+      state.sourceFileType = detectedFileType;
+      state.sourceKind = 'upload';
       state.isCustomImageLoaded = true;
       state.hasUnsavedChanges = true;
 
@@ -1505,6 +1548,8 @@ export function processUploadedFile(file, force = false) {
         slot.image = img;
         slot.imageSrc = event.target.result;
         slot.fileName = file.name;
+        slot.sourceFileType = detectedFileType;
+        slot.sourceKind = 'upload';
         slot.isCustomImageLoaded = true;
         slot.hasUnsavedChanges = true;
         slot.seriesName = '';
@@ -1600,13 +1645,18 @@ export function clearAllWorkspace(force = false) {
 
   // 1. Reset global state variables
   state.currentImage = null;
+  state.sourceFileName = '';
+  state.sourceFileType = '';
+  state.sourceKind = 'none';
   state.isCustomImageLoaded = false;
   state.hasUnsavedChanges = false;
   state.pendingGuardAction = null;
   state.customNormalImg = null;
   state.customNormalFileName = '';
+  state.customNormalFileType = '';
   state.customMaskImg = null;
   state.customMaskFileName = '';
+  state.customMaskFileType = '';
   state.designerLogoImg = null;
   state.badge1FileName = '';
   state.badge2Img = null;
@@ -1992,12 +2042,17 @@ export function executeClearSelected() {
         slot.image = null;
         slot.imageSrc = '';
         slot.fileName = '';
+        slot.sourceFileType = '';
+        slot.sourceKind = 'none';
         slot.thumbnail = '';
         slot.isCustomImageLoaded = false;
         slot.hasUnsavedChanges = false;
       }
     });
     state.currentImage = null;
+    state.sourceFileName = '';
+    state.sourceFileType = '';
+    state.sourceKind = 'none';
     state.isCustomImageLoaded = false;
     state.hasUnsavedChanges = false;
     const fileInput = document.getElementById('fileInput');
@@ -2017,11 +2072,16 @@ export function executeClearSelected() {
       slot.image = null;
       slot.imageSrc = '';
       slot.fileName = '';
+      slot.sourceFileType = '';
+      slot.sourceKind = 'none';
       slot.thumbnail = '';
       slot.isCustomImageLoaded = false;
       slot.hasUnsavedChanges = false;
     }
     state.currentImage = null;
+    state.sourceFileName = '';
+    state.sourceFileType = '';
+    state.sourceKind = 'none';
     state.isCustomImageLoaded = false;
     state.hasUnsavedChanges = false;
     const fileInput = document.getElementById('fileInput');
@@ -2064,6 +2124,7 @@ export function executeClearSelected() {
     if (state.setSlots && state.setSlots[mode]) {
       state.setSlots[mode].customNormalImg = null;
       state.setSlots[mode].customNormalFileName = '';
+      state.setSlots[mode].customNormalFileType = '';
       state.setSlots[mode].bumpIntensity = parseFloat(defaultBump);
       state.setSlots[mode].normalBlur = 0;
       state.setSlots[mode].invertBump = false;
@@ -2108,6 +2169,7 @@ export function executeClearSelected() {
     if (state.setSlots && state.setSlots[mode]) {
       state.setSlots[mode].customMaskImg = null;
       state.setSlots[mode].customMaskFileName = '';
+      state.setSlots[mode].customMaskFileType = '';
       state.setSlots[mode].metallic = parseInt(defaultMetal, 10);
       state.setSlots[mode].smoothness = parseInt(defaultSmooth, 10);
       state.setSlots[mode].maskVariation = 0;
@@ -2270,12 +2332,18 @@ Object.assign(window, {
   onResolutionChange,
   onAssetNameInput,
   onNormalOpacityChange,
+  onBaseOpacityChange,
+  onMetallicOpacityChange,
+  getLayerMaskValue,
   onLayerMaskChange,
   onDrawOrderChange,
   onGlobalMaterialChange,
   onUvScaleChange,
   setUvScale,
   onNetlaneParamChange,
+  getJsonSchemaMode,
+  setJsonSchemaMode,
+  setNetlaneJsonPreviewTab,
   updateConfigJson,
   copyConfigJson,
   copyDecalPath,
@@ -2640,7 +2708,19 @@ Object.assign(window, {
   handleStandWizardNormalDrop,
   clearStandWizardCustomNormal,
   updateStandWizardSummary,
-  confirmNewStandaloneAsset
+  confirmNewStandaloneAsset,
+  openAssetChecklistModal,
+  closeAssetChecklistModal,
+  closeAssetChecklistModalOnBackdrop,
+  refreshAssetChecklistModal,
+  jumpToChecklistTarget,
+  switchChecklistSlot,
+  setChecklistJsonSchema,
+  toggleChecklistMetadata,
+  onChecklistMetadataInput,
+  addCustomMetadataEntry,
+  updateCustomMetadataEntry,
+  removeCustomMetadataEntry
 });
 
 // ==========================================
@@ -2972,6 +3052,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       closeCreateSetAssetModal();
       closeCreateNewSetWizard();
       closeNewStandaloneAssetWizard();
+      closeAssetChecklistModal();
       if (typeof window.closePackPriorityModal === 'function') window.closePackPriorityModal();
       if (typeof window.closeBackupAllDataModal === 'function') window.closeBackupAllDataModal();
       if (typeof window.closeManageSetItemsModal === 'function') window.closeManageSetItemsModal();

@@ -408,8 +408,8 @@ export const FIELD_HELP = {
     title: 'JSON Configuration Format',
     badge: 'Mod Config',
     badgeClass: 'pill-blue',
-    desc: 'Selects the schema format for generated geometry and shader configuration JSON.',
-    details: '• <strong>Extended (Float/Vector):</strong> Complete CS2 configuration containing <code>_colossal_DecalLayerMask</code>, <code>_NormalOpacity</code>, <code>_BaseOpacity</code>, <code>_MetallicOpacity</code>, <code>UiPriority</code>, and oriented 3D bounding coordinates.<br>• <strong>Simple (Flat):</strong> Compact schema specifying fundamental width, height, and depth dimensions.',
+    desc: 'Selects between Standard and Enhanced schema formats for the generated ExtraAssetsImporter JSON.',
+    details: '• <strong>Standard:</strong> Clean core ExtraAssetsImporter configuration with essential <code>UiPriority</code>, draw order, opacities, and mode geometry (<code>_MeshSize</code> / <code>_TextureArea</code>).<br>• <strong>Enhanced:</strong> Complete extended configuration adding dual <code>m_UIPriority</code>, <code>Bool.m_availableInEditor</code>, global material fallbacks, and full UV/mesh vectors.',
     wikiTopic: 'wiki'
   },
   exportPackage: {

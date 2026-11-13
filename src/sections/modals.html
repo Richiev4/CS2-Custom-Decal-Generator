@@ -2834,6 +2834,37 @@
     </div>
   </div>
 
+  <!-- Asset Readiness Checklist & Live JSON Inspector Modal -->
+  <div class="modal-overlay" id="assetChecklistModal" onclick="closeAssetChecklistModalOnBackdrop(event)" style="display: none;">
+    <div class="modal-card checklist-modal-card" role="dialog" aria-modal="true" aria-labelledby="assetChecklistModalTitle">
+      <div class="modal-header checklist-modal-header">
+        <div class="checklist-modal-title-group">
+          <span class="checklist-modal-badge">AUDIT &amp; JSON</span>
+          <div>
+            <h2 id="assetChecklistModalTitle" class="checklist-modal-title">Asset Checklist &amp; .JSON Inspector</h2>
+            <p class="checklist-modal-subtitle">Verify loaded graphics, normal/mask sources, shader parameters, and inspect or customize the generated JSON.</p>
+          </div>
+        </div>
+        <button type="button" class="preset-btn checklist-close-btn" onclick="closeAssetChecklistModal()" aria-label="Close checklist window">✕</button>
+      </div>
+
+      <div class="modal-body checklist-modal-body">
+        <div class="checklist-layout">
+          <div class="checklist-pane-left" id="assetChecklistContent"></div>
+          <div class="checklist-pane-right" id="checklistJsonPane"></div>
+        </div>
+      </div>
+
+      <div class="modal-footer checklist-modal-footer">
+        <span class="checklist-footer-hint">Click any <strong>Jump / Adjust →</strong> button to edit settings directly in the sidebar or pack modal.</span>
+        <div class="checklist-footer-actions">
+          <button type="button" class="btn-secondary" onclick="exportZipPackage()">Export .ZIP</button>
+          <button type="button" class="btn-primary" onclick="closeAssetChecklistModal()">Done</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     window.positionMainProjectMenu = function() {
       const menu = document.getElementById('mainProjectMenuDropdown');

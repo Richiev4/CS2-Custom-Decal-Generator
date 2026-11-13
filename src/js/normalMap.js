@@ -1,7 +1,7 @@
 // ==========================================
 // Normal Map Generation & Custom Normal Module
 // ==========================================
-import { state, drawImageSquare, showToast } from './state.js';
+import { state, drawImageSquare, showToast, formatFileTypeLabel } from './state.js';
 
 export function handleCustomNormalSelect(e) {
   if (e.target.files.length > 0) {
@@ -16,6 +16,7 @@ export function handleCustomNormalSelect(e) {
       img.onload = () => {
         state.customNormalImg = img;
         state.customNormalFileName = file.name;
+        state.customNormalFileType = formatFileTypeLabel(file);
         state.isCustomImageLoaded = true;
         state.hasUnsavedChanges = true;
         const bumpSlider = document.getElementById('bumpIntensity');
@@ -25,6 +26,7 @@ export function handleCustomNormalSelect(e) {
         }
         updateCustomNormalUI();
         if (window.renderAllMaps) window.renderAllMaps();
+        if (window.refreshAssetChecklistModal) window.refreshAssetChecklistModal();
         showToast(`Inserted custom normal map: ${file.name}`);
       };
       img.src = event.target.result;
@@ -36,6 +38,7 @@ export function handleCustomNormalSelect(e) {
 export function clearCustomNormal(triggerRender = true) {
   state.customNormalImg = null;
   state.customNormalFileName = '';
+  state.customNormalFileType = '';
   const input = document.getElementById('customNormalInput');
   if (input) input.value = '';
   updateCustomNormalUI();
@@ -46,6 +49,7 @@ export function clearCustomNormal(triggerRender = true) {
       document.getElementById('bumpVal').textContent = '2.5×';
     }
     if (window.renderAllMaps) window.renderAllMaps();
+    if (window.refreshAssetChecklistModal) window.refreshAssetChecklistModal();
     showToast('Reverted to procedural normal map');
   }
 }

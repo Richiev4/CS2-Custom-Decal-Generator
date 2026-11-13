@@ -541,6 +541,9 @@ export function loadSample(type, force = false) {
     state.currentImage = img;
     state.isCustomImageLoaded = false;
     state.hasUnsavedChanges = false;
+    state.sourceFileName = `${type}_preset.png`;
+    state.sourceFileType = 'PNG (Generated Preset)';
+    state.sourceKind = 'preset';
     state.currentLoadedAssetName = document.getElementById('assetName').value;
     state.currentLoadedAssetSeries = getAssetSeriesName();
     if (state.decalAspectLocked) {
@@ -555,6 +558,9 @@ export function loadSample(type, force = false) {
       slot.image = img;
       slot.isCustomImageLoaded = false;
       slot.hasUnsavedChanges = false;
+      slot.fileName = state.sourceFileName;
+      slot.sourceFileType = state.sourceFileType;
+      slot.sourceKind = 'preset';
       slot.assetName = state.currentLoadedAssetName;
       slot.category = document.getElementById('assetCategory')?.value || slot.category;
       slot.seriesName = state.currentLoadedAssetSeries;
@@ -704,6 +710,9 @@ export function createSampleSlot(type) {
     image: img,
     imageSrc: dataUrl,
     thumbnail,
+    fileName: `${type}_preset.png`,
+    sourceFileType: 'PNG (Generated Preset)',
+    sourceKind: 'preset',
     assetName,
     category,
     seriesName,

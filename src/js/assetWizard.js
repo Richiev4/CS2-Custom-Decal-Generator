@@ -3,16 +3,20 @@
 // Guided 3-step setup for independent or set-assigned assets
 // ==========================================
 
-import { state, showToast, getCanvases, drawImageSquare } from './state.js';
+import { state, showToast, getCanvases, drawImageSquare, formatFileTypeLabel } from './state.js';
 import { getSetsRegistry, saveSetsRegistry, getSetProfile } from './setRegistry.js';
 import { renderIconMap } from './badges.js';
 
 let standWizardStep = 1;
 let standWizardMode = 'decal';
 let standWizardLoadedImage = null;
+let standWizardGraphicFileName = '';
+let standWizardGraphicFileType = '';
+let standWizardGraphicKind = 'none';
 let standWizardNormalMode = 'auto'; // 'auto' | 'custom'
 let standWizardLoadedNormal = null;
 let standWizardNormalFileName = '';
+let standWizardNormalFileType = '';
 
 /**
  * Open the standalone asset setup wizard
@@ -24,6 +28,10 @@ export function openNewStandaloneAssetWizard() {
   // Initialize defaults from current workspace state
   standWizardMode = state.appMode || 'decal';
   standWizardLoadedImage = null;
+  standWizardGraphicFileName = '';
+  standWizardGraphicFileType = '';
+  standWizardGraphicKind = 'none';
+  standWizardNormalFileType = '';
 
   // Sync mode choice
   selectStandWizardMode(standWizardMode);
@@ -548,6 +556,9 @@ function processStandWizardGraphicFile(file) {
     const img = new Image();
     img.onload = () => {
       standWizardLoadedImage = img;
+      standWizardGraphicFileName = file.name;
+      standWizardGraphicFileType = formatFileTypeLabel(file);
+      standWizardGraphicKind = 'upload';
 
       const natW = img.naturalWidth || 1;
       const natH = img.naturalHeight || 1;
@@ -685,6 +696,7 @@ function processStandWizardNormalFile(file) {
     img.onload = () => {
       standWizardLoadedNormal = img;
       standWizardNormalFileName = file.name;
+      standWizardNormalFileType = formatFileTypeLabel(file);
 
       const previewImg = document.getElementById('standSelectedNormalImgPreview');
       if (previewImg) previewImg.src = event.target.result;
@@ -716,6 +728,7 @@ function processStandWizardNormalFile(file) {
 export function clearStandWizardCustomNormal() {
   standWizardLoadedNormal = null;
   standWizardNormalFileName = '';
+  standWizardNormalFileType = '';
 
   const emptyView = document.getElementById('standNormalDropEmptyView');
   const selView = document.getElementById('standNormalDropSelectedView');
@@ -813,6 +826,9 @@ export function useStandWizardStarterGraphic() {
   const img = new Image();
   img.onload = () => {
     standWizardLoadedImage = img;
+    standWizardGraphicFileName = 'Template_Starter.png';
+    standWizardGraphicFileType = 'PNG (Generated Preset)';
+    standWizardGraphicKind = 'preset';
     const previewImg = document.getElementById('standSelectedImgPreview');
     if (previewImg) previewImg.src = dataUrl;
     const fn = document.getElementById('standSelectedFileName');
@@ -1027,7 +1043,10 @@ export async function confirmNewStandaloneAsset() {
   // 4. Load Graphic into Canvas
   if (standWizardLoadedImage) {
     state.currentImage = standWizardLoadedImage;
-    state.isCustomImageLoaded = true;
+    state.isCustomImageLoaded = standWizardGraphicKind !== 'preset';
+    state.sourceFileName = standWizardGraphicFileName || 'WizardGraphic.png';
+    state.sourceFileType = standWizardGraphicFileType || 'PNG (Wizard Graphic)';
+    state.sourceKind = standWizardGraphicKind === 'preset' ? 'preset' : 'upload';
 
     if (typeof window.updateSourceImageBadge === 'function') {
       const rawW = standWizardLoadedImage.naturalWidth || 1024;
@@ -1045,6 +1064,7 @@ export async function confirmNewStandaloneAsset() {
   if (standWizardNormalMode === 'custom' && standWizardLoadedNormal) {
     state.customNormalImg = standWizardLoadedNormal;
     state.customNormalFileName = standWizardNormalFileName || 'custom_normal.png';
+    state.customNormalFileType = standWizardNormalFileType || formatFileTypeLabel(state.customNormalFileName, 'image/png', 'PNG');
 
     const standFlipY = document.getElementById('standInvertNormalY');
     const mainFlipY = document.getElementById('flipNormalY');
@@ -1057,6 +1077,7 @@ export async function confirmNewStandaloneAsset() {
   } else {
     state.customNormalImg = null;
     state.customNormalFileName = '';
+    state.customNormalFileType = '';
     const customNormalInput = document.getElementById('customNormalInput');
     if (customNormalInput) customNormalInput.value = '';
     if (typeof window.updateCustomNormalUI === 'function') {

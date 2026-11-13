@@ -4,7 +4,7 @@
 // ==========================================
 
 import JSZip from 'jszip';
-import { state, showToast, escapeHtml, getCanvases, hasActiveWork, openUnsavedModal } from './state.js';
+import { state, showToast, escapeHtml, getCanvases, hasActiveWork, openUnsavedModal, formatFileTypeLabel } from './state.js';
 import {
   initIndexedDBStorage as initIDB,
   getSavedLibraryFromMemory,
@@ -456,6 +456,10 @@ async function applyImportedMapCollection(entryMap, sourceName = 'ImportedAsset'
   let configJsonObj = null;
   let inferredAssetName = sourceName.replace(/\.(zip|json|png|jpg|jpeg)$/i, '');
 
+  let basePath = '';
+  let normalPath = '';
+  let maskPath = '';
+
   for (const [path, getBlobOrText] of Object.entries(entryMap)) {
     const lower = path.toLowerCase();
     if (lower.endsWith('decal.json') || lower.endsWith('surface.json') || lower.endsWith('netlane.json')) {
@@ -469,10 +473,13 @@ async function applyImportedMapCollection(entryMap, sourceName = 'ImportedAsset'
       }
     } else if (lower.includes('_basecolormap') || (!lower.includes('_normalmap') && !lower.includes('_maskmap') && !lower.endsWith('icon.png') && /\.(png|jpg|jpeg|webp)$/i.test(lower))) {
       baseBlob = await getBlobOrText('blob');
+      basePath = path;
     } else if (lower.includes('_normalmap')) {
       normalBlob = await getBlobOrText('blob');
+      normalPath = path;
     } else if (lower.includes('_maskmap')) {
       maskBlob = await getBlobOrText('blob');
+      maskPath = path;
     }
   }
 
@@ -502,16 +509,24 @@ async function applyImportedMapCollection(entryMap, sourceName = 'ImportedAsset'
     const baseImg = await loadBlobAsImage(baseBlob);
     state.currentImage = baseImg;
     state.isCustomImageLoaded = true;
+    const baseFileName = basePath ? basePath.split('/').pop() : '_BaseColorMap.png';
+    state.sourceFileName = baseFileName;
+    state.sourceFileType = formatFileTypeLabel(baseFileName, baseBlob.type || 'image/png', 'PNG (Imported)');
+    state.sourceKind = 'imported';
   }
   if (normalBlob) {
     const normImg = await loadBlobAsImage(normalBlob);
     state.customNormalImg = normImg;
-    state.customNormalFileName = '_NormalMap.png';
+    const normFileName = normalPath ? normalPath.split('/').pop() : '_NormalMap.png';
+    state.customNormalFileName = normFileName;
+    state.customNormalFileType = formatFileTypeLabel(normFileName, normalBlob.type || 'image/png', 'PNG (Imported)');
   }
   if (maskBlob) {
     const maskImg = await loadBlobAsImage(maskBlob);
     state.customMaskImg = maskImg;
-    state.customMaskFileName = '_MaskMap.png';
+    const maskFileName = maskPath ? maskPath.split('/').pop() : '_MaskMap.png';
+    state.customMaskFileName = maskFileName;
+    state.customMaskFileType = formatFileTypeLabel(maskFileName, maskBlob.type || 'image/png', 'PNG (Imported)');
   }
 
   if (typeof window.renderAllMaps === 'function') window.renderAllMaps();

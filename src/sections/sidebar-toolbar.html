@@ -10,6 +10,9 @@
           <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'sidebarTools', event)" onmouseenter="showFieldHelp(this, 'sidebarTools', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Tool Sections &amp; Shortcuts" title="Help for Tool Sections &amp; Shortcuts" style="width: 14px; height: 14px; font-size: 9.5px;">?</button>
         </div>
         <div class="sidebar-toolbar-actions">
+          <button type="button" class="sidebar-tool-btn sidebar-tool-btn-checklist" id="btnOpenAssetChecklist" onclick="openAssetChecklistModal()" title="Open Asset Checklist, section quick-jumps, and live JSON inspector">
+            <span>☑ Checklist &amp; JSON</span>
+          </button>
           <button type="button" class="sidebar-tool-btn" onclick="expandAllSections()" title="Expand all sections">
             <span>▾ Expand All</span>
           </button>

@@ -9,6 +9,25 @@ export const ALWAYS_ASK_SAVE_KEY = 'cs2_always_ask_where_to_save';
 export const HIDE_SAMPLE_PRESETS_KEY = 'cs2_hide_sample_presets';
 export const COLLAPSED_SECTIONS_KEY = 'cs2_collapsed_sidebar_sections';
 
+export function formatFileTypeLabel(fileOrName, mimeType = '', fallbackLabel = '') {
+  const name = typeof fileOrName === 'string' ? fileOrName : fileOrName?.name || '';
+  const rawMime = (typeof fileOrName === 'object' && fileOrName?.type ? fileOrName.type : mimeType || '').trim();
+  let ext = '';
+  if (name && name.includes('.')) {
+    ext = name.split('.').pop().trim().toUpperCase();
+  }
+  if (!ext && rawMime.includes('/')) {
+    const sub = rawMime.split('/')[1].split('+')[0].toUpperCase();
+    ext = sub === 'JPEG' ? 'JPG' : sub;
+  }
+  if (ext && rawMime) {
+    return `${ext} (${rawMime})`;
+  }
+  if (ext) return ext;
+  if (rawMime) return rawMime;
+  return fallbackLabel || 'Unknown';
+}
+
 export function createDefaultSlot(mode = 'decal') {
   const isNetlane = mode === 'netlane';
   const isSurface = mode === 'surface';
@@ -20,6 +39,8 @@ export function createDefaultSlot(mode = 'decal') {
     imageDataUrl: null,
     thumbnail: null,
     fileName: '',
+    sourceFileType: '',
+    sourceKind: 'none',
     assetName: isSurface
       ? 'AsphaltPaving_01'
       : isNetlane
@@ -53,9 +74,11 @@ export function createDefaultSlot(mode = 'decal') {
     customNormalImg: null,
     customNormalDataUrl: null,
     customNormalFileName: '',
+    customNormalFileType: '',
     customMaskImg: null,
     customMaskDataUrl: null,
     customMaskFileName: '',
+    customMaskFileType: '',
     textureRotation: 0,
     flipH: false,
     flipV: false
@@ -75,10 +98,17 @@ export const state = {
   lastExportedAssetName: '',
   rotationReminderDismissed: false,
 
+  sourceFileName: '',
+  sourceFileType: '',
+  sourceKind: 'none',
   customNormalImg: null,
   customNormalFileName: '',
+  customNormalFileType: '',
   customMaskImg: null,
   customMaskFileName: '',
+  customMaskFileType: '',
+  jsonSchemaMode: 'standard',
+  customMetadataEntries: [],
 
   designerLogoImg: null,
   badge1FileName: '',
@@ -450,13 +480,23 @@ export function toggleSection(secId, forceExpand = null) {
   saveCollapsedSectionsState();
 }
 
-export function openAndScrollToSection(secId) {
+export function openAndScrollToSection(secId, focusId = null) {
   const sec = getEl(secId);
   if (!sec) return;
   toggleSection(secId, true);
   setTimeout(() => {
     sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, 60);
+    sec.classList.remove('checklist-jump-highlight');
+    void sec.offsetWidth;
+    sec.classList.add('checklist-jump-highlight');
+    setTimeout(() => sec.classList.remove('checklist-jump-highlight'), 1800);
+    if (focusId) {
+      const target = getEl(focusId);
+      if (target && typeof target.focus === 'function') {
+        target.focus({ preventScroll: true });
+      }
+    }
+  }, 70);
 }
 
 export function scrollToNormalMapArea() {

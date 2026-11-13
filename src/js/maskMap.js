@@ -1,7 +1,7 @@
 // ==========================================
 // Mask Map Channel Packing (R=Metallic, G=0, B=0, A=Smoothness)
 // ==========================================
-import { state, drawImageSquare, showToast } from './state.js';
+import { state, drawImageSquare, showToast, formatFileTypeLabel } from './state.js';
 
 export function handleCustomMaskSelect(e) {
   if (e.target.files.length > 0) {
@@ -16,10 +16,12 @@ export function handleCustomMaskSelect(e) {
       img.onload = () => {
         state.customMaskImg = img;
         state.customMaskFileName = file.name;
+        state.customMaskFileType = formatFileTypeLabel(file);
         state.isCustomImageLoaded = true;
         state.hasUnsavedChanges = true;
         updateCustomMaskUI();
         if (window.renderAllMaps) window.renderAllMaps();
+        if (window.refreshAssetChecklistModal) window.refreshAssetChecklistModal();
         showToast(`Inserted custom mask map: ${file.name}`);
       };
       img.src = event.target.result;
@@ -31,11 +33,13 @@ export function handleCustomMaskSelect(e) {
 export function clearCustomMask(triggerRender = true) {
   state.customMaskImg = null;
   state.customMaskFileName = '';
+  state.customMaskFileType = '';
   const input = document.getElementById('customMaskInput');
   if (input) input.value = '';
   updateCustomMaskUI();
   if (triggerRender) {
     if (window.renderAllMaps) window.renderAllMaps();
+    if (window.refreshAssetChecklistModal) window.refreshAssetChecklistModal();
     showToast('Reverted to procedural mask map');
   }
 }
