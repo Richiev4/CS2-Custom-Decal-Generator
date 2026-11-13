@@ -214,6 +214,7 @@ import {
 import {
   setAssetCategory,
   getAssetCategory,
+  onAssetCategoryInput,
   applyCategoryQuickPick,
   updateCategoryQuickPickerForMode,
   onNormalOpacityChange,
@@ -488,13 +489,14 @@ export function saveCurrentSlotState(mode = state.appMode) {
   slot.targetResolution = state.currentResolution || 1024;
 
   const assetNameEl = document.getElementById('assetName');
-  if (assetNameEl && assetNameEl.value.trim()) {
+  if (assetNameEl) {
     slot.assetName = assetNameEl.value.trim();
+    slot.hasCustomName = Boolean(slot.assetName);
   }
 
   const catEl = document.getElementById('assetCategory');
   if (catEl) {
-    slot.category = catEl.value.trim() || 'None';
+    slot.category = catEl.value.trim();
   }
 
   const seriesEl = document.getElementById('assetSeries') || document.getElementById('metaSetName');
@@ -949,15 +951,16 @@ export function clearCurrentSlot() {
   state.isCustomImageLoaded = false;
   state.hasUnsavedChanges = false;
 
-  const defaultNames = {
-    decal: 'CustomDecal_01',
-    surface: 'CustomSurface_01',
-    netlane: 'CustomNetLane_01'
-  };
+  // Clear identity fields back to blank since no graphic is loaded in this slot
   const nameInput = document.getElementById('assetName');
-  if (nameInput) nameInput.value = defaultNames[mode] || 'CustomAsset_01';
-  slot.assetName = defaultNames[mode] || 'CustomAsset_01';
+  if (nameInput) nameInput.value = '';
+  slot.assetName = '';
   slot.hasCustomName = false;
+  slot.category = '';
+  state.currentLoadedAssetName = '';
+  if (typeof setAssetCategory === 'function') {
+    setAssetCategory('');
+  }
 
   updateEmptyPreviewIndicator();
   updateConfigJson();
@@ -1703,6 +1706,13 @@ export function clearAllWorkspace(force = false) {
   const assetNameInput = document.getElementById('assetName');
   if (assetNameInput) assetNameInput.value = '';
 
+  if (typeof setAssetCategory === 'function') {
+    setAssetCategory('');
+  }
+  if (typeof updateCategoryQuickPickerForMode === 'function') {
+    updateCategoryQuickPickerForMode(state.appMode);
+  }
+
   const seriesInput = document.getElementById('assetSeries');
   if (seriesInput) seriesInput.value = '';
 
@@ -2231,13 +2241,13 @@ export function executeClearSelected() {
 
   // 5. Clear Metadata & Dimensions
   if (chkMetadata) {
-    const defaultNames = {
-      decal: 'CustomDecal_01',
-      surface: 'CustomSurface_01',
-      netlane: 'CustomNetLane_01'
-    };
     const assetNameInput = document.getElementById('assetName');
-    if (assetNameInput) assetNameInput.value = defaultNames[mode] || 'CustomAsset_01';
+    if (assetNameInput) assetNameInput.value = '';
+    state.currentLoadedAssetName = '';
+
+    if (typeof setAssetCategory === 'function') {
+      setAssetCategory('');
+    }
 
     const seriesInput = document.getElementById('assetSeries');
     if (seriesInput) seriesInput.value = '';
@@ -2250,7 +2260,9 @@ export function executeClearSelected() {
     const dimD = document.getElementById('dimDepth'); if (dimD) dimD.value = '0.5';
 
     if (state.setSlots && state.setSlots[mode]) {
-      state.setSlots[mode].assetName = defaultNames[mode] || 'CustomAsset_01';
+      state.setSlots[mode].assetName = '';
+      state.setSlots[mode].hasCustomName = false;
+      state.setSlots[mode].category = '';
       state.setSlots[mode].seriesName = '';
       state.setSlots[mode].dimensions = {
         width: mode === 'decal' ? 1.8 : 2.0,
@@ -2511,6 +2523,7 @@ Object.assign(window, {
   scrollTabsNav,
   checkTabScrollButtons,
   setAssetCategory,
+  onAssetCategoryInput,
   applyCategoryQuickPick,
   updateCategoryQuickPickerForMode,
   getAssetSeriesName,

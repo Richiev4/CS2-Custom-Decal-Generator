@@ -25,7 +25,7 @@
                 </span>
               </div>
             </div>
-            <input type="text" id="assetName" value="CustomRoadMarking_01" placeholder="e.g. StopMarking_01" spellcheck="false" oninput="onAssetNameInput()">
+            <input type="text" id="assetName" value="" placeholder="e.g. StopMarking_01" spellcheck="false" oninput="onAssetNameInput()">
             
             <!-- Dynamic Reminder Card when Texture is Rotated or Flipped -->
             <div id="rotationNameReminder" class="rotation-name-reminder" style="display: none;">
@@ -59,14 +59,15 @@
                 <span>Asset Category (Subfolder)</span>
                 <button type="button" class="help-q-btn" onclick="toggleFieldHelp(this, 'assetCategory', event)" onmouseenter="showFieldHelp(this, 'assetCategory', event)" onmouseleave="scheduleHideFieldHelp()" aria-label="Help for Asset Category" title="Help for Asset Category">?</button>
               </div>
-              <span class="form-val-badge" id="categorySubfolderBadge">RoadMarkings</span>
+              <span class="form-val-badge" id="categorySubfolderBadge">None</span>
             </div>
             <div style="display: flex; gap: 6px;">
-              <input type="text" id="assetCategory" value="RoadMarkings" placeholder="Category folder name (or None)..." spellcheck="false" oninput="updateConfigJson()" style="flex: 1;">
-              <input type="hidden" id="surfaceCategory" value="RoadMarkings">
+              <input type="text" id="assetCategory" value="" placeholder="Category folder name (or None)..." spellcheck="false" oninput="onAssetCategoryInput()" style="flex: 1;">
+              <input type="hidden" id="surfaceCategory" value="">
               <select id="categoryQuickPicker" onchange="applyCategoryQuickPick(this.value)" style="width: 130px;">
+                <option value="" selected>-- Quick Pick Category --</option>
                 <option value="None">None (No Subfolder)</option>
-                <option value="RoadMarkings" selected>RoadMarkings</option>
+                <option value="RoadMarkings">RoadMarkings</option>
                 <option value="Posters">Posters / Adverts</option>
                 <option value="Billboards">Billboards</option>
                 <option value="Signage">Signage</option>

@@ -41,14 +41,11 @@ export function createDefaultSlot(mode = 'decal') {
     fileName: '',
     sourceFileType: '',
     sourceKind: 'none',
-    assetName: isSurface
-      ? 'AsphaltPaving_01'
-      : isNetlane
-      ? 'RoadLine_Dashed_01'
-      : 'RoadMarking_TurnArrow_01',
+    // Default identity fields remain blank across all modes until a graphic is loaded
+    assetName: '',
     assetSeries: '',
     seriesName: '',
-    category: 'RoadMarkings',
+    category: '',
     uiPriority: 41,
     drawOrder: 0,
     normalOpacity: 1.0,

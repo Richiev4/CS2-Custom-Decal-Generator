@@ -85,7 +85,7 @@ export const CATEGORY_OPTIONS_BY_MODE = {
  */
 export function getAssetCategory() {
   const rawEl = getEl('assetCategory') || getEl('categoryCustom');
-  const raw = rawEl ? rawEl.value.trim() : 'RoadMarkings';
+  const raw = rawEl ? rawEl.value.trim() : '';
   if (!raw || raw.toLowerCase() === 'none') {
     return '';
   }
@@ -95,20 +95,52 @@ export function getAssetCategory() {
 export function setAssetCategory(cat) {
   const trimmed = (cat ?? '').trim();
   const isNone = !trimmed || trimmed.toLowerCase() === 'none';
-  const displayVal = isNone ? 'None' : trimmed;
+  // Keep input fields blank when empty; only show 'None' if explicitly selected
+  const inputVal = !trimmed ? '' : trimmed;
+  const badgeVal = isNone ? 'None' : trimmed;
 
-  setElValue('assetCategory', displayVal);
-  setElValue('categoryCustom', displayVal);
-  setElValue('surfaceCategory', displayVal);
-  setElText('categorySubfolderBadge', displayVal);
-  setElText('packCategoryTag', displayVal);
+  setElValue('assetCategory', inputVal);
+  setElValue('categoryCustom', inputVal);
+  setElValue('surfaceCategory', inputVal);
+  setElText('categorySubfolderBadge', badgeVal);
+  setElText('packCategoryTag', badgeVal);
+
+  const mode = state.appMode || 'decal';
+  if (state.setSlots && state.setSlots[mode]) {
+    state.setSlots[mode].category = inputVal;
+  }
 
   const sel = getEl('categoryQuickPicker');
   if (sel) {
-    const match = Array.from(sel.options).find(
-      (opt) => opt.value.toLowerCase() === displayVal.toLowerCase()
-    );
-    if (match) sel.value = match.value;
+    if (!trimmed) {
+      sel.value = '';
+    } else {
+      const match = Array.from(sel.options).find(
+        (opt) => opt.value.toLowerCase() === trimmed.toLowerCase()
+      );
+      sel.value = match ? match.value : '';
+    }
+  }
+
+  updateConfigJson();
+}
+
+export function onAssetCategoryInput() {
+  const raw = (getEl('assetCategory')?.value ?? '').trim();
+  setElValue('categoryCustom', raw);
+  setElValue('surfaceCategory', raw);
+
+  const mode = state.appMode || 'decal';
+  if (state.setSlots && state.setSlots[mode]) {
+    state.setSlots[mode].category = raw;
+  }
+
+  const sel = getEl('categoryQuickPicker');
+  if (sel) {
+    const match = raw
+      ? Array.from(sel.options).find((opt) => opt.value.toLowerCase() === raw.toLowerCase())
+      : null;
+    sel.value = match ? match.value : '';
   }
 
   updateConfigJson();
@@ -116,7 +148,7 @@ export function setAssetCategory(cat) {
 
 export function applyCategoryQuickPick(val) {
   const picked = val !== undefined ? val : getEl('categoryQuickPicker')?.value;
-  if (!picked) return;
+  if (picked === undefined) return;
   setAssetCategory(picked);
 }
 
@@ -124,13 +156,13 @@ export function updateCategoryQuickPickerForMode(mode = state.appMode) {
   const sel = getEl('categoryQuickPicker');
   if (!sel) return;
   const list = CATEGORY_OPTIONS_BY_MODE[mode] || CATEGORY_OPTIONS_BY_MODE.decal;
-  const current = getAssetCategory() || 'None';
+  const rawInput = (getEl('assetCategory')?.value ?? '').trim();
   sel.innerHTML =
-    `<option value="">-- Quick Pick Category --</option>` +
+    `<option value="" ${!rawInput ? 'selected' : ''}>-- Quick Pick Category --</option>` +
     list
       .map((c) => {
         const label = c === 'None' ? 'None (No Subfolder)' : c;
-        const selected = c.toLowerCase() === current.toLowerCase() ? 'selected' : '';
+        const selected = rawInput && c.toLowerCase() === rawInput.toLowerCase() ? 'selected' : '';
         return `<option value="${c}" ${selected}>${label}</option>`;
       })
       .join('');
@@ -1101,8 +1133,8 @@ export function deserializeAndLoadProject(proj) {
   if (proj.appMode && typeof window.setMode === 'function') {
     window.setMode(proj.appMode);
   }
-  if (proj.assetName) setElValue('assetName', proj.assetName);
-  if (proj.assetSeries) setAssetSeriesName(proj.assetSeries);
+  if (proj.assetName !== undefined) setElValue('assetName', proj.assetName || '');
+  if (proj.assetSeries !== undefined) setAssetSeriesName(proj.assetSeries || '');
   if (proj.category !== undefined) setAssetCategory(proj.category);
   if (proj.uiPriority !== undefined) applyUiPriorityPreset(proj.uiPriority);
   if (proj.dimWidth !== undefined) {

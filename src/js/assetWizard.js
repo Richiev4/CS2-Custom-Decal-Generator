@@ -36,18 +36,26 @@ export function openNewStandaloneAssetWizard() {
   // Sync mode choice
   selectStandWizardMode(standWizardMode);
 
-  // Set initial name
+  // Set initial name (blank unless current workspace already has an active name)
   const nameInput = document.getElementById('standAssetName');
   if (nameInput) {
     const existingName = document.getElementById('assetName')?.value?.trim();
-    nameInput.value = existingName || (standWizardMode === 'surface' ? 'CustomSurface_Pavement_01' : (standWizardMode === 'netlane' ? 'CustomNetLane_Line_01' : 'CustomRoadMarking_01'));
+    nameInput.value = existingName || '';
   }
 
-  // Set category
+  // Set category (blank unless current workspace already has an active category)
   const catInput = document.getElementById('standCategory');
   if (catInput) {
     const existingCat = document.getElementById('category')?.value?.trim() || document.getElementById('assetCategory')?.value?.trim();
-    catInput.value = existingCat || (standWizardMode === 'surface' ? 'Pavement' : (standWizardMode === 'netlane' ? 'RoadMarkings' : 'RoadMarkings'));
+    catInput.value = existingCat || '';
+  }
+  const catSelect = document.getElementById('standCategorySelect');
+  if (catSelect) {
+    const targetCat = catInput?.value?.trim() || '';
+    const match = targetCat
+      ? Array.from(catSelect.options).find((opt) => opt.value.toLowerCase() === targetCat.toLowerCase())
+      : null;
+    catSelect.value = match ? match.value : '';
   }
 
   // Populate existing sets dropdown
@@ -850,8 +858,8 @@ window.useStandWizardStarterGraphic = useStandWizardStarterGraphic;
  * Update Summary Card in Step 3
  */
 export function updateStandWizardSummary() {
-  const name = document.getElementById('standAssetName')?.value?.trim() || 'Custom_Asset';
-  const category = document.getElementById('standCategory')?.value?.trim() || 'RoadMarkings';
+  const name = document.getElementById('standAssetName')?.value?.trim() || 'New Asset';
+  const category = document.getElementById('standCategory')?.value?.trim() || 'None';
   const prio = document.getElementById('standPriority')?.value || '50';
   const membership = document.getElementById('standSetMembership')?.value || 'standalone';
   const bump = document.getElementById('standBump')?.value || '2.2';
@@ -927,7 +935,7 @@ export async function confirmNewStandaloneAsset() {
     return;
   }
 
-  const category = document.getElementById('standCategory')?.value?.trim() || 'RoadMarkings';
+  const category = document.getElementById('standCategory')?.value?.trim() || '';
   const priority = parseInt(document.getElementById('standPriority')?.value || '50', 10);
   const author = document.getElementById('standAuthor')?.value?.trim() || 'CS2 Creator';
   const membership = document.getElementById('standSetMembership')?.value || 'standalone';
@@ -952,8 +960,12 @@ export async function confirmNewStandaloneAsset() {
   const secName = document.getElementById('assetName');
   if (secName) secName.value = assetName;
 
-  const secCat = document.getElementById('category') || document.getElementById('assetCategory');
-  if (secCat) secCat.value = category;
+  if (typeof window.setAssetCategory === 'function') {
+    window.setAssetCategory(category);
+  } else {
+    const secCat = document.getElementById('category') || document.getElementById('assetCategory');
+    if (secCat) secCat.value = category;
+  }
 
   const prioIn = document.getElementById('uiPriorityInput');
   if (prioIn) prioIn.value = priority;
