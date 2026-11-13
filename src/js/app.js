@@ -462,6 +462,23 @@ import {
   removeCustomMetadataEntry
 } from './assetChecklist.js';
 
+import {
+  updateSourceCropUI,
+  autoTrimSourceGraphic,
+  resetSourceCrop,
+  openSourceCropModal,
+  closeSourceCropModal,
+  closeSourceCropModalOnBackdrop,
+  onCropNumericInputChange,
+  setCropAspectPreset,
+  runCropperAutoTrim,
+  applySourceCropModal,
+  setCropZoom,
+  stepCropZoom,
+  resetCropZoomToFit,
+  toggleCropPanMode
+} from './imageCropper.js';
+
 // ==========================================
 // 3-in-1 Set Slots State Preservation
 // ==========================================
@@ -472,6 +489,8 @@ export function saveCurrentSlotState(mode = state.appMode) {
 
   // Save current image & transform state
   slot.image = state.currentImage;
+  slot.originalImage = state.originalImage || state.currentImage;
+  slot.cropRect = state.cropRect ? { ...state.cropRect } : null;
   slot.isCustomImageLoaded = !!state.isCustomImageLoaded;
   slot.hasUnsavedChanges = !!state.hasUnsavedChanges;
   slot.textureRotation = state.textureRotation || 0;
@@ -591,6 +610,8 @@ export function restoreSlotState(mode) {
   const slot = state.setSlots[mode];
 
   state.currentImage = slot.image;
+  state.originalImage = slot.originalImage || slot.image || null;
+  state.cropRect = slot.cropRect ? { ...slot.cropRect } : null;
   state.isCustomImageLoaded = !!slot.isCustomImageLoaded;
   state.hasUnsavedChanges = !!slot.hasUnsavedChanges;
   state.textureRotation = slot.textureRotation || 0;
@@ -754,6 +775,7 @@ export function restoreSlotState(mode) {
 
   updateCustomNormalUI();
   updateCustomMaskUI();
+  updateSourceCropUI();
 }
 
 export function updateSetSlotsUI() {
@@ -937,6 +959,8 @@ export function clearCurrentSlot() {
   const slot = state.setSlots[mode];
 
   slot.image = null;
+  slot.originalImage = null;
+  slot.cropRect = null;
   slot.imageSrc = '';
   slot.fileName = '';
   slot.sourceFileType = '';
@@ -945,6 +969,8 @@ export function clearCurrentSlot() {
   slot.isCustomImageLoaded = false;
   slot.hasUnsavedChanges = false;
   state.currentImage = null;
+  state.originalImage = null;
+  state.cropRect = null;
   state.sourceFileName = '';
   state.sourceFileType = '';
   state.sourceKind = 'none';
@@ -1367,6 +1393,7 @@ window.clearCanvases = clearCanvases;
 
 export function renderAllMaps() {
   updateEmptyPreviewIndicator();
+  updateSourceCropUI();
   if (!state.currentImage) {
     clearCanvases();
 
@@ -1450,6 +1477,7 @@ export function renderAllMaps() {
   }
 
   refreshAssetChecklistModal();
+  updateSourceCropUI();
 }
 
 export function updateGridSimulationCanvas() {
@@ -1539,6 +1567,8 @@ export function processUploadedFile(file, force = false) {
     img.onload = () => {
       const detectedFileType = formatFileTypeLabel(file, file.type, 'Image Upload');
       state.currentImage = img;
+      state.originalImage = img;
+      state.cropRect = null;
       state.sourceFileName = file.name;
       state.sourceFileType = detectedFileType;
       state.sourceKind = 'upload';
@@ -1549,6 +1579,8 @@ export function processUploadedFile(file, force = false) {
       if (state.setSlots && state.setSlots[state.appMode]) {
         const slot = state.setSlots[state.appMode];
         slot.image = img;
+        slot.originalImage = img;
+        slot.cropRect = null;
         slot.imageSrc = event.target.result;
         slot.fileName = file.name;
         slot.sourceFileType = detectedFileType;
@@ -1648,6 +1680,8 @@ export function clearAllWorkspace(force = false) {
 
   // 1. Reset global state variables
   state.currentImage = null;
+  state.originalImage = null;
+  state.cropRect = null;
   state.sourceFileName = '';
   state.sourceFileType = '';
   state.sourceKind = 'none';
@@ -1789,6 +1823,7 @@ export function clearAllWorkspace(force = false) {
   updateConfigJson();
   updateEmptyPreviewIndicator();
   updateSetSlotsUI();
+  updateSourceCropUI();
   showToast('Workspace wiped to a completely clear slate');
 }
 
@@ -2050,6 +2085,8 @@ export function executeClearSelected() {
       if (state.setSlots && state.setSlots[m]) {
         const slot = state.setSlots[m];
         slot.image = null;
+        slot.originalImage = null;
+        slot.cropRect = null;
         slot.imageSrc = '';
         slot.fileName = '';
         slot.sourceFileType = '';
@@ -2060,6 +2097,8 @@ export function executeClearSelected() {
       }
     });
     state.currentImage = null;
+    state.originalImage = null;
+    state.cropRect = null;
     state.sourceFileName = '';
     state.sourceFileType = '';
     state.sourceKind = 'none';
@@ -2080,6 +2119,8 @@ export function executeClearSelected() {
     if (state.setSlots && state.setSlots[mode]) {
       const slot = state.setSlots[mode];
       slot.image = null;
+      slot.originalImage = null;
+      slot.cropRect = null;
       slot.imageSrc = '';
       slot.fileName = '';
       slot.sourceFileType = '';
@@ -2089,6 +2130,8 @@ export function executeClearSelected() {
       slot.hasUnsavedChanges = false;
     }
     state.currentImage = null;
+    state.originalImage = null;
+    state.cropRect = null;
     state.sourceFileName = '';
     state.sourceFileType = '';
     state.sourceKind = 'none';
@@ -2306,6 +2349,7 @@ export function executeClearSelected() {
   updateConfigJson();
   updateEmptyPreviewIndicator();
   updateSetSlotsUI();
+  updateSourceCropUI();
   closeClearModal();
 
   if (clearedSummary.length > 0) {
@@ -2733,7 +2777,21 @@ Object.assign(window, {
   onChecklistMetadataInput,
   addCustomMetadataEntry,
   updateCustomMetadataEntry,
-  removeCustomMetadataEntry
+  removeCustomMetadataEntry,
+  updateSourceCropUI,
+  autoTrimSourceGraphic,
+  resetSourceCrop,
+  openSourceCropModal,
+  closeSourceCropModal,
+  closeSourceCropModalOnBackdrop,
+  onCropNumericInputChange,
+  setCropAspectPreset,
+  runCropperAutoTrim,
+  applySourceCropModal,
+  setCropZoom,
+  stepCropZoom,
+  resetCropZoomToFit,
+  toggleCropPanMode
 });
 
 // ==========================================
@@ -3066,6 +3124,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       closeCreateNewSetWizard();
       closeNewStandaloneAssetWizard();
       closeAssetChecklistModal();
+      closeSourceCropModal();
       if (typeof window.closePackPriorityModal === 'function') window.closePackPriorityModal();
       if (typeof window.closeBackupAllDataModal === 'function') window.closeBackupAllDataModal();
       if (typeof window.closeManageSetItemsModal === 'function') window.closeManageSetItemsModal();

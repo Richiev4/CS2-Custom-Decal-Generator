@@ -44,6 +44,31 @@
             <div class="drop-hint" id="dropHintText">All ratios supported • 2:3 / 3:4 Posters, 16:9 Billboards, or 1:1 Square</div>
           </div>
 
+          <!-- Source Graphic Crop & Blank-Margin Auto-Trim Controls -->
+          <div class="source-crop-bar" id="sourceCropBar" style="display: none;">
+            <div class="source-crop-bar-top">
+              <div class="source-crop-meta">
+                <span class="source-crop-title">✂️ Trim / Crop Graphic</span>
+                <span class="source-crop-badge" id="sourceCropStatusBadge">Original: 1024×1024 px</span>
+              </div>
+              <div class="source-crop-actions">
+                <button type="button" class="btn-secondary source-crop-btn" id="btnAutoTrimSource" onclick="autoTrimSourceGraphic()" title="Automatically trim extra transparent or solid outer margins (e.g. from Affinity Suite exports)">
+                  ✨ Auto-Trim
+                </button>
+                <button type="button" class="btn-secondary source-crop-btn primary-tint" id="btnOpenSourceCropModal" onclick="openSourceCropModal()" title="Open interactive crop editor to manually frame the graphic">
+                  ✂️ Crop...
+                </button>
+                <button type="button" class="btn-secondary source-crop-btn reset-tint" id="btnResetSourceCrop" onclick="resetSourceCrop()" style="display: none;" title="Restore original uncropped imported graphic">
+                  ↺ Reset
+                </button>
+              </div>
+            </div>
+            <div class="source-blank-margin-notice" id="sourceBlankMarginNotice" style="display: none;">
+              <span class="blank-margin-dot"></span>
+              <span id="sourceBlankMarginText">Blank outer margins detected around graphic</span>
+            </div>
+          </div>
+
           <!-- Quick Shortcut to Normal Map Area -->
           <div class="source-normal-shortcut-bar" id="sourceNormalShortcutBar">
             <div class="source-normal-shortcut-info">

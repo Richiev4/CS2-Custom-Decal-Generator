@@ -1124,7 +1124,9 @@ export function serializeCurrentProject() {
     blurRadius: Number(getEl('blurRadius')?.value ?? 0),
     metallic: Number(getEl('metallic')?.value ?? 0),
     smoothness: Number(getEl('smoothness')?.value ?? 0),
-    sourceImageDataUrl: state.currentImage ? imageToDataUrl(state.currentImage) : null
+    sourceImageDataUrl: state.currentImage ? imageToDataUrl(state.currentImage) : null,
+    originalImageDataUrl: (state.cropRect && state.originalImage) ? imageToDataUrl(state.originalImage) : null,
+    cropRect: state.cropRect ? { ...state.cropRect } : null
   };
 }
 
@@ -1149,17 +1151,34 @@ export function deserializeAndLoadProject(proj) {
   if (proj.metallic !== undefined) setElValue('metallic', proj.metallic);
   if (proj.smoothness !== undefined) setElValue('smoothness', proj.smoothness);
 
+  state.cropRect = proj.cropRect ? { ...proj.cropRect } : null;
+
+  if (proj.originalImageDataUrl) {
+    const origImg = new Image();
+    origImg.onload = () => {
+      state.originalImage = origImg;
+    };
+    origImg.src = proj.originalImageDataUrl;
+  } else {
+    state.originalImage = null;
+  }
+
   if (proj.sourceImageDataUrl) {
     const img = new Image();
     img.onload = () => {
       state.currentImage = img;
+      if (!proj.originalImageDataUrl) {
+        state.originalImage = img;
+      }
       state.isCustomImageLoaded = true;
       if (typeof window.renderAllMaps === 'function') window.renderAllMaps();
+      if (typeof window.updateSourceCropUI === 'function') window.updateSourceCropUI();
       updateConfigJson();
     };
     img.src = proj.sourceImageDataUrl;
   } else {
     if (typeof window.renderAllMaps === 'function') window.renderAllMaps();
+    if (typeof window.updateSourceCropUI === 'function') window.updateSourceCropUI();
     updateConfigJson();
   }
 }

@@ -36,6 +36,8 @@ export function createDefaultSlot(mode = 'decal') {
     loaded: false,
     isCustomImageLoaded: false,
     image: null,
+    originalImage: null,
+    cropRect: null,
     imageDataUrl: null,
     thumbnail: null,
     fileName: '',
@@ -85,6 +87,8 @@ export function createDefaultSlot(mode = 'decal') {
 export const state = {
   appMode: 'decal',
   currentImage: null,
+  originalImage: null,
+  cropRect: null,
   isCustomImageLoaded: false,
   hasUnsavedChanges: false,
   currentResolution: 1024,

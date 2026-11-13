@@ -7763,3 +7763,378 @@
         overflow-y: visible;
       }
     }
+
+    /* Source Image Crop & Blank-Margin Trim Controls */
+    .source-crop-bar {
+      margin-top: 10px;
+      padding: 9px 11px;
+      background: rgba(15, 23, 42, 0.78);
+      border: 1px solid rgba(56, 189, 248, 0.28);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .source-crop-bar-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .source-crop-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .source-crop-title {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .source-crop-badge {
+      font-size: 10px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: rgba(148, 163, 184, 0.14);
+      color: var(--text-muted);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+    }
+
+    .source-crop-badge.is-cropped {
+      background: rgba(16, 185, 129, 0.16);
+      color: #34d399;
+      border-color: rgba(16, 185, 129, 0.35);
+      font-weight: 700;
+    }
+
+    .source-crop-actions {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .source-crop-btn {
+      padding: 4px 9px !important;
+      font-size: 11px !important;
+      font-weight: 600 !important;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .source-crop-btn.primary-tint {
+      color: var(--accent-cyan);
+      border-color: rgba(56, 189, 248, 0.45);
+      background: rgba(56, 189, 248, 0.12);
+    }
+
+    .source-crop-btn.primary-tint:hover {
+      background: rgba(56, 189, 248, 0.22);
+      color: #fff;
+    }
+
+    .source-crop-btn.reset-tint {
+      color: #fbbf24;
+      border-color: rgba(245, 158, 11, 0.4);
+      background: rgba(245, 158, 11, 0.1);
+    }
+
+    .source-crop-btn.reset-tint:hover {
+      background: rgba(245, 158, 11, 0.2);
+      color: #fde68a;
+    }
+
+    .source-blank-margin-notice {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 5px 8px;
+      border-radius: 5px;
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      font-size: 10.5px;
+      color: #fde68a;
+      line-height: 1.3;
+    }
+
+    .blank-margin-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #f59e0b;
+      flex-shrink: 0;
+    }
+
+    /* Interactive Crop Modal */
+    .crop-modal-card {
+      max-width: 760px;
+      width: 96%;
+      max-height: 92vh;
+      max-height: 92dvh;
+      border-color: rgba(56, 189, 248, 0.45);
+      box-shadow: 0 25px 65px rgba(0, 0, 0, 0.92);
+    }
+
+    .crop-modal-card .modal-header {
+      flex-shrink: 0;
+    }
+
+    .crop-modal-body {
+      padding: 14px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+    }
+
+    .crop-modal-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .crop-aspect-pills {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .crop-toolbar-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-right: 2px;
+    }
+
+    .crop-aspect-pill {
+      padding: 4px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 5px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-input);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .crop-aspect-pill:hover {
+      border-color: var(--primary);
+      color: var(--text-main);
+    }
+
+    .crop-aspect-pill.active {
+      background: rgba(0, 168, 255, 0.22);
+      border-color: var(--primary);
+      color: #ffffff;
+    }
+
+    .crop-autotrim-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .crop-trim-select {
+      width: auto !important;
+      padding: 4px 8px !important;
+      font-size: 11px !important;
+      height: 28px;
+    }
+
+    .crop-pad-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .crop-pad-label input {
+      width: 48px !important;
+      padding: 3px 5px !important;
+      font-size: 11px !important;
+      text-align: center;
+      height: 28px;
+    }
+
+    .crop-autotrim-btn {
+      padding: 4px 10px !important;
+      font-size: 11px !important;
+      font-weight: 600 !important;
+      color: var(--accent-emerald);
+      border-color: rgba(16, 185, 129, 0.45);
+      background: rgba(16, 185, 129, 0.12);
+      height: 28px;
+    }
+
+    .crop-autotrim-btn:hover {
+      background: rgba(16, 185, 129, 0.24);
+      color: #ffffff;
+    }
+
+    .crop-zoom-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 7px 10px;
+      border-radius: 7px;
+      background: rgba(15, 23, 42, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      flex-wrap: wrap;
+    }
+
+    .crop-zoom-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .crop-zoom-step-btn {
+      width: 24px;
+      height: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 5px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-input);
+      color: var(--text-main);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .crop-zoom-step-btn:hover {
+      border-color: var(--primary);
+      color: #ffffff;
+    }
+
+    .crop-zoom-slider {
+      width: 120px !important;
+      height: 6px !important;
+    }
+
+    .crop-zoom-badge {
+      min-width: 46px;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      color: var(--accent-cyan);
+      background: rgba(0, 229, 255, 0.1);
+      border: 1px solid rgba(0, 229, 255, 0.25);
+      border-radius: 4px;
+      padding: 2px 6px;
+    }
+
+    .crop-pan-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .crop-zoom-hint {
+      font-size: 10.5px;
+      color: var(--text-dim);
+      white-space: nowrap;
+    }
+
+    .crop-canvas-stage {
+      width: 100%;
+      height: clamp(200px, 44vh, 400px);
+      min-height: 180px;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      display: flex;
+      flex-shrink: 0;
+      overflow: auto;
+      position: relative;
+      user-select: none;
+    }
+
+    .crop-canvas-inner {
+      margin: auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    #cropperCanvas {
+      display: block;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18);
+      touch-action: none;
+    }
+
+    #cropperCanvas.is-pixelated {
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    .crop-coords-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .crop-coord-inputs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .crop-coord-field {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .crop-coord-field input {
+      width: 68px !important;
+      padding: 4px 6px !important;
+      font-size: 11px !important;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      text-align: right;
+    }
+
+    .crop-selection-summary {
+      font-size: 11px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      color: var(--accent-cyan);
+    }
+
+    .crop-modal-footer {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 12px 18px;
+      background: #141c28;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      flex-wrap: wrap;
+    }

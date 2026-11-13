@@ -3119,5 +3119,104 @@
     });
   </script>
 
+  <!-- Interactive Source Graphic Crop & Auto-Trim Modal -->
+  <div class="modal-overlay" id="sourceCropModal" onclick="closeSourceCropModalOnBackdrop(event)" style="display: none; z-index: 12700;">
+    <div class="modal-card crop-modal-card">
+      <div class="modal-header" style="background: #141c28;">
+        <div class="modal-title" style="color: #38bdf8; display: flex; align-items: center; gap: 8px;">
+          <span>✂️</span>
+          <span>Crop &amp; Trim Source Graphic</span>
+        </div>
+        <button type="button" class="preset-btn" style="padding: 4px 8px;" onclick="closeSourceCropModal()" aria-label="Close">✕</button>
+      </div>
+
+      <div class="modal-body crop-modal-body">
+        <div class="crop-modal-toolbar">
+          <div class="crop-aspect-pills" role="group" aria-label="Crop aspect ratio presets">
+            <span class="crop-toolbar-label">Ratio:</span>
+            <button type="button" class="crop-aspect-pill active" id="cropAspectBtn_free" onclick="setCropAspectPreset('free')">Free</button>
+            <button type="button" class="crop-aspect-pill" id="cropAspectBtn_1_1" onclick="setCropAspectPreset('1:1')">1:1</button>
+            <button type="button" class="crop-aspect-pill" id="cropAspectBtn_2_3" onclick="setCropAspectPreset('2:3')">2:3</button>
+            <button type="button" class="crop-aspect-pill" id="cropAspectBtn_3_4" onclick="setCropAspectPreset('3:4')">3:4</button>
+            <button type="button" class="crop-aspect-pill" id="cropAspectBtn_4_3" onclick="setCropAspectPreset('4:3')">4:3</button>
+            <button type="button" class="crop-aspect-pill" id="cropAspectBtn_16_9" onclick="setCropAspectPreset('16:9')">16:9</button>
+          </div>
+
+          <div class="crop-autotrim-controls">
+            <select id="cropTrimModeSelect" class="crop-trim-select" title="Choose how blank margins are detected">
+              <option value="auto" selected>Auto (Transparent / Edge)</option>
+              <option value="alpha">Transparent Margins Only</option>
+              <option value="edge">Solid Edge Color</option>
+            </select>
+            <label class="crop-pad-label" title="Safety padding (in pixels) kept around artwork so anti-aliased edges aren't clipped">
+              <span>Pad:</span>
+              <input type="number" id="cropTrimPaddingInput" value="2" min="0" max="64" step="1">
+              <span>px</span>
+            </label>
+            <button type="button" class="btn-secondary crop-autotrim-btn" onclick="runCropperAutoTrim()" title="Snap crop box tightly around artwork">
+              ✨ Auto-Trim Blank
+            </button>
+          </div>
+        </div>
+
+        <div class="crop-zoom-bar">
+          <div class="crop-zoom-controls">
+            <span class="crop-toolbar-label">Zoom:</span>
+            <button type="button" class="crop-aspect-pill" id="cropZoomFitBtn" onclick="resetCropZoomToFit()" title="Fit entire image inside crop window">Fit</button>
+            <button type="button" class="crop-aspect-pill" id="cropZoom100Btn" onclick="setCropZoom(100)" title="View at 100% native pixels (1:1)">1:1</button>
+            <button type="button" class="crop-zoom-step-btn" onclick="stepCropZoom(-25)" title="Zoom out">−</button>
+            <input type="range" id="cropZoomSlider" class="crop-zoom-slider" min="10" max="800" step="5" value="100" oninput="setCropZoom(this.value)" title="Adjust crop preview zoom (Scroll wheel also zooms)">
+            <button type="button" class="crop-zoom-step-btn" onclick="stepCropZoom(25)" title="Zoom in">+</button>
+            <span class="crop-zoom-badge" id="cropZoomValueBadge">100%</span>
+          </div>
+          <div class="crop-pan-controls">
+            <button type="button" class="crop-aspect-pill" id="cropPanModeBtn" onclick="toggleCropPanMode()" title="Toggle Pan Hand Tool (or hold Space / Middle-click and drag)">
+              ✋ Pan
+            </button>
+            <span class="crop-zoom-hint">Scroll to zoom • Space+Drag to pan • Shift+Drag to resize evenly</span>
+          </div>
+        </div>
+
+        <div class="crop-canvas-stage checkerboard" id="cropperCanvasStage">
+          <div class="crop-canvas-inner" id="cropperCanvasInner">
+            <canvas id="cropperCanvas"></canvas>
+          </div>
+        </div>
+
+        <div class="crop-coords-row">
+          <div class="crop-coord-inputs">
+            <label class="crop-coord-field">
+              <span>X</span>
+              <input type="number" id="cropInputX" min="0" step="1" onchange="onCropNumericInputChange()">
+            </label>
+            <label class="crop-coord-field">
+              <span>Y</span>
+              <input type="number" id="cropInputY" min="0" step="1" onchange="onCropNumericInputChange()">
+            </label>
+            <label class="crop-coord-field">
+              <span>Width</span>
+              <input type="number" id="cropInputW" min="1" step="1" onchange="onCropNumericInputChange()">
+            </label>
+            <label class="crop-coord-field">
+              <span>Height</span>
+              <input type="number" id="cropInputH" min="1" step="1" onchange="onCropNumericInputChange()">
+            </label>
+          </div>
+          <div class="crop-selection-summary" id="cropSelectionSummary">
+            0 × 0 px
+          </div>
+        </div>
+      </div>
+
+      <!-- Pinned footer outside scrollable modal-body so Cancel & Apply Crop remain always visible -->
+      <div class="crop-modal-footer">
+        <button type="button" class="btn-secondary" onclick="closeSourceCropModal()">Cancel</button>
+        <button type="button" class="btn-primary" onclick="applySourceCropModal()" style="padding: 7px 16px;">
+          ✓ Apply Crop
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notification -->
   <div id="toast">Copied to clipboard!</div>
